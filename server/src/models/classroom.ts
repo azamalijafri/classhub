@@ -1,19 +1,27 @@
 import { Schema, model, Document, Types } from "mongoose";
 import { Day } from "../enums/days";
 
-export interface IClassroom extends Document {
-  name: string;
+interface ITimeSlot {
+  day: Day;
   startTime: string;
   endTime: string;
-  days: Day[];
+}
+
+export interface IClassroom extends Document {
+  name: string;
+  days: ITimeSlot[];
   teacher: Types.ObjectId;
 }
 
-const ClassroomSchema = new Schema<IClassroom>({
-  name: { type: String, required: true },
+const Dayschema = new Schema<ITimeSlot>({
+  day: { type: String, enum: Object.values(Day), required: true },
   startTime: { type: String, required: true },
   endTime: { type: String, required: true },
-  days: [{ type: String, enum: Object.values(Day), required: true }],
+});
+
+const ClassroomSchema = new Schema<IClassroom>({
+  name: { type: String, required: true },
+  days: { type: [Dayschema], required: true },
   teacher: { type: Schema.Types.ObjectId, ref: "User" },
 });
 

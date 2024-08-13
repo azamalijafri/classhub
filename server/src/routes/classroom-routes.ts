@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authenticateUser } from "../middlewares/auth-middleware";
 import { requireRole } from "../middlewares/role-middleware";
 import {
+  assignStudentToClassroom,
   assignTeacherToClassroom,
   createClassroom,
 } from "../controllers/classroom-controller";
@@ -16,6 +17,12 @@ router.post(
   "/assign-teacher",
   requireRole(["principal"]),
   assignTeacherToClassroom
+);
+
+router.post(
+  "/assign-student",
+  requireRole(["principal", "teacher"]),
+  assignStudentToClassroom
 );
 
 export default router;
