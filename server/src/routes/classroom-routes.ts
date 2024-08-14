@@ -11,16 +11,16 @@ const router = Router();
 
 router.use(authenticateUser);
 
-router.post("/create-classroom", requireRole(["principal"]), createClassroom);
+router.post("/create/classroom", requireRole(["principal"]), createClassroom);
 
 router.post(
-  "/assign-teacher",
+  "/assign/teacher",
   requireRole(["principal"]),
   assignTeacherToClassroom
 );
 
 router.post(
-  "/assign-student",
+  "/assign/student",
   requireRole(["principal", "teacher"]),
   assignStudentToClassroom
 );

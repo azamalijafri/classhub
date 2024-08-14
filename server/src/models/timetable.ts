@@ -1,7 +1,7 @@
 import { Schema, model, Document, Types } from "mongoose";
 import { Day } from "../enums/days";
 
-export interface IPeriod extends Document {
+export interface IPeriod {
   subject: string;
   startTime: string;
   endTime: string;

@@ -1,0 +1,28 @@
+import { Plus } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
+import { Button } from "./ui/button";
+
+const CreateButton = () => {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button className="flex items-center gap-x-2">
+          <span>Add</span>
+          <Plus className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuItem>Classroom</DropdownMenuItem>
+        <DropdownMenuItem>Teacher</DropdownMenuItem>
+        <DropdownMenuItem>Student</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
+export default CreateButton;
