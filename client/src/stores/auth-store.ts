@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import axiosInstance from "../lib/axios-instance";
+import { apiUrls } from "../constants/api-urls";
 
 interface AuthState {
   user: IUser | null;
@@ -59,7 +60,7 @@ const useAuthStore = create<AuthStore>((set, get) => ({
       }
 
       const response = await axiosInstance.get(
-        `/get/my/profile?role=${localStorage.getItem("role")}`
+        `${apiUrls.user.getMyProfile}?role=${localStorage.getItem("role")}`
       );
       const data = response.data;
 
@@ -74,7 +75,10 @@ const useAuthStore = create<AuthStore>((set, get) => ({
     set({ isLoading: true, isError: null });
 
     try {
-      const response = await axiosInstance.post("/login", credentials);
+      const response = await axiosInstance.post(
+        apiUrls.noauth.login,
+        credentials
+      );
 
       if (response.status === 200) {
         const { user, token } = response.data;

@@ -11,3 +11,26 @@ interface CustomError {
 interface IProfile {
   name: string;
 }
+
+interface ITimeSlot {
+  day: Day;
+  startTime: string;
+  endTime: string;
+}
+
+interface IClassroom {
+  _id: string;
+  name: string;
+  days: ITimeSlot[];
+  teacher: IProfile;
+}
+
+enum Day {
+  Monday = "Monday",
+  Tuesday = "Tuesday",
+  Wednesday = "Wednesday",
+  Thursday = "Thursday",
+  Friday = "Friday",
+  Saturday = "Saturday",
+  Sunday = "Sunday",
+}

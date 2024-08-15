@@ -1,16 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
+import { useSidebar } from "../stores/sidebar-store";
 
-const Sidebar = ({
-  isCollapsed,
-  onToggle,
-}: {
-  isCollapsed: boolean;
-  onToggle: React.Dispatch<React.SetStateAction<boolean>>;
-}) => {
+const Sidebar = () => {
+  const { isCollapsed } = useSidebar();
   return (
     <div
-      className={`h-screen border-r-[1px] flex flex-col p-4 ${
+      className={`bg-white h-screen border-r-[1px] flex flex-col p-4 ${
         isCollapsed ? "w-20" : "w-64"
       } transition-width duration-300`}
     >

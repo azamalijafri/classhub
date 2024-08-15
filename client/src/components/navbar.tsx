@@ -1,8 +1,10 @@
 import { MenuIcon, PresentationIcon } from "lucide-react";
 import { UserAvatar } from "./user-avatar";
 import CreateButton from "./create-button";
+import { useSidebar } from "../stores/sidebar-store";
 
-export const Navbar = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
+export const Navbar = () => {
+  const { toggleSidebar } = useSidebar();
   return (
     <div className="flex h-20 justify-between py-8 px-8 w-full mx-auto items-center">
       <div className="flex items-center gap-x-6">

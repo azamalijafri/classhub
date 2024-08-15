@@ -5,6 +5,7 @@ import {
   assignStudentToClassroom,
   assignTeacherToClassroom,
   createClassroom,
+  getAllClassrooms,
 } from "../controllers/classroom-controller";
 
 const router = Router();
@@ -24,5 +25,7 @@ router.post(
   requireRole(["principal", "teacher"]),
   assignStudentToClassroom
 );
+
+router.get("/get/all/classrooms", requireRole(["principal"]), getAllClassrooms);
 
 export default router;

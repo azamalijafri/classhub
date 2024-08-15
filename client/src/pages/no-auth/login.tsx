@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
@@ -30,6 +30,10 @@ const LoginPage: React.FC = () => {
     await login({ email, password });
     navigate("/", { replace: true });
   };
+
+  useEffect(() => {
+    document.title = "Login";
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-white">
@@ -79,9 +83,10 @@ const LoginPage: React.FC = () => {
             </div>
             <div>
               <Button
+                disabled={isLoading}
                 onClick={handleLogin}
                 type="submit"
-                loadingText="Signing In"
+                loadingText="Signing in"
                 isLoading={isLoading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white"
               >

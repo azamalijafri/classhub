@@ -6,8 +6,10 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import { Button } from "./ui/button";
+import { useModal } from "../stores/modal-store";
 
 const CreateButton = () => {
+  const { openModal } = useModal();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -17,7 +19,9 @@ const CreateButton = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem>Classroom</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => openModal("create-classroom")}>
+          Classroom
+        </DropdownMenuItem>
         <DropdownMenuItem>Teacher</DropdownMenuItem>
         <DropdownMenuItem>Student</DropdownMenuItem>
       </DropdownMenuContent>

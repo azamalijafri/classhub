@@ -10,7 +10,7 @@ type ModalData = unknown | null;
 interface ModalStore {
   modalData: ModalData;
   isOpen: boolean;
-  openModal: (type: ModalType, data: ModalData) => void;
+  openModal: (type: ModalType, data?: ModalData) => void;
   closeModal: () => void;
   type: ModalType;
 }
