@@ -19,9 +19,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <Sidebar />
           </div>
           <div
-            className={`${
-              isCollapsed ? "ml-20" : "ml-64"
-            } transition p-4 w-full`}
+            className={`${isCollapsed ? "ml-20" : "ml-64"} transition w-full`}
           >
             {children}
           </div>

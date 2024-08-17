@@ -1,17 +1,17 @@
 import { ReactNode } from "react";
 import { Dialog, DialogContent } from "../../components/ui/dialog";
+import { useModal } from "../../stores/modal-store";
 
 export function ModalLayout({
   isOpen,
-  onClose,
   children,
 }: {
   isOpen: boolean;
-  onClose: () => void;
   children: ReactNode;
 }) {
+  const { closeModal } = useModal();
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={closeModal}>
       <DialogContent className="max-w-[30rem]">{children}</DialogContent>
     </Dialog>
   );

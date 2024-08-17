@@ -4,21 +4,33 @@ type ModalType =
   | "create-classroom"
   | "create-teacher"
   | "create-student"
+  | "assign-teacher"
+  | "confirm"
   | null;
-type ModalData = unknown | null;
+
+type ModalData = {
+  classId?: string;
+} | null;
+
+interface Modal {
+  type: ModalType;
+  data?: ModalData;
+}
 
 interface ModalStore {
-  modalData: ModalData;
-  isOpen: boolean;
+  modals: Modal[];
   openModal: (type: ModalType, data?: ModalData) => void;
   closeModal: () => void;
-  type: ModalType;
 }
 
 export const useModal = create<ModalStore>((set) => ({
-  modalData: {},
-  isOpen: false,
-  openModal: (type, data) => set({ isOpen: true, modalData: data, type }),
-  closeModal: () => set({ isOpen: false, modalData: null }),
-  type: null,
+  modals: [],
+  openModal: (type, data) =>
+    set((state) => ({
+      modals: [...state.modals, { type, data }],
+    })),
+  closeModal: () =>
+    set((state) => ({
+      modals: state.modals.slice(0, -1),
+    })),
 }));

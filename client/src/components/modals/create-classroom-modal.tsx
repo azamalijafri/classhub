@@ -20,8 +20,8 @@ const daysOfWeek = [
 ];
 
 const CreateClassroomModal = () => {
-  const { isOpen, closeModal, type } = useModal();
-  const open = type === "create-classroom" && isOpen;
+  const { modals, closeModal } = useModal();
+  const modal = modals.find((modal) => modal.type == "create-classroom");
 
   const [name, setName] = useState("");
   const [timeSlots, setTimeSlots] = useState(
@@ -94,7 +94,7 @@ const CreateClassroomModal = () => {
   };
 
   return (
-    <ModalLayout isOpen={open} onClose={closeModal}>
+    <ModalLayout isOpen={!!modal}>
       <div className="flex flex-col gap-y-4">
         <DialogTitle className="font-bold mb-4 text-xl">
           Create Classroom

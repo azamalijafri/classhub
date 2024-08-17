@@ -22,7 +22,7 @@ const Dayschema = new Schema<ITimeSlot>({
 const ClassroomSchema = new Schema<IClassroom>({
   name: { type: String, required: true },
   days: { type: [Dayschema], required: true },
-  teacher: { type: Schema.Types.ObjectId, ref: "User" },
+  teacher: { type: Schema.Types.ObjectId, ref: "Teacher" },
 });
 
 const Classroom = model<IClassroom>("Classroom", ClassroomSchema);

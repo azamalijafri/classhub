@@ -33,7 +33,7 @@ const ClassroomCard = ({ classroom }: { classroom: IClassroom }) => {
         </div>
 
         <span
-          onClick={() => navigate(`/class/${classroom._id}`)}
+          onClick={() => navigate(`/class/${classroom._id}/timetable`)}
           className="hover:underline underline-offset-2 cursor-pointer transition"
         >
           {classroom.name}
@@ -41,8 +41,10 @@ const ClassroomCard = ({ classroom }: { classroom: IClassroom }) => {
       </CardHeader>
       <Separator />
       <CardContent className="py-2">
-        <span className="text-sm">
-          {classroom.teacher ? classroom.teacher?.name : "No teacher assigned"}
+        <span className="text-sm font-medium">
+          {classroom.teacher
+            ? `Assigned to ${classroom.teacher?.name}`
+            : "No teacher assigned"}
         </span>
       </CardContent>
     </Card>

@@ -18,6 +18,7 @@ const hashPassword = async (password: string) => {
 };
 
 const createUserAndProfile = async (
+  name: string,
   email: string,
   password: string,
   role: IUser["role"],
@@ -45,9 +46,9 @@ const createUserAndProfile = async (
 
     let profile;
     if (role === "student") {
-      profile = new Student({ user: user._id, name: randomName });
+      profile = new Student({ user: user._id, name: name });
     } else if (role === "teacher") {
-      profile = new Teacher({ user: user._id, name: randomName });
+      profile = new Teacher({ user: user._id, name: name });
     }
 
     if (profile) {
@@ -67,13 +68,13 @@ const createUserAndProfile = async (
 };
 
 export const createTeacher = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-  await createUserAndProfile(email, password, "teacher", res);
+  const { name, email, password } = req.body;
+  await createUserAndProfile(name, email, password, "teacher", res);
 };
 
 export const createStudent = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-  await createUserAndProfile(email, password, "student", res);
+  const { name, email, password } = req.body;
+  await createUserAndProfile(name, email, password, "student", res);
 };
 
 export const getMyProfile = async (req: Request, res: Response) => {

@@ -86,7 +86,6 @@ const LoginPage: React.FC = () => {
                 disabled={isLoading}
                 onClick={handleLogin}
                 type="submit"
-                loadingText="Signing in"
                 isLoading={isLoading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white"
               >

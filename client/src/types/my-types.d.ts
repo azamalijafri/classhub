@@ -9,7 +9,9 @@ interface CustomError {
 }
 
 interface IProfile {
+  _id: string;
   name: string;
+  user: IUser;
 }
 
 interface ITimeSlot {

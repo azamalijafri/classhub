@@ -4,7 +4,8 @@ import ModalProvider from "./modal-provider";
 const RootProvider = ({ children }: { children: ReactNode }) => {
   return (
     <div>
-      <ModalProvider>{children}</ModalProvider>
+      <ModalProvider />
+      {children}
     </div>
   );
 };

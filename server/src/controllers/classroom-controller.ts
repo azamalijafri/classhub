@@ -59,8 +59,10 @@ export const assignTeacherToClassroom = async (req: Request, res: Response) => {
 
   const { teacherId, classroomId } = result.data;
 
+  console.log(teacherId, classroomId);
+
   try {
-    const teacher = await Teacher.findOne({ _id: teacherId, role: "teacher" });
+    const teacher = await Teacher.findOne({ _id: teacherId });
 
     if (!teacher) {
       return res.status(404).json({ message: "Teacher not found" });
@@ -143,6 +145,21 @@ export const getAllClassrooms = async (req: Request, res: Response) => {
     res.status(200).json({
       message: "Classrooms fetched successfully",
       classrooms,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching classrooms", error });
+  }
+};
+
+export const getClassroomDetails = async (req: Request, res: Response) => {
+  try {
+    const { classId } = req.params;
+
+    const classroom = await Classroom.findById(classId).populate("teacher");
+
+    res.status(200).json({
+      message: "Classroom details fetched successfully",
+      classroom,
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching classrooms", error });

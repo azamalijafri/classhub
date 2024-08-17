@@ -29,7 +29,7 @@ export const PrincipalDashboard = () => {
   }, [fetchClassrooms]);
 
   return (
-    <div className={`grid ${isCollapsed ? "grid-cols-5" : "grid-cols-4"}`}>
+    <div className={`grid ${isCollapsed ? "grid-cols-5" : "grid-cols-4"} p-4`}>
       {classrooms?.map((classroom: IClassroom) => (
         <ClassroomCard key={classroom._id} classroom={classroom} />
       ))}

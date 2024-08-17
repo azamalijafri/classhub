@@ -99,3 +99,18 @@ export const upsertTimeTable = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Server error", error });
   }
 };
+
+export const getTimetable = async (req: Request, res: Response) => {
+  try {
+    const { classId } = req.params;
+
+    const timetable = await Timetable.findOne({ classroom: classId });
+
+    if (!timetable)
+      return res.status(404).json({ message: "Timetable not found" });
+
+    res.status(200).json({ timetable: [timetable] });
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
