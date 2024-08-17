@@ -2,7 +2,7 @@ import TimetableGrid from "@/components/timetable-grid";
 
 const Timetable = () => {
   return (
-    <div>
+    <div className="p-4">
       <TimetableGrid />
     </div>
   );

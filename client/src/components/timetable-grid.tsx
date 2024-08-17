@@ -1,7 +1,13 @@
-import { apiUrls } from "@/constants/api-urls";
-import axiosInstance from "@/lib/axios-instance";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import dayjs from "dayjs";
+import axiosInstance from "@/lib/axios-instance";
+import { apiUrls } from "@/constants/api-urls";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { PartyPopperIcon } from "lucide-react";
+
+dayjs.extend(customParseFormat);
 
 interface IPeriod {
   subject: string;
@@ -14,9 +20,22 @@ interface ITimetable {
   periods: IPeriod[];
 }
 
-const TimetableGrid: React.FC = () => {
+const formatTime = (time: string) => {
+  return dayjs(time, "HH:mm").format("h:mm A");
+};
+
+const TimetableTabs: React.FC = () => {
   const { classId } = useParams<{ classId: string }>();
   const [timetable, setTimetable] = useState<ITimetable[]>([]);
+  const daysOfWeek = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
 
   useEffect(() => {
     const fetchTimetable = async () => {
@@ -24,8 +43,6 @@ const TimetableGrid: React.FC = () => {
         const response = await axiosInstance.get(
           `${apiUrls.timetable.getTimetable}/${classId}`
         );
-        console.log(response.data.timetable);
-
         setTimetable(response.data.timetable);
       } catch (error) {
         console.error("Failed to fetch timetable:", error);
@@ -35,23 +52,44 @@ const TimetableGrid: React.FC = () => {
     fetchTimetable();
   }, [classId]);
 
-  return (
-    <div className="grid grid-cols-7 gap-4">
-      {timetable?.map((daySchedule, index) => (
-        <div key={index} className="flex flex-col">
-          <div className="font-bold mb-2">{daySchedule.day}</div>
-          {daySchedule.periods.map((period, idx) => (
-            <div key={idx} className="border p-2 mb-2 rounded">
-              <div className="text-sm font-medium">{period.subject}</div>
-              <div className="text-xs">
-                {period.startTime} - {period.endTime}
-              </div>
-            </div>
-          ))}
+  const renderPeriods = (day: string) => {
+    const daySchedule = timetable.find((schedule) => schedule.day === day);
+
+    if (!daySchedule || daySchedule.periods.length === 0) {
+      return (
+        <div className="text-primary flex items-center gap-x-2 justify-center mt-10">
+          <span className="text-xl font-medium">No class on this day</span>
+          <PartyPopperIcon />
         </div>
+      );
+    }
+
+    return daySchedule.periods.map((period, index) => (
+      <div key={index} className="p-2 border-[1px] border-primary rounded mb-2">
+        <div className="font-medium">{period.subject}</div>
+        <div className="text-sm">
+          {formatTime(period.startTime)} - {formatTime(period.endTime)}
+        </div>
+      </div>
+    ));
+  };
+
+  return (
+    <Tabs defaultValue="Monday" className="w-full">
+      <TabsList className="flex justify-around bg-primary">
+        {daysOfWeek.map((day) => (
+          <TabsTrigger key={day} value={day} className="text-white">
+            {day}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+      {daysOfWeek.map((day) => (
+        <TabsContent key={day} value={day} className="">
+          {renderPeriods(day)}
+        </TabsContent>
       ))}
-    </div>
+    </Tabs>
   );
 };
 
-export default TimetableGrid;
+export default TimetableTabs;

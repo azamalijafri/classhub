@@ -53,7 +53,7 @@ const ClassDetailsLayout = () => {
         </div>
         <div>
           {classroom?.teacher ? (
-            <div className="bg-primary px-4 py-2 rounded-md text-white">
+            <div className="px-4 py-2 rounded-md border-[1px] border-primary">
               <span>{classroom.teacher.name}</span>
             </div>
           ) : (
