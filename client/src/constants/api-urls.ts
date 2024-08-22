@@ -7,6 +7,7 @@ export const apiUrls = {
     getAllClassrooms: "/get/all/classrooms",
     getClassroomDetails: "/get/classroom/details",
     assignTeacher: "/assign/teacher",
+    getClassroomDays: "/get/classroom/days",
   },
   user: {
     getMyProfile: "/get/my/profile",
@@ -17,5 +18,6 @@ export const apiUrls = {
   },
   timetable: {
     getTimetable: "/get/timetable",
+    updateTimetable: "/update/timetable",
   },
 };

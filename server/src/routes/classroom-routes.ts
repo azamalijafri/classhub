@@ -6,6 +6,7 @@ import {
   assignTeacherToClassroom,
   createClassroom,
   getAllClassrooms,
+  getClassroomDays,
   getClassroomDetails,
 } from "../controllers/classroom-controller";
 
@@ -30,5 +31,7 @@ router.post(
 router.get("/get/all/classrooms", requireRole(["principal"]), getAllClassrooms);
 
 router.get("/get/classroom/details/:classId", getClassroomDetails);
+
+router.get("/get/classroom/days/:classId", getClassroomDays);
 
 export default router;

@@ -1,26 +1,22 @@
 import { z } from "zod";
-import { Day } from "../enums/days";
+import { Day } from "../enums/days"; // Ensure this is the correct path to your enums
 
-const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const PeriodSchema = z.object({
+  subject: z.string().min(1, "Subject is required"),
+  startTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid start time format"),
+  endTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid end time format"),
+});
 
-export const upsertTimetableSchema = z.object({
-  classroomId: z.string().min(1, "Classroom ID is required"),
-  day: z.enum([
-    Day.Monday,
-    Day.Tuesday,
-    Day.Wednesday,
-    Day.Thursday,
-    Day.Friday,
-    Day.Saturday,
-    Day.Sunday,
-  ]),
-  periods: z
-    .array(
-      z.object({
-        subject: z.string().min(1, "Subject is required"),
-        startTime: z.string().regex(timeRegex, "Invalid start time format"),
-        endTime: z.string().regex(timeRegex, "Invalid end time format"),
-      })
-    )
-    .nonempty("Periods are required"),
+const TimetableEntrySchema = z.object({
+  day: z.nativeEnum(Day, { errorMap: () => ({ message: "Invalid day" }) }),
+  periods: z.array(PeriodSchema),
+});
+
+export const updateTimetableSchema = z.object({
+  classroomId: z.string().length(24, "Invalid classroom ID"), // Adjust the length if needed
+  timetableData: z.array(TimetableEntrySchema),
 });

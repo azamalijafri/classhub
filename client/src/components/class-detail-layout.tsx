@@ -23,8 +23,6 @@ const ClassDetailsLayout = () => {
       `${apiUrls.classroom.getClassroomDetails}/${classId}`
     );
     if (response) {
-      console.log(response.data);
-
       setClassroom(response.data.classroom);
     }
   }, [classId]);
@@ -51,19 +49,26 @@ const ClassDetailsLayout = () => {
             </div>
           ))}
         </div>
-        <div>
-          {classroom?.teacher ? (
-            <div className="px-4 py-2 rounded-md border-[1px] border-primary">
-              <span>{classroom.teacher.name}</span>
-            </div>
-          ) : (
-            <Button
-              size={"sm"}
-              onClick={() => openModal("assign-teacher", { classId })}
-            >
-              Assign Teacher
+        <div className="flex items-center gap-x-5">
+          <div>
+            <Button onClick={() => openModal("edit-timetable", { classId })}>
+              Edit Timetable
             </Button>
-          )}
+          </div>
+          <div>
+            {classroom?.teacher ? (
+              <div className="px-4 py-2 rounded-md border-[1px] border-primary">
+                <span>{classroom.teacher.name}</span>
+              </div>
+            ) : (
+              <Button
+                size={"sm"}
+                onClick={() => openModal("assign-teacher", { classId })}
+              >
+                Assign Teacher
+              </Button>
+            )}
+          </div>
         </div>
       </div>
       <div>

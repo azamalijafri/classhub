@@ -12,7 +12,7 @@ export function ModalLayout({
   const { closeModal } = useModal();
   return (
     <Dialog open={isOpen} onOpenChange={closeModal}>
-      <DialogContent className="max-w-[30rem]">{children}</DialogContent>
+      <DialogContent className="min-w-fit">{children}</DialogContent>
     </Dialog>
   );
 }

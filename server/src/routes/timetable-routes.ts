@@ -1,6 +1,6 @@
 import {
   getTimetable,
-  upsertTimeTable,
+  updateTimetable,
 } from "./../controllers/timetable-controller";
 import { Router } from "express";
 import { authenticateUser } from "../middlewares/auth-middleware";
@@ -11,9 +11,9 @@ const router = Router();
 router.use(authenticateUser);
 
 router.post(
-  "/upsert/timetable",
+  "/update/timetable",
   requireRole(["principal", "teacher"]),
-  upsertTimeTable
+  updateTimetable
 );
 
 router.get("/get/timetable/:classId", getTimetable);

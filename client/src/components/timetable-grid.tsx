@@ -6,6 +6,7 @@ import { apiUrls } from "@/constants/api-urls";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PartyPopperIcon } from "lucide-react";
+import { useLoading } from "@/stores/loader-store";
 
 dayjs.extend(customParseFormat);
 
@@ -27,17 +28,24 @@ const formatTime = (time: string) => {
 const TimetableTabs: React.FC = () => {
   const { classId } = useParams<{ classId: string }>();
   const [timetable, setTimetable] = useState<ITimetable[]>([]);
-  const daysOfWeek = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
+  const [availableDays, setAvailableDays] = useState<string[]>([]);
+  const { startLoading, stopLoading } = useLoading();
 
   useEffect(() => {
+    startLoading();
+    const fetchDays = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `${apiUrls.classroom.getClassroomDays}/${classId}`
+        );
+        setAvailableDays(response.data.days);
+      } catch (error) {
+        console.error("Failed to fetch classroom days:", error);
+      } finally {
+        stopLoading();
+      }
+    };
+
     const fetchTimetable = async () => {
       try {
         const response = await axiosInstance.get(
@@ -49,8 +57,9 @@ const TimetableTabs: React.FC = () => {
       }
     };
 
+    fetchDays();
     fetchTimetable();
-  }, [classId]);
+  }, [classId, startLoading, stopLoading]);
 
   const renderPeriods = (day: string) => {
     const daySchedule = timetable.find((schedule) => schedule.day === day);
@@ -74,16 +83,18 @@ const TimetableTabs: React.FC = () => {
     ));
   };
 
+  if (availableDays.length == 0) return null;
+
   return (
-    <Tabs defaultValue="Monday" className="w-full">
+    <Tabs defaultValue={availableDays[0]} className="w-full">
       <TabsList className="flex justify-around bg-primary">
-        {daysOfWeek.map((day) => (
+        {availableDays.map((day) => (
           <TabsTrigger key={day} value={day} className="text-white">
             {day}
           </TabsTrigger>
         ))}
       </TabsList>
-      {daysOfWeek.map((day) => (
+      {availableDays.map((day) => (
         <TabsContent key={day} value={day} className="">
           {renderPeriods(day)}
         </TabsContent>

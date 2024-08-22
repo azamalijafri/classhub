@@ -8,6 +8,8 @@ import { useShowToast } from "../../hooks/useShowToast";
 import axiosInstance from "../../lib/axios-instance";
 import { apiUrls } from "../../constants/api-urls";
 import { DialogTitle } from "@radix-ui/react-dialog";
+import { Label } from "../ui/label";
+import { Separator } from "../ui/separator";
 
 const daysOfWeek = [
   { label: "Monday", value: "Monday" },
@@ -96,11 +98,11 @@ const CreateClassroomModal = () => {
   return (
     <ModalLayout isOpen={!!modal}>
       <div className="flex flex-col gap-y-4">
-        <DialogTitle className="font-bold mb-4 text-xl">
+        <DialogTitle className="font-bold mb-4 text-2xl">
           Create Classroom
         </DialogTitle>
         <div className="flex flex-col">
-          <label className="mb-1 font-medium text-sm">Class Name</label>
+          <Label className="mb-1 text-base">Class Name</Label>
           <Input
             type="text"
             value={name}
@@ -109,7 +111,9 @@ const CreateClassroomModal = () => {
             required
           />
         </div>
+        <Separator />
         <div className="flex flex-col gap-y-4">
+          {/* <Label>Class Days</Label> */}
           <div className="flex flex-col gap-y-6">
             {timeSlots.map((slot, index) => (
               <div key={slot.day} className="flex gap-x-2 items-center">
@@ -118,7 +122,7 @@ const CreateClassroomModal = () => {
                   onChange={() => handleCheckboxChange(index)}
                   onClick={() => handleCheckboxChange(index)}
                 />
-                <label className="text-sm">{slot.day}</label>
+                <label className="">{slot.day}</label>
                 {slot.isChecked && (
                   <div className=" ml-4 flex gap-x-4 w-full items-center justify-end">
                     <div className="flex gap-x-2 items-center">

@@ -165,3 +165,19 @@ export const getClassroomDetails = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error fetching classrooms", error });
   }
 };
+
+export const getClassroomDays = async (req: Request, res: Response) => {
+  try {
+    const { classId } = req.params;
+
+    const classroom = await Classroom.findById(classId);
+    const days = classroom?.days.map((day) => day.day);
+
+    res.status(200).json({
+      message: "Classroom days fetched successfully",
+      days,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching classrooms", error });
+  }
+};

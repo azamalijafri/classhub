@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Timetable, { IPeriod } from "../models/timetable";
 import Classroom from "../models/classroom";
-import { upsertTimetableSchema } from "../validation/timetable-schema";
+import { updateTimetableSchema } from "../validation/timetable-schema";
 
 const timeToMinutes = (time: string): number => {
   const [hours, minutes] = time.split(":").map(Number);
@@ -25,9 +25,9 @@ const periodsOverlap = (periods: IPeriod[]): boolean => {
   return false;
 };
 
-export const upsertTimeTable = async (req: Request, res: Response) => {
+export const updateTimetable = async (req: Request, res: Response) => {
   try {
-    const result = upsertTimetableSchema.safeParse(req.body);
+    const result = updateTimetableSchema.safeParse(req.body);
 
     if (!result.success) {
       return res.status(400).json({
@@ -36,7 +36,7 @@ export const upsertTimeTable = async (req: Request, res: Response) => {
       });
     }
 
-    const { classroomId, day, periods } = result.data;
+    const { classroomId, timetableData } = result.data;
 
     const classroom = await Classroom.findById(classroomId);
 
@@ -45,7 +45,7 @@ export const upsertTimeTable = async (req: Request, res: Response) => {
     }
 
     if (
-      req.user.role != "principal" &&
+      req.user.role !== "principal" &&
       classroom.teacher?.toString() !== req.user._id?.toString()
     ) {
       return res.status(403).json({
@@ -53,47 +53,53 @@ export const upsertTimeTable = async (req: Request, res: Response) => {
       });
     }
 
-    const timeSlot = classroom.days.find((slot) => slot.day === day);
-    if (!timeSlot) {
-      return res
-        .status(400)
-        .json({ message: "No time slot defined for this day" });
-    }
+    console.log(classroom);
 
-    for (const period of periods) {
-      if (
-        timeToMinutes(period.startTime) < timeToMinutes(timeSlot.startTime) ||
-        timeToMinutes(period.endTime) > timeToMinutes(timeSlot.endTime)
-      ) {
+    for (const { day, periods } of timetableData) {
+      const timeSlot = classroom.days.find((slot) => slot.day === day);
+
+      if (!timeSlot) {
+        return res
+          .status(400)
+          .json({ message: `No time slot defined for ${day}` });
+      }
+
+      // Validate periods
+      for (const period of periods) {
+        if (
+          timeToMinutes(period.startTime) < timeToMinutes(timeSlot.startTime) ||
+          timeToMinutes(period.endTime) > timeToMinutes(timeSlot.endTime)
+        ) {
+          return res.status(400).json({
+            message: `Period ${period.subject} on ${day} is outside the classroom's designated time slot.`,
+          });
+        }
+      }
+
+      if (periodsOverlap(periods)) {
         return res.status(400).json({
-          message: `Period ${period.subject} is outside the classroom's designated time slot.`,
+          message: `Periods on ${day} overlap with each other.`,
         });
       }
+
+      // Upsert timetable entry
+      let timetable = await Timetable.findOne({ classroom: classroomId, day });
+
+      if (timetable) {
+        timetable.periods = periods;
+      } else {
+        timetable = new Timetable({
+          classroom: classroomId,
+          day,
+          periods,
+        });
+      }
+
+      await timetable.save();
     }
-
-    if (periodsOverlap(periods)) {
-      return res.status(400).json({
-        message: "Periods overlap with each other.",
-      });
-    }
-
-    let timetable = await Timetable.findOne({ classroom: classroomId, day });
-
-    if (timetable) {
-      timetable.periods = periods;
-    } else {
-      timetable = new Timetable({
-        classroom: classroomId,
-        day,
-        periods,
-      });
-    }
-
-    await timetable.save();
 
     return res.status(200).json({
       message: "Timetable updated successfully",
-      timetable,
     });
   } catch (error) {
     return res.status(500).json({ message: "Server error", error });

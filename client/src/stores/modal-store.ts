@@ -6,6 +6,7 @@ type ModalType =
   | "create-student"
   | "assign-teacher"
   | "confirm"
+  | "edit-timetable"
   | null;
 
 type ModalData = {
