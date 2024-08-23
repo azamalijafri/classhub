@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import dayjs from "dayjs";
+import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "@/lib/axios-instance";
 import { apiUrls } from "@/constants/api-urls";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -27,42 +28,49 @@ const formatTime = (time: string) => {
 
 const TimetableTabs: React.FC = () => {
   const { classId } = useParams<{ classId: string }>();
-  const [timetable, setTimetable] = useState<ITimetable[]>([]);
-  const [availableDays, setAvailableDays] = useState<string[]>([]);
   const { startLoading, stopLoading } = useLoading();
+
+  const fetchDays = async () => {
+    const response = await axiosInstance.get(
+      `${apiUrls.classroom.getClassroomDays}/${classId}`
+    );
+    stopLoading();
+    return response.data.days;
+  };
+
+  const fetchTimetable = async () => {
+    const response = await axiosInstance.get(
+      `${apiUrls.timetable.getTimetable}/${classId}`
+    );
+    return response.data.timetable;
+  };
+
+  const { data: availableDays, isLoading: isLoadingDays } = useQuery({
+    queryKey: ["classroomDays", classId],
+    queryFn: fetchDays,
+  });
+
+  const {
+    data: timetable,
+    isLoading: isLoadingTimetable,
+    isFetching,
+  } = useQuery({
+    queryKey: ["timetable", classId],
+    queryFn: fetchTimetable,
+  });
+
+  useEffect(() => {
+    console.log("is fetching");
+  }, [isFetching]);
 
   useEffect(() => {
     startLoading();
-    const fetchDays = async () => {
-      try {
-        const response = await axiosInstance.get(
-          `${apiUrls.classroom.getClassroomDays}/${classId}`
-        );
-        setAvailableDays(response.data.days);
-      } catch (error) {
-        console.error("Failed to fetch classroom days:", error);
-      } finally {
-        stopLoading();
-      }
-    };
-
-    const fetchTimetable = async () => {
-      try {
-        const response = await axiosInstance.get(
-          `${apiUrls.timetable.getTimetable}/${classId}`
-        );
-        setTimetable(response.data.timetable);
-      } catch (error) {
-        console.error("Failed to fetch timetable:", error);
-      }
-    };
-
-    fetchDays();
-    fetchTimetable();
-  }, [classId, startLoading, stopLoading]);
+  }, [startLoading]);
 
   const renderPeriods = (day: string) => {
-    const daySchedule = timetable.find((schedule) => schedule.day === day);
+    const daySchedule = timetable?.find(
+      (schedule: ITimetable) => schedule.day === day
+    );
 
     if (!daySchedule || daySchedule.periods.length === 0) {
       return (
@@ -73,7 +81,7 @@ const TimetableTabs: React.FC = () => {
       );
     }
 
-    return daySchedule.periods.map((period, index) => (
+    return daySchedule.periods.map((period: IPeriod, index: number) => (
       <div key={index} className="p-2 border-[1px] border-primary rounded mb-2">
         <div className="font-medium">{period.subject}</div>
         <div className="text-sm">
@@ -83,18 +91,20 @@ const TimetableTabs: React.FC = () => {
     ));
   };
 
-  if (availableDays.length == 0) return null;
+  if (isLoadingDays || isLoadingTimetable) return <div>Loading...</div>;
+
+  if (!availableDays || availableDays.length === 0) return null;
 
   return (
     <Tabs defaultValue={availableDays[0]} className="w-full">
       <TabsList className="flex justify-around bg-primary">
-        {availableDays.map((day) => (
+        {availableDays.map((day: string) => (
           <TabsTrigger key={day} value={day} className="text-white">
             {day}
           </TabsTrigger>
         ))}
       </TabsList>
-      {availableDays.map((day) => (
+      {availableDays.map((day: string) => (
         <TabsContent key={day} value={day} className="">
           {renderPeriods(day)}
         </TabsContent>

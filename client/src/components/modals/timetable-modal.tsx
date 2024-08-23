@@ -7,10 +7,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ModalLayout } from "./modal-layout";
-import { DialogFooter, DialogTitle } from "@/components/ui/dialog";
+import {
+  DialogDescription,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useModal } from "@/stores/modal-store";
 import { Label } from "../ui/label";
-import { useShowToast } from "@/hooks/useShowToast";
+import { useQueryClient } from "@tanstack/react-query";
 
 dayjs.extend(customParseFormat);
 
@@ -40,6 +44,8 @@ const EditTimetableModal: React.FC = () => {
   const [activeDay, setActiveDay] = useState<string>("");
   const [classroomDays, setClassroomDays] = useState<string[]>([]);
 
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     const fetchTimetable = async () => {
       try {
@@ -57,7 +63,6 @@ const EditTimetableModal: React.FC = () => {
         const response = await axiosInstance.get(
           `${apiUrls.classroom.getClassroomDays}/${classId}`
         );
-        console.log(response.data);
 
         setClassroomDays(response.data.days || []);
         setActiveDay(response.data.days[0] || "");
@@ -69,39 +74,6 @@ const EditTimetableModal: React.FC = () => {
     if (classroomDays) fetchTimetable();
     if (classroomDays.length == 0) fetchDays();
   }, [classId, classroomDays]);
-
-  const renderPeriods = (day: string) => {
-    const daySchedule = timetable.find((schedule) => schedule.day === day);
-
-    if (!daySchedule || daySchedule.periods.length === 0) {
-      return (
-        <div className="text-primary flex items-center gap-x-2 justify-center mt-10">
-          <span className="text-xl font-medium">No class on this day</span>
-        </div>
-      );
-    }
-
-    return daySchedule.periods.map((period, index) => (
-      <div
-        key={index}
-        className="p-2 border-[1px] border-primary rounded mb-2 flex justify-between items-center"
-      >
-        <div>
-          <div className="font-medium">{period.subject}</div>
-          <div className="text-sm">
-            {formatTime(period.startTime)} - {formatTime(period.endTime)}
-          </div>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleEditPeriod(day, index)}
-        >
-          Edit
-        </Button>
-      </div>
-    ));
-  };
 
   const handleAddPeriod = (day: string) => {
     setActiveDay(day);
@@ -140,21 +112,80 @@ const EditTimetableModal: React.FC = () => {
     setEditingPeriod(null);
   };
 
-  const { showToast } = useShowToast();
+  const handleRemovePeriod = (day: string, index: number) => {
+    setTimetable((prevTimetable) =>
+      prevTimetable.map((schedule) =>
+        schedule.day === day
+          ? {
+              ...schedule,
+              periods: schedule.periods.filter((_, idx) => idx !== index),
+            }
+          : schedule
+      )
+    );
+  };
 
   const handleSaveTimetable = async () => {
     const response = await axiosInstance.post(
       apiUrls.timetable.updateTimetable,
       { timetableData: timetable, classroomId: classId }
     );
+
     if (response) {
-      showToast(
-        "Request Success",
-        "Timetable has been updated successfully",
-        false
-      );
+      // queryClient.invalidateQueries({ queryKey: ["timetable", classId] });
+      queryClient.refetchQueries({
+        queryKey: ["timetable", classId],
+      });
+
       closeModal();
+      // showToast(
+      //   "Request Success",
+      //   "Timetable has been updated successfully",
+      //   false
+      // );
     }
+  };
+
+  const renderPeriods = (day: string) => {
+    const daySchedule = timetable.find((schedule) => schedule.day === day);
+
+    if (!daySchedule || daySchedule.periods.length === 0) {
+      return (
+        <div className="text-primary flex items-center gap-x-2 justify-center mt-10">
+          <span className="text-xl font-medium">No class on this day</span>
+        </div>
+      );
+    }
+
+    return daySchedule.periods.map((period, index) => (
+      <div
+        key={index}
+        className="p-2 border-[1px] border-primary rounded mb-2 flex justify-between items-center"
+      >
+        <div>
+          <div className="font-medium">{period.subject}</div>
+          <div className="text-sm">
+            {formatTime(period.startTime)} - {formatTime(period.endTime)}
+          </div>
+        </div>
+        <div className="flex gap-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleEditPeriod(day, index)}
+          >
+            Edit
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => handleRemovePeriod(day, index)}
+          >
+            Remove
+          </Button>
+        </div>
+      </div>
+    ));
   };
 
   return (
@@ -162,6 +193,7 @@ const EditTimetableModal: React.FC = () => {
       <DialogTitle className="text-lg font-medium text-primary mt-4">
         Edit Timetable
       </DialogTitle>
+      <DialogDescription />
       {classroomDays.length > 0 ? (
         <Tabs
           defaultValue={classroomDays[0]}
@@ -179,7 +211,7 @@ const EditTimetableModal: React.FC = () => {
             <TabsContent key={day} value={day} className="p-4">
               {renderPeriods(day)}
               <div
-                className={`grid grid-cols-5 gap-x-3 my-6 transition-all duration-500 ease-in-out ${
+                className={`grid grid-cols-5 gap-x-3 my-6 transition-all duration-500 ease-out ${
                   activePeriod && activeDay === day
                     ? "opacity-100 visible max-h-[200px]"
                     : "opacity-0 invisible max-h-0"
