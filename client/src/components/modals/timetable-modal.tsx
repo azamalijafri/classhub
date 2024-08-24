@@ -15,6 +15,7 @@ import {
 import { useModal } from "@/stores/modal-store";
 import { Label } from "../ui/label";
 import { useQueryClient } from "@tanstack/react-query";
+import { useShowToast } from "@/hooks/useShowToast";
 
 dayjs.extend(customParseFormat);
 
@@ -43,6 +44,7 @@ const EditTimetableModal: React.FC = () => {
   const [editingPeriod, setEditingPeriod] = useState<number | null>(null);
   const [activeDay, setActiveDay] = useState<string>("");
   const [classroomDays, setClassroomDays] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -125,25 +127,27 @@ const EditTimetableModal: React.FC = () => {
     );
   };
 
+  const { showToast } = useShowToast();
+
   const handleSaveTimetable = async () => {
+    setIsLoading(true);
     const response = await axiosInstance.post(
       apiUrls.timetable.updateTimetable,
       { timetableData: timetable, classroomId: classId }
     );
 
     if (response) {
-      // queryClient.invalidateQueries({ queryKey: ["timetable", classId] });
       queryClient.refetchQueries({
         queryKey: ["timetable", classId],
       });
 
+      showToast({
+        title: "Request Success",
+        description: "Timetable has been updated successfully!",
+      });
       closeModal();
-      // showToast(
-      //   "Request Success",
-      //   "Timetable has been updated successfully",
-      //   false
-      // );
     }
+    setIsLoading(false);
   };
 
   const renderPeriods = (day: string) => {
@@ -289,7 +293,9 @@ const EditTimetableModal: React.FC = () => {
         </div>
       )}
       <DialogFooter className="mx-auto flex gap-x-4 mt-4">
-        <Button onClick={handleSaveTimetable}>Save Timetable</Button>
+        <Button onClick={handleSaveTimetable} isLoading={isLoading}>
+          Save Timetable
+        </Button>
         <Button variant={"outline"} onClick={() => closeModal()}>
           Cancel
         </Button>

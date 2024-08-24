@@ -37,11 +37,10 @@ const CreateTeacherModal = () => {
     );
 
     if (response) {
-      showToast(
-        "Request Success",
-        "Teacher has been created successfully",
-        false
-      );
+      showToast({
+        title: "Request Success",
+        description: "Teacher has been created successfully",
+      });
       closeModal();
     }
   };

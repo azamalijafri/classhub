@@ -10,6 +10,7 @@ import { apiUrls } from "../../constants/api-urls";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
+import { useQueryClient } from "@tanstack/react-query";
 
 const daysOfWeek = [
   { label: "Monday", value: "Monday" },
@@ -73,10 +74,16 @@ const CreateClassroomModal = () => {
     return true;
   };
 
+  const queryClient = useQueryClient();
+
   const handleSubmit = async () => {
     const selectedTimeSlots = timeSlots.filter((slot) => slot.isChecked);
     if (!validateData(selectedTimeSlots)) {
-      showToast("Invalid Data", "Please enter valid data", true);
+      showToast({
+        title: "Invalid Data",
+        description: "Please enter valid data",
+        isDestructive: true,
+      });
       return;
     }
 
@@ -86,11 +93,12 @@ const CreateClassroomModal = () => {
     );
 
     if (response.status == 201) {
-      showToast(
-        "Request Success",
-        "classroom has been created successfully",
-        false
-      );
+      queryClient.refetchQueries({ queryKey: ["classrooms"] });
+
+      showToast({
+        title: "Request Success",
+        description: "classroom has been created successfully",
+      });
       closeModal();
     }
   };

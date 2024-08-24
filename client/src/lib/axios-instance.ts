@@ -7,11 +7,15 @@ const axiosInstance = axios.create({
 });
 
 export const setupAxiosInterceptors = (
-  showToast: (
-    title: string,
-    description: string,
-    isDestructive: boolean
-  ) => void
+  showToast: ({
+    title,
+    description,
+    isDestructive,
+  }: {
+    title: string;
+    description: string;
+    isDestructive?: boolean;
+  }) => void
 ) => {
   axiosInstance.interceptors.request.use(
     (config) => {
@@ -22,7 +26,11 @@ export const setupAxiosInterceptors = (
       return config;
     },
     (error: AxiosError) => {
-      showToast("Request Error", error.message, true);
+      showToast({
+        title: "Request Error",
+        description: error.message,
+        isDestructive: true,
+      });
       return Promise.reject(error);
     }
   );
@@ -34,11 +42,23 @@ export const setupAxiosInterceptors = (
         const errorMessage =
           error.response.data?.message || error.response.statusText;
 
-        showToast("Request Error", errorMessage, true);
+        showToast({
+          title: "Request Error",
+          description: errorMessage,
+          isDestructive: true,
+        });
       } else if (error.request) {
-        showToast("Network Error", "Please try again later", true);
+        showToast({
+          title: "Network Error",
+          description: "Please try again later",
+          isDestructive: true,
+        });
       } else {
-        showToast("Request Error", error.message, true);
+        showToast({
+          title: "Request Error",
+          description: error.message,
+          isDestructive: true,
+        });
       }
       return Promise.reject(error);
     }

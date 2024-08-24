@@ -11,6 +11,7 @@ type ModalType =
 
 type ModalData = {
   classId?: string;
+  performingAction?: () => void;
 } | null;
 
 interface Modal {

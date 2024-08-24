@@ -4,17 +4,27 @@ import { DialogDescription, DialogFooter } from "../ui/dialog";
 import { ModalLayout } from "./modal-layout";
 
 const ConfirmModal = () => {
-  const { modals } = useModal();
+  const { modals, closeModal } = useModal();
   const modal = modals.find((modal) => modal.type == "confirm");
+  const performingAction = modal?.data?.performingAction;
 
   return (
     <ModalLayout isOpen={!!modal}>
-      <DialogDescription className="text-lg font-medium text-primary mt-4">
-        Are you sure you want to perform this action?
+      <DialogDescription className="text-lg font-medium text-primary mt-4 mx-auto">
+        Are you sure you want to do this?
       </DialogDescription>
       <DialogFooter className="mx-auto flex gap-x-4">
-        <Button>Confirm</Button>
-        <Button variant={"outline"}>Cancel</Button>
+        <Button
+          onClick={() => {
+            performingAction!();
+            closeModal();
+          }}
+        >
+          Confirm
+        </Button>
+        <Button variant={"outline"} onClick={closeModal}>
+          Cancel
+        </Button>
       </DialogFooter>
     </ModalLayout>
   );

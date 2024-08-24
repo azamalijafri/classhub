@@ -3,11 +3,15 @@ import { useToast } from "../components/ui/use-toast";
 export function useShowToast() {
   const { toast } = useToast();
 
-  const showToast = (
-    title: string,
-    description: string,
-    isDestructive: boolean
-  ) => {
+  const showToast = ({
+    title,
+    description,
+    isDestructive,
+  }: {
+    title: string;
+    description: string;
+    isDestructive?: boolean;
+  }) => {
     toast({
       title,
       description,

@@ -162,7 +162,9 @@ export const getClassroomDetails = async (req: Request, res: Response) => {
       classroom,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching classrooms", error });
+    res
+      .status(500)
+      .json({ message: "Error fetching classroom details", error });
   }
 };
 
@@ -178,6 +180,35 @@ export const getClassroomDays = async (req: Request, res: Response) => {
       days,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching classrooms", error });
+    res.status(500).json({ message: "Error fetching classrooms days", error });
+  }
+};
+
+export const deleteClassroom = async (req: Request, res: Response) => {
+  try {
+    const { classId } = req.params;
+
+    const classroom = await Classroom.findById(classId);
+
+    if (!classroom) {
+      return res.status(404).json({ message: "Classroom not found" });
+    }
+
+    if (
+      req.user.role != "principal" &&
+      classroom?.teacher?.toString() != req.user._id?.toString()
+    ) {
+      return res
+        .status(400)
+        .json({ message: "You cannot delete this classroom" });
+    }
+
+    await Classroom.findByIdAndDelete(classroom?._id);
+
+    res.status(200).json({
+      message: "Classroom has been deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting classroom", error });
   }
 };

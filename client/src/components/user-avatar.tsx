@@ -7,9 +7,11 @@ import {
 } from "../components/ui/dropdown-menu";
 import useAuthStore from "../stores/auth-store";
 import { Button } from "./ui/button";
+import { useModal } from "@/stores/modal-store";
 
 export function UserAvatar() {
   const { profile, logout } = useAuthStore();
+  const { openModal } = useModal();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -25,7 +27,13 @@ export function UserAvatar() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() =>
+            openModal("confirm", { performingAction: handleLogout })
+          }
+        >
+          Logout
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

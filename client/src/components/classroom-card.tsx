@@ -8,13 +8,32 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
+import { useShowToast } from "@/hooks/useShowToast";
+import axiosInstance from "@/lib/axios-instance";
+import { apiUrls } from "@/constants/api-urls";
+import { useQueryClient } from "@tanstack/react-query";
+import { useModal } from "@/stores/modal-store";
 
 const ClassroomCard = ({ classroom }: { classroom: IClassroom }) => {
   const navigate = useNavigate();
+  const { showToast } = useShowToast();
+  const { openModal } = useModal();
 
-  // const handleRemove = async() => {
-  //
-  // }
+  const queryClient = useQueryClient();
+
+  const handleRemove = async () => {
+    const response = await axiosInstance.delete(
+      `${apiUrls.classroom.removeClassroom}/${classroom._id}`
+    );
+    if (response) {
+      queryClient.refetchQueries({ queryKey: ["classrooms"] });
+
+      showToast({
+        title: "Request Success",
+        description: "Classroom has been deleted successfully!",
+      });
+    }
+  };
 
   return (
     <Card className="w-full">
@@ -27,7 +46,13 @@ const ClassroomCard = ({ classroom }: { classroom: IClassroom }) => {
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem>Remove</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  openModal("confirm", { performingAction: handleRemove })
+                }
+              >
+                Remove
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
