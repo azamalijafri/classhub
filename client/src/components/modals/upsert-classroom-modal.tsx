@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useModal } from "../../stores/modal-store";
 import { ModalLayout } from "./modal-layout";
 import { Input } from "../ui/input";
@@ -22,10 +22,10 @@ const daysOfWeek = [
   { label: "Sunday", value: "Sunday" },
 ];
 
-const CreateClassroomModal = () => {
+const UpsertClassroomModal = () => {
   const { modals, closeModal } = useModal();
-  const modal = modals.find((modal) => modal.type == "create-classroom");
-
+  const modal = modals.find((modal) => modal.type === "upsert-classroom");
+  const classId = modal?.data?.classId;
   const [name, setName] = useState("");
   const [timeSlots, setTimeSlots] = useState(
     daysOfWeek.map((day) => ({
@@ -35,6 +35,36 @@ const CreateClassroomModal = () => {
       endTime: "",
     }))
   );
+
+  const { showToast } = useShowToast();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (classId) {
+      // Fetch classroom details if editing
+      const fetchClassDetails = async () => {
+        const response = await axiosInstance.get(
+          `${apiUrls.classroom.getClassroomDetails}/${classId}`
+        );
+        setName(response.data.classroom.name);
+        setTimeSlots(
+          daysOfWeek.map((day) => {
+            const dayDetails = response.data.classroom.days.find(
+              (d: { day: string }) => d.day === day.value
+            );
+            return {
+              day: day.value,
+              isChecked: !!dayDetails,
+              startTime: dayDetails?.startTime || "",
+              endTime: dayDetails?.endTime || "",
+            };
+          })
+        );
+      };
+
+      fetchClassDetails();
+    }
+  }, [classId]);
 
   const handleCheckboxChange = (index: number) => {
     setTimeSlots((prev) =>
@@ -56,8 +86,6 @@ const CreateClassroomModal = () => {
     );
   };
 
-  const { showToast } = useShowToast();
-
   const validateData = (
     selectedTimeSlots: {
       day: string;
@@ -74,8 +102,6 @@ const CreateClassroomModal = () => {
     return true;
   };
 
-  const queryClient = useQueryClient();
-
   const handleSubmit = async () => {
     const selectedTimeSlots = timeSlots.filter((slot) => slot.isChecked);
     if (!validateData(selectedTimeSlots)) {
@@ -87,17 +113,30 @@ const CreateClassroomModal = () => {
       return;
     }
 
-    const response = await axiosInstance.post(
-      apiUrls.classroom.createClassroom,
-      { name, days: selectedTimeSlots }
-    );
+    const requestData = { name, days: selectedTimeSlots };
+    let response;
 
-    if (response.status == 201) {
+    if (classId) {
+      // Update existing classroom
+      response = await axiosInstance.put(
+        `${apiUrls.classroom.updateClassroom}/${classId}`,
+        requestData
+      );
+    } else {
+      // Create new classroom
+      response = await axiosInstance.post(
+        apiUrls.classroom.createClassroom,
+        requestData
+      );
+    }
+
+    if (response) {
       queryClient.refetchQueries({ queryKey: ["classrooms"] });
-
       showToast({
         title: "Request Success",
-        description: "classroom has been created successfully",
+        description: classId
+          ? "Classroom has been updated successfully"
+          : "Classroom has been created successfully",
       });
       closeModal();
     }
@@ -107,7 +146,7 @@ const CreateClassroomModal = () => {
     <ModalLayout isOpen={!!modal}>
       <div className="flex flex-col gap-y-4">
         <DialogTitle className="font-bold mb-4 text-2xl">
-          Create Classroom
+          {classId ? "Edit Classroom" : "Create Classroom"}
         </DialogTitle>
         <div className="flex flex-col">
           <Label className="mb-1 text-base">Class Name</Label>
@@ -121,7 +160,6 @@ const CreateClassroomModal = () => {
         </div>
         <Separator />
         <div className="flex flex-col gap-y-4">
-          {/* <Label>Class Days</Label> */}
           <div className="flex flex-col gap-y-6">
             {timeSlots.map((slot, index) => (
               <div key={slot.day} className="flex gap-x-2 items-center">
@@ -132,7 +170,7 @@ const CreateClassroomModal = () => {
                 />
                 <label className="">{slot.day}</label>
                 {slot.isChecked && (
-                  <div className=" ml-4 flex gap-x-4 w-full items-center justify-end">
+                  <div className="ml-4 flex gap-x-4 w-full items-center justify-end">
                     <div className="flex gap-x-2 items-center">
                       <Input
                         type="time"
@@ -160,10 +198,12 @@ const CreateClassroomModal = () => {
             ))}
           </div>
         </div>
-        <Button onClick={handleSubmit}>Create</Button>
+        <Button onClick={handleSubmit}>
+          {classId ? "Save Changes" : "Create"}
+        </Button>
       </div>
     </ModalLayout>
   );
 };
 
-export default CreateClassroomModal;
+export default UpsertClassroomModal;

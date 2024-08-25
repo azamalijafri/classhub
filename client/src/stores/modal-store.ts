@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 type ModalType =
-  | "create-classroom"
+  | "upsert-classroom"
   | "create-teacher"
   | "create-student"
   | "assign-teacher"

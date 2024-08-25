@@ -9,6 +9,7 @@ export const apiUrls = {
     assignTeacher: "/assign/teacher",
     getClassroomDays: "/get/classroom/days",
     removeClassroom: "/remove/classroom",
+    updateClassroom: "/update/classroom",
   },
   user: {
     getMyProfile: "/get/my/profile",

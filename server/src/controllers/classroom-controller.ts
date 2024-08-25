@@ -212,3 +212,39 @@ export const deleteClassroom = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error deleting classroom", error });
   }
 };
+
+export const updateClassroom = async (req: Request, res: Response) => {
+  try {
+    const { classId } = req.params;
+
+    const result = createClassroomSchema.safeParse(req.body);
+
+    if (!result.success) {
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: result.error.errors.map((err) => ({
+          path: err.path,
+          message: err.message,
+        })),
+      });
+    }
+
+    const { name, days } = result.data;
+
+    const existingClassroom = await Classroom.findById(classId);
+
+    if (!existingClassroom)
+      return res.status(404).json({
+        message: "Classroom not found",
+      });
+
+    await existingClassroom.updateOne({ name, days });
+    await existingClassroom.save();
+
+    return res.status(201).json({
+      message: "Classroom updated successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Error creating classroom", error });
+  }
+};

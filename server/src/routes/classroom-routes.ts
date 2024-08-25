@@ -9,6 +9,7 @@ import {
   getAllClassrooms,
   getClassroomDays,
   getClassroomDetails,
+  updateClassroom,
 } from "../controllers/classroom-controller";
 
 const router = Router();
@@ -36,5 +37,7 @@ router.get("/get/classroom/details/:classId", getClassroomDetails);
 router.get("/get/classroom/days/:classId", getClassroomDays);
 
 router.delete("/remove/classroom/:classId", deleteClassroom);
+
+router.put("/update/classroom/:classId", updateClassroom);
 
 export default router;

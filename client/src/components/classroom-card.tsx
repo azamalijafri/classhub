@@ -48,6 +48,16 @@ const ClassroomCard = ({ classroom }: { classroom: IClassroom }) => {
             <DropdownMenuContent>
               <DropdownMenuItem
                 onClick={() =>
+                  openModal("upsert-classroom", {
+                    classId: classroom._id,
+                  })
+                }
+              >
+                Edit
+              </DropdownMenuItem>
+              <Separator />
+              <DropdownMenuItem
+                onClick={() =>
                   openModal("confirm", { performingAction: handleRemove })
                 }
               >

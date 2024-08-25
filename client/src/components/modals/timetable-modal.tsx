@@ -54,7 +54,20 @@ const EditTimetableModal: React.FC = () => {
         const response = await axiosInstance.get(
           `${apiUrls.timetable.getTimetable}/${classId}`
         );
-        setTimetable(response.data.timetable);
+        const fetchedTimetable = response.data.timetable;
+
+        // Check if there are missing days in the fetched timetable
+        classroomDays.forEach((day) => {
+          if (
+            !fetchedTimetable.some(
+              (schedule: { day: string }) => schedule.day === day
+            )
+          ) {
+            fetchedTimetable.push({ day, periods: [] });
+          }
+        });
+
+        setTimetable(fetchedTimetable);
       } catch (error) {
         console.error("Failed to fetch timetable:", error);
       }
@@ -65,16 +78,19 @@ const EditTimetableModal: React.FC = () => {
         const response = await axiosInstance.get(
           `${apiUrls.classroom.getClassroomDays}/${classId}`
         );
-
-        setClassroomDays(response.data.days || []);
-        setActiveDay(response.data.days[0] || "");
+        const days = response.data.days || [];
+        setClassroomDays(days);
+        setActiveDay(days[0] || "");
       } catch (error) {
         console.error("Failed to fetch classroom days:", error);
       }
     };
 
-    if (classroomDays) fetchTimetable();
-    if (classroomDays.length == 0) fetchDays();
+    if (classroomDays.length > 0) {
+      fetchTimetable();
+    } else {
+      fetchDays().then(fetchTimetable);
+    }
   }, [classId, classroomDays]);
 
   const handleAddPeriod = (day: string) => {
