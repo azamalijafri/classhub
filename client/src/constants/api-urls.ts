@@ -18,6 +18,9 @@ export const apiUrls = {
     createTeacher: "/create/teacher",
     getAllTeachers: "/get/all/teachers",
   },
+  student: {
+    createStudent: "/create/student",
+  },
   timetable: {
     getTimetable: "/get/timetable",
     updateTimetable: "/update/timetable",

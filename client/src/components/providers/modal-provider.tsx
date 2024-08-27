@@ -4,6 +4,7 @@ import { useModal } from "../../stores/modal-store";
 import CreateTeacherModal from "../modals/create-teacher-modal";
 import AssignTeacherModal from "../modals/assign-teacher-modal";
 import TimetableModal from "../modals/timetable-modal";
+import CreateStudentModal from "../modals/create-student-modal";
 
 const ModalProvider = () => {
   const { modals } = useModal();
@@ -16,6 +17,8 @@ const ModalProvider = () => {
             return <CreateClassroomModal key={index} />;
           case "create-teacher":
             return <CreateTeacherModal key={index} />;
+          case "create-student":
+            return <CreateStudentModal key={index} />;
           case "confirm":
             return <ConfirmModal key={index} />;
           case "assign-teacher":

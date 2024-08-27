@@ -25,7 +25,9 @@ const CreateButton = () => {
         <DropdownMenuItem onClick={() => openModal("create-teacher")}>
           Teacher
         </DropdownMenuItem>
-        <DropdownMenuItem>Student</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => openModal("create-student")}>
+          Student
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

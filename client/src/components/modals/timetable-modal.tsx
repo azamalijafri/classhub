@@ -43,7 +43,9 @@ const EditTimetableModal: React.FC = () => {
   const [activePeriod, setActivePeriod] = useState<IPeriod | null>(null);
   const [editingPeriod, setEditingPeriod] = useState<number | null>(null);
   const [activeDay, setActiveDay] = useState<string>("");
-  const [classroomDays, setClassroomDays] = useState<string[]>([]);
+  const [classroomDays, setClassroomDays] = useState<
+    { day: string; startTime: string; endTime: string }[]
+  >([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const queryClient = useQueryClient();
@@ -60,7 +62,7 @@ const EditTimetableModal: React.FC = () => {
         classroomDays.forEach((day) => {
           if (
             !fetchedTimetable.some(
-              (schedule: { day: string }) => schedule.day === day
+              (schedule: { day: string }) => schedule.day === day.day
             )
           ) {
             fetchedTimetable.push({ day, periods: [] });
@@ -76,13 +78,14 @@ const EditTimetableModal: React.FC = () => {
     const fetchDays = async () => {
       try {
         const response = await axiosInstance.get(
-          `${apiUrls.classroom.getClassroomDays}/${classId}`
+          `${apiUrls.classroom.getClassroomDetails}/${classId}`
         );
-        const days = response.data.days || [];
-        setClassroomDays(days);
-        setActiveDay(days[0] || "");
+        const classroom = response.data.classroom;
+        // const days = classroom?.days.map((day: { day: Day, startTime:string, endTime:string }) => day.day);
+        setClassroomDays(classroom.days);
+        setActiveDay(classroom.days[0].day || "");
       } catch (error) {
-        console.error("Failed to fetch classroom days:", error);
+        console.error("Failed to fetch classroom details:", error);
       }
     };
 
@@ -216,23 +219,30 @@ const EditTimetableModal: React.FC = () => {
       <DialogDescription />
       {classroomDays.length > 0 ? (
         <Tabs
-          defaultValue={classroomDays[0]}
+          defaultValue={classroomDays[0].day}
           className="w-full"
           onValueChange={setActiveDay}
         >
           <TabsList className="flex justify-around bg-primary">
             {classroomDays.map((day) => (
-              <TabsTrigger key={day} value={day} className="text-white">
-                {day}
+              <TabsTrigger key={day.day} value={day.day} className="text-white">
+                {day.day}
               </TabsTrigger>
             ))}
           </TabsList>
           {classroomDays.map((day) => (
-            <TabsContent key={day} value={day} className="p-4">
-              {renderPeriods(day)}
+            <TabsContent key={day.day} value={day.day} className="p-4">
+              <div className="flex flex-col gap-y-4">
+                <span className="mx-auto font-medium">
+                  Day timing: {formatTime(day.startTime)}-
+                  {formatTime(day.endTime)}
+                </span>
+                <div>{renderPeriods(day.day)}</div>
+              </div>
+
               <div
                 className={`grid grid-cols-5 gap-x-3 my-6 transition-all duration-500 ease-out ${
-                  activePeriod && activeDay === day
+                  activePeriod && activeDay === day.day
                     ? "opacity-100 visible max-h-[200px]"
                     : "opacity-0 invisible max-h-0"
                 }`}
@@ -296,7 +306,7 @@ const EditTimetableModal: React.FC = () => {
               <Button
                 variant="outline"
                 className="mt-4"
-                onClick={() => handleAddPeriod(day)}
+                onClick={() => handleAddPeriod(day.day)}
               >
                 Add Period
               </Button>
