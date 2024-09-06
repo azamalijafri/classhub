@@ -1,17 +1,27 @@
-import { LayoutDashboardIcon } from "lucide-react";
+import { LayoutDashboardIcon, UsersIcon } from "lucide-react";
 
 export const PrincipalItems = [
   {
     label: "Classes",
-    href: "",
+    href: "/",
     icon: LayoutDashboardIcon,
+  },
+  {
+    label: "Teachers",
+    href: "/teachers",
+    icon: UsersIcon,
+  },
+  {
+    label: "Students",
+    href: "/students",
+    icon: UsersIcon,
   },
 ];
 
 export const StudentItems = [
   {
     label: "Classes",
-    href: "",
+    href: "/",
     icon: LayoutDashboardIcon,
   },
 ];
@@ -19,7 +29,7 @@ export const StudentItems = [
 export const TeacherItems = [
   {
     label: "Classes",
-    href: "",
+    href: "/",
     icon: LayoutDashboardIcon,
   },
 ];

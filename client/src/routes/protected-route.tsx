@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Route, useNavigate } from "react-router-dom";
-import { useAuthStore } from "../stores/auth-store";
+import useAuthStore from "../stores/auth-store";
 import SplashScreen from "../components/splash-screen";
 
 interface ProtectedRouteProps {
@@ -15,7 +15,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const { role, isAuthenticated, loading, fetchProfile } = useAuthStore();
+  const { isLoading, user } = useAuthStore();
 
   // useEffect(() => {
   //   if (role) {
@@ -23,11 +23,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   //   }
   // }, [role, fetchProfile]);
 
-  if (!loading && !isAuthenticated()) {
+  if (!isLoading && !user) {
     navigate("/", { replace: true });
   }
 
-  if (loading) return <SplashScreen />;
+  if (isLoading) return <SplashScreen />;
 
   return <Route {...rest} path={path} element={<Component />} />;
 };

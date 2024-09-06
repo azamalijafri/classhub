@@ -70,8 +70,8 @@ const SidebarItem = ({
   isCollapsed,
   href,
 }: SidebarItemProps) => {
-  const pathname = useLocation().pathname.split("/").reverse()[0];
-  console.log(pathname);
+  const pathname = useLocation().pathname;
+  // console.log(pathname);
 
   return (
     <Link
@@ -80,8 +80,8 @@ const SidebarItem = ({
       } ${href == pathname && "bg-primary text-white"}`}
       to={href}
     >
-      <div className="p-2">{<Icon className="size-5" />}</div>
-      {!isCollapsed && <span className="text-lg">{label}</span>}
+      <div className="p-2">{<Icon className="size-4" />}</div>
+      {!isCollapsed && <span className="">{label}</span>}
     </Link>
   );
 };

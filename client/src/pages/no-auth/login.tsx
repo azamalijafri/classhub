@@ -93,6 +93,14 @@ const LoginPage: React.FC = () => {
               </Button>
             </div>
           </form>
+          <div className="mt-4">
+            <span
+              className="text-sm underline underline-offset-2 cursor-pointer transition-all"
+              onClick={() => navigate("/register")}
+            >
+              Create an account
+            </span>
+          </div>
         </CardContent>
       </Card>
     </div>
