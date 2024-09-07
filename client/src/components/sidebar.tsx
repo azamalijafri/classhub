@@ -75,9 +75,9 @@ const SidebarItem = ({
 
   return (
     <Link
-      className={`flex items-center justify-start transition rounded-md p-2 ${
-        !isCollapsed && "border-[1px]"
-      } ${href == pathname && "bg-primary text-white"}`}
+      className={`flex items-center justify-start transition rounded-md p-2 border-[1px] ${
+        href == pathname && "bg-primary text-white"
+      }`}
       to={href}
     >
       <div className="p-2">{<Icon className="size-4" />}</div>

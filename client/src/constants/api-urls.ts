@@ -2,6 +2,9 @@ export const apiUrls = {
   noauth: {
     login: "/login",
   },
+  school: {
+    registerPrincipal: "/register",
+  },
   classroom: {
     createClassroom: "/create/classroom",
     getAllClassrooms: "/get/all/classrooms",

@@ -3,6 +3,7 @@ import { Schema, model, Document, Types } from "mongoose";
 export interface ISchool extends Document {
   name: string;
   principal: Types.ObjectId;
+  schoolCode: string;
   address?: string;
   contactInfo?: string;
   createdAt: Date;
@@ -15,6 +16,10 @@ const SchoolSchema = new Schema<ISchool>(
     principal: {
       type: Schema.Types.ObjectId,
       ref: "Principal",
+      required: true,
+    },
+    schoolCode: {
+      type: String,
       required: true,
     },
     address: { type: String },

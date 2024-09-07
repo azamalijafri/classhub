@@ -24,7 +24,6 @@ const CreateTeacherModal = () => {
     defaultValues: {
       name: "",
       email: "",
-      password: "",
     },
   });
 
@@ -72,15 +71,8 @@ const CreateTeacherModal = () => {
               name="email"
               placeholder="Enter Email"
               type="email"
+              description="We will send teacher's credentials on this email"
               error={errors.email?.message}
-            />
-            <TextInput
-              label="Password"
-              control={form.control}
-              name="password"
-              placeholder="Enter Password"
-              type="password"
-              error={errors.password?.message}
             />
             <Button
               isLoading={isSubmitting}

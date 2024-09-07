@@ -12,7 +12,7 @@ interface AuthState {
 }
 
 interface AuthActions {
-  login: (credentials: Credentials) => Promise<void>;
+  login: (credentials: Credentials) => Promise<boolean | undefined>;
   logout: () => void;
   // fetchUser: () => Promise<void>;
   fetchProfile: () => Promise<void>;
@@ -94,6 +94,7 @@ const useAuthStore = create<AuthStore>((set, get) => ({
         localStorage.setItem("role", user?.role);
 
         await get().fetchProfile();
+        return true;
       } else {
         set({ isLoading: false, isError: response.data.message });
       }

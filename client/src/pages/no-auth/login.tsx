@@ -6,6 +6,7 @@ import useAuthStore from "../../stores/auth-store";
 import { useToast } from "../../components/ui/use-toast";
 import { validateEmail } from "../../lib/utils";
 import { useNavigate } from "react-router-dom";
+import { useShowToast } from "@/hooks/useShowToast";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -14,6 +15,7 @@ const LoginPage: React.FC = () => {
   const { login, isLoading } = useAuthStore();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { showToast } = useShowToast();
 
   const handleLogin = async (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>
@@ -27,8 +29,16 @@ const LoginPage: React.FC = () => {
       });
       return;
     }
-    await login({ email, password });
-    navigate("/", { replace: true });
+    const response = await login({ email, password });
+    if (response) {
+      console.log("reached");
+
+      showToast({
+        title: "Request Success",
+        description: "Successfully logged in!",
+      });
+      navigate("/", { replace: true });
+    }
   };
 
   useEffect(() => {

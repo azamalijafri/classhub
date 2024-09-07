@@ -1,36 +1,45 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
-import useAuthStore from "../../stores/auth-store";
 import { useToast } from "../../components/ui/use-toast";
-import { validateEmail } from "../../lib/utils";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "@/lib/axios-instance";
+import { apiUrls } from "@/constants/api-urls";
+import { useForm } from "react-hook-form";
+import { RegisterFormValues, registerSchema } from "@/validators/register";
+import { Form } from "@/components/ui/form";
+import TextInput from "@/components/inputs/text-input";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const RegisterPage: React.FC = () => {
-  const [schoolName, setSchoolName] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      schoolName: "",
+      email: "",
+      password: "",
+      principalName: "",
+      schoolCode: "",
+    },
+  });
 
-  const { isLoading } = useAuthStore();
+  const { isSubmitting, errors } = form.formState;
+
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleRegister = async (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => {
-    e.preventDefault();
-    if (!schoolName || !name || !validateEmail(email) || !password) {
+  const handleRegister = async (values: RegisterFormValues) => {
+    const response = await axiosInstance.post(
+      apiUrls.school.registerPrincipal,
+      values
+    );
+    if (response) {
       toast({
-        title: "Invalid Entry",
-        description: "Please fill in all fields with valid information",
-        variant: "destructive",
+        title: "Request Succes",
+        description: "Registered Successfully",
       });
-      return;
+      navigate("/login", { replace: true });
     }
-    // await registerPrincipal({ schoolName, name, email, password });
-    navigate("/login", { replace: true });
   };
 
   useEffect(() => {
@@ -46,91 +55,63 @@ const RegisterPage: React.FC = () => {
           </h4>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4">
-            <div>
-              <label
-                htmlFor="schoolName"
-                className="block text-sm font-medium text-gray-700"
-              >
-                School Name
-              </label>
-              <Input
-                value={schoolName}
-                onChange={(e) => setSchoolName(e.target.value)}
-                id="schoolName"
+          <Form {...form}>
+            <form
+              className="space-y-4"
+              onSubmit={form.handleSubmit(handleRegister)}
+            >
+              <TextInput
+                control={form.control}
+                label="School Name"
                 name="schoolName"
+                placeholder="Enter School Name"
                 type="text"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                placeholder="Enter your school name"
+                error={errors.schoolName?.message}
               />
-            </div>
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Your Name
-              </label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                id="name"
-                name="name"
+              <TextInput
+                control={form.control}
+                label="School Code"
+                name="schoolCode"
+                placeholder="Enter School Abbreviation"
                 type="text"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                placeholder="Enter your name"
+                description="This will be used in your school emails"
+                error={errors.schoolCode?.message}
               />
-            </div>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email address
-              </label>
-              <Input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                id="email"
+              <TextInput
+                control={form.control}
+                label="Principal Name"
+                name="principalName"
+                placeholder="Enter Principal Name"
+                type="text"
+                error={errors.principalName?.message}
+              />
+              <TextInput
+                control={form.control}
+                label="Email"
                 name="email"
+                placeholder="Enter Email"
                 type="email"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                placeholder="Enter your email"
+                error={errors.email?.message}
               />
-            </div>
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <Input
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                id="password"
+              <TextInput
+                control={form.control}
+                label="Password"
                 name="password"
+                placeholder="Enter Password"
                 type="password"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                placeholder="••••••••"
+                error={errors.password?.message}
               />
-            </div>
-            <div>
               <Button
-                disabled={isLoading}
-                onClick={handleRegister}
+                disabled={isSubmitting}
                 type="submit"
-                isLoading={isLoading}
+                isLoading={isSubmitting}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white"
               >
                 Register
               </Button>
-            </div>
-          </form>
+            </form>
+          </Form>
+
           <div className="mt-4">
             <span
               className="text-sm underline underline-offset-2 cursor-pointer transition-all"

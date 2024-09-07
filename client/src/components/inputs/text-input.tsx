@@ -11,6 +11,7 @@ const TextInput = ({
   placeholder,
   type,
   error,
+  description,
 }: {
   control: Control<any>;
   name: string;
@@ -18,6 +19,7 @@ const TextInput = ({
   placeholder: string;
   type: "text" | "email" | "password";
   error?: string;
+  description?: string;
 }) => {
   return (
     <FormField
@@ -27,7 +29,10 @@ const TextInput = ({
         <FormItem>
           <FormControl>
             <div className="flex flex-col gap-y-2">
-              <Label>{label}</Label>
+              <Label className="text-base">{label}</Label>
+              {description && (
+                <span className="text-xs text-zinc-500">{description}</span>
+              )}
               <Input {...field} placeholder={placeholder} type={type} />
               {error && <span className="text-xs text-red-500">{error}</span>}
             </div>

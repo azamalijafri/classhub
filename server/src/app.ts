@@ -5,6 +5,7 @@ import roleRoutes from "./routes/profile-routes";
 import classroomRoutes from "./routes/classroom-routes";
 import timetableRoutes from "./routes/timetable-routes";
 import teachersRoutes from "./routes/teacher-routes";
+import schoolRoutes from "./routes/school-routes";
 import dotenv from "dotenv";
 import cors from "cors";
 
@@ -17,6 +18,8 @@ app.use(cors());
 connectDB();
 
 app.use("/api", userRoutes);
+app.use("/api", schoolRoutes);
+
 app.use("/api", roleRoutes);
 app.use("/api", classroomRoutes);
 app.use("/api", timetableRoutes);
