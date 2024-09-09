@@ -6,37 +6,41 @@ import { DialogTitle } from "@radix-ui/react-dialog";
 import { Form } from "../ui/form";
 import { useForm } from "react-hook-form";
 import {
-  CreateTeacherFormValues,
-  createTeacherSchema,
-} from "../../validators/create-teacher";
+  CreateStudentFormValues,
+  createStudentSchema,
+} from "../../validators/create-profile";
 import TextInput from "../inputs/text-input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axiosInstance from "../../lib/axios-instance";
 import { apiUrls } from "../../constants/api-urls";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CreateStudentModal = () => {
   const { modals, closeModal } = useModal();
   const modal = modals.find((modal) => modal.type == "create-student");
 
   const { showToast } = useShowToast();
-  const form = useForm<CreateTeacherFormValues>({
-    resolver: zodResolver(createTeacherSchema),
+  const form = useForm<CreateStudentFormValues>({
+    resolver: zodResolver(createStudentSchema),
     defaultValues: {
       name: "",
       email: "",
-      password: "",
+      roll: "",
     },
   });
 
   const { isValid, isSubmitting, errors } = form.formState;
 
-  const handleSubmit = async (values: CreateTeacherFormValues) => {
+  const queryClient = useQueryClient();
+
+  const handleSubmit = async (values: CreateStudentFormValues) => {
     const response = await axiosInstance.post(
       apiUrls.student.createStudent,
       values
     );
 
     if (response) {
+      queryClient.refetchQueries({queryKey:["all","students"]})
       showToast({
         title: "Request Success",
         description: "Student has been created successfully",
@@ -72,15 +76,16 @@ const CreateStudentModal = () => {
               name="email"
               placeholder="Enter Email"
               type="email"
+              description="We will send student's credentials on this email"
               error={errors.email?.message}
             />
             <TextInput
-              label="Password"
+              label="Roll No"
               control={form.control}
-              name="password"
-              placeholder="Enter Password"
-              type="password"
-              error={errors.password?.message}
+              name="roll"
+              placeholder="Enter Student Roll No"
+              type="text"
+              error={errors.roll?.message}
             />
             <Button
               isLoading={isSubmitting}

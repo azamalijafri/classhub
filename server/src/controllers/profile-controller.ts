@@ -7,6 +7,7 @@ import Principal from "../models/principal";
 import passwordGenerator from "generate-password";
 import School, { ISchool } from "../models/school";
 import nodemailer from "nodemailer";
+import { getSchool } from "../libs/utils";
 
 let randomCount = 0;
 
@@ -22,7 +23,7 @@ const generateUniqueEmail = async (baseEmail: string) => {
   while (existingUser) {
     const emailParts = baseEmail.split("@");
     randomCount += 1;
-    email = `${emailParts[0]}${randomCount}@${emailParts[1]}`;
+    email = `${emailParts[0]}.${randomCount}@${emailParts[1]}`;
     existingUser = await User.findOne({ email });
   }
 
@@ -74,13 +75,15 @@ const createUserAndProfile = async (
       numbers: true,
     });
 
-    name = name.replace(/\s+/g, "").toLowerCase();
+    const emailName = name.replace(/\s+/g, "").toLowerCase();
     let userSchoolEmail;
 
     if (rollNo) {
-      userSchoolEmail = `${name}.${rollNo}@${school.schoolCode}.edu.com`;
+      userSchoolEmail = `${emailName}.${rollNo.toLowerCase()}@${
+        school.schoolCode
+      }.edu.com`;
     } else {
-      userSchoolEmail = `${name}@${school.schoolCode}.edu.com`;
+      userSchoolEmail = `${emailName}@${school.schoolCode}.edu.com`;
     }
 
     const uniqueEmail = await generateUniqueEmail(userSchoolEmail);
@@ -96,7 +99,7 @@ const createUserAndProfile = async (
 
     let profile;
     if (role === "student") {
-      profile = new Student({ user: user._id, name, school: school._id });
+      profile = new Student({ user: user._id, name, school: school._id, rollNo:rollNo });
     } else if (role === "teacher") {
       profile = new Teacher({ user: user._id, name, school: school._id });
     }
@@ -119,20 +122,6 @@ const createUserAndProfile = async (
   }
 };
 
-const getSchool = async (req: Request) => {
-  const principalProfile = await Principal.findOne({ user: req.user._id });
-  if (principalProfile) {
-    const school = await School.findOne({ principal: principalProfile._id });
-    if (school) {
-      return school;
-    } else {
-      throw new Error("School not found");
-    }
-  } else {
-    throw new Error("Principal not found");
-  }
-};
-
 export const createTeacher = async (req: Request, res: Response) => {
   const { name, email } = req.body;
   try {
@@ -144,10 +133,10 @@ export const createTeacher = async (req: Request, res: Response) => {
 };
 
 export const createStudent = async (req: Request, res: Response) => {
-  const { name, email, rollNo } = req.body;
+  const { name, email, roll } = req.body;
   try {
     const school = await getSchool(req);
-    await createUserAndProfile(name, email, "student", res, school, rollNo);
+    await createUserAndProfile(name, email, "student", res, school, roll);
   } catch (error: any) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

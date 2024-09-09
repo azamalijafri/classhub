@@ -22,7 +22,7 @@ export const Navbar = () => {
           onClick={() => navigate("/")}
         >
           <PresentationIcon />
-          <h1 className="text-xl text-primary">Classroom</h1>
+          <h1 className="text-xl text-primary">Cloud Campus</h1>
         </div>
       </div>
       <div className="flex gap-x-4">

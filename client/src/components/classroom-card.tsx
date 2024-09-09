@@ -69,7 +69,7 @@ const ClassroomCard = ({ classroom }: { classroom: IClassroom }) => {
 
         <span
           onClick={() => navigate(`/class/${classroom._id}/timetable`)}
-          className="hover:underline underline-offset-2 cursor-pointer transition"
+          className="hover:underline underline-offset-2 cursor-pointer transition w-fit"
         >
           {classroom.name}
         </span>

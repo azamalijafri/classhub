@@ -23,6 +23,7 @@ export const apiUrls = {
   },
   student: {
     createStudent: "/create/student",
+    getAllStudents: "/get/all/students"
   },
   timetable: {
     getTimetable: "/get/timetable",

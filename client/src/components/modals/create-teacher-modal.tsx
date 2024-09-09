@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import {
   CreateTeacherFormValues,
   createTeacherSchema,
-} from "../../validators/create-teacher";
+} from "../../validators/create-profile";
 import TextInput from "../inputs/text-input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axiosInstance from "../../lib/axios-instance";

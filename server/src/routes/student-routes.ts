@@ -9,7 +9,7 @@ router.use(authenticateUser);
 
 router.get(
   "/get/all/students",
-  requireRole(["principal", "teacher"]),
+  requireRole(["principal"]),
   getAllStudent
 );
 

@@ -8,6 +8,7 @@ import {
 import { Types } from "mongoose";
 import Teacher from "../models/teacher";
 import Student from "../models/student";
+import { getSchool } from "../libs/utils";
 
 export const createClassroom = async (req: Request, res: Response) => {
   try {
@@ -25,7 +26,12 @@ export const createClassroom = async (req: Request, res: Response) => {
 
     const { name, days } = result.data;
 
-    const existingClassroom = await Classroom.findOne({ name });
+    const school = await getSchool(req);
+
+    const existingClassroom = await Classroom.findOne({
+      name,
+      school: school._id,
+    });
 
     if (existingClassroom)
       return res.status(409).json({
@@ -35,6 +41,7 @@ export const createClassroom = async (req: Request, res: Response) => {
     const classroom = new Classroom({
       name,
       days,
+      school: school._id,
     });
 
     await classroom.save();
@@ -43,6 +50,8 @@ export const createClassroom = async (req: Request, res: Response) => {
       classroom,
     });
   } catch (error) {
+    console.log("create-classroom: ", error);
+
     return res.status(500).json({ message: "Error creating classroom", error });
   }
 };

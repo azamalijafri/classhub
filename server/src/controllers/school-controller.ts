@@ -5,6 +5,7 @@ import { registerSchema } from "../validation/school-schema";
 import Principal from "../models/principal";
 import School from "../models/school";
 import { z } from "zod";
+import { Types } from "mongoose";
 
 export const registerPrincipal = async (req: Request, res: Response) => {
   try {
@@ -33,6 +34,8 @@ export const registerPrincipal = async (req: Request, res: Response) => {
       principal: principal._id,
       schoolCode,
     });
+
+    principal.school = school._id as Types.ObjectId;
 
     res.status(201).json({
       message: "Principal and school registered successfully",
