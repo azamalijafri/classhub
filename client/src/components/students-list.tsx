@@ -3,13 +3,22 @@ import { useQuery } from "@tanstack/react-query";
 import { useLoading } from "@/stores/loader-store";
 import axiosInstance from "@/lib/axios-instance";
 import { apiUrls } from "@/constants/api-urls";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "./ui/checkbox";
+import { useModal } from "@/stores/modal-store";
 
 const StudentsList = ({ queryKey }: { queryKey: string }) => {
   const { isLoading, startLoading, stopLoading } = useLoading();
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const { openModal } = useModal();
 
   const fetchStudents = async () => {
     startLoading();
@@ -31,7 +40,6 @@ const StudentsList = ({ queryKey }: { queryKey: string }) => {
     console.log("Block student", student);
   };
 
-  // Toggle student selection
   const toggleSelectStudent = (studentId: string) => {
     setSelectedStudents((prevSelected) =>
       prevSelected.includes(studentId)
@@ -40,9 +48,8 @@ const StudentsList = ({ queryKey }: { queryKey: string }) => {
     );
   };
 
-  // Assign students
   const handleAssign = () => {
-    console.log("Assigning students with IDs:", selectedStudents);
+    openModal("assign-students", { selectedStudents });
   };
 
   if (isLoading) return null;
@@ -52,9 +59,15 @@ const StudentsList = ({ queryKey }: { queryKey: string }) => {
       {/* Assign button */}
       <div className="flex justify-between items-center">
         {/* {selectedStudents.length > 0 && ( */}
-          <Button variant="default" onClick={handleAssign} className={`${selectedStudents.length > 0 ? "opacity-100" : "opacity-0"} transition`}>
-            Assign Class
-          </Button>
+        <Button
+          variant="default"
+          onClick={handleAssign}
+          className={`${
+            selectedStudents.length > 0 ? "opacity-100" : "opacity-0"
+          } transition`}
+        >
+          Assign Class
+        </Button>
         {/* )} */}
       </div>
 
@@ -64,37 +77,64 @@ const StudentsList = ({ queryKey }: { queryKey: string }) => {
         <Table className="border border-gray-300">
           <TableHeader>
             <TableRow className="bg-gray-100">
-              <TableHead className="py-2 px-4 border border-gray-300">Select</TableHead>
-              <TableHead className="py-2 px-4 border border-gray-300">Name</TableHead>
-              <TableHead className="py-2 px-4 border border-gray-300">Email</TableHead>
-              <TableHead className="py-2 px-4 border border-gray-300">Class</TableHead>
-              <TableHead className="py-2 px-4 border border-gray-300">Roll No</TableHead>
-              <TableHead className="py-2 px-4 border border-gray-300">Actions</TableHead>
+              <TableHead className="py-2 px-4 border border-gray-300">
+                Select
+              </TableHead>
+              <TableHead className="py-2 px-4 border border-gray-300">
+                Name
+              </TableHead>
+              <TableHead className="py-2 px-4 border border-gray-300">
+                Email
+              </TableHead>
+              <TableHead className="py-2 px-4 border border-gray-300">
+                Class
+              </TableHead>
+              <TableHead className="py-2 px-4 border border-gray-300">
+                Roll No
+              </TableHead>
+              <TableHead className="py-2 px-4 border border-gray-300">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {students.map((student: IStudent) => (
-              <TableRow key={student._id} className="even:bg-gray-50 odd:bg-white">
+              <TableRow
+                key={student._id}
+                className="even:bg-gray-50 odd:bg-white"
+              >
                 <TableCell className="py-2 px-4 border border-gray-300">
-                  {!student.classroom && (
-                    <Checkbox 
+                  {/* {!student.classroom && ( */}
+                  <Checkbox
                     checked={selectedStudents.includes(student._id)}
                     onClick={() => toggleSelectStudent(student._id)}
-                    />
-                  )}
+                  />
+                  {/* )} */}
                 </TableCell>
-                <TableCell className="py-2 px-4 border border-gray-300">{student.name}</TableCell>
-                <TableCell className="py-2 px-4 border border-gray-300">{student.user.email}</TableCell>
+                <TableCell className="py-2 px-4 border border-gray-300">
+                  {student.name}
+                </TableCell>
+                <TableCell className="py-2 px-4 border border-gray-300">
+                  {student.user.email}
+                </TableCell>
                 <TableCell className="py-2 px-4 border border-gray-300">
                   {student.classroom?.name ?? `N/A`}
                 </TableCell>
-                <TableCell className="py-2 px-4 border border-gray-300">{student.rollNo}</TableCell>
+                <TableCell className="py-2 px-4 border border-gray-300">
+                  {student.rollNo}
+                </TableCell>
                 <TableCell className="py-2 px-4 border border-gray-300">
                   <div className="flex space-x-2">
-                    <Button variant="default" onClick={() => handleEdit(student)}>
+                    <Button
+                      variant="default"
+                      onClick={() => handleEdit(student)}
+                    >
                       Edit
                     </Button>
-                    <Button variant="destructive" onClick={() => handleBlock(student)}>
+                    <Button
+                      variant="destructive"
+                      onClick={() => handleBlock(student)}
+                    >
                       Block
                     </Button>
                   </div>

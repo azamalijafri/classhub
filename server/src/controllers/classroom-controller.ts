@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Classroom from "../models/classroom";
 import {
-  assignStudentSchema,
+  assignStudentsSchema,
   assignTeacherSchema,
   createClassroomSchema,
 } from "../validation/classroom-schema";
@@ -111,45 +111,60 @@ export const assignTeacherToClassroom = async (req: Request, res: Response) => {
   }
 };
 
-export const assignStudentToClassroom = async (req: Request, res: Response) => {
+export const assignStudentsToClassroom = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const { studentId, classroomId } = assignStudentSchema.parse(req.body);
+    const { studentsIds, classroomId } = assignStudentsSchema.parse(req.body);
 
     const classroom = await Classroom.findById(classroomId);
     if (!classroom) {
       return res.status(404).json({ message: "Classroom not found" });
     }
 
-    const student = await Student.findById(studentId);
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
+    const successfullyAssignedStudents: string[] = [];
+
+    for (const studentId of studentsIds) {
+      const student = await Student.findById(studentId);
+      if (!student) {
+        return res
+          .status(404)
+          .json({ message: `Student with ID ${studentId} not found` });
+      }
+
+      // if (student.classroom) {
+      //   return res
+      //     .status(400)
+      //     .json({
+      //       message: `${student.name} is already assigned to a classroom`,
+      //     });
+      // }
+
+      student.classroom = new Types.ObjectId(classroomId);
+      await student.save();
+
+      successfullyAssignedStudents.push(studentId);
     }
-
-    if (student.classroom) {
-      return res
-        .status(400)
-        .json({ message: "Student is already assigned to a classroom" });
-    }
-
-    await classroom.save();
-
-    student.classroom = new Types.ObjectId(classroomId);
-    await student.save();
 
     res.status(200).json({
-      message: "Student assigned to classroom successfully",
+      message: "Students assigned to classroom successfully",
+      assignedStudents: successfullyAssignedStudents,
       classroom,
     });
   } catch (error) {
     res
       .status(500)
-      .json({ message: "Error assigning student to classroom", error });
+      .json({ message: "Error assigning students to classroom", error });
   }
 };
 
 export const getAllClassrooms = async (req: Request, res: Response) => {
   try {
-    const classrooms = await Classroom.find().populate("teacher");
+    const school = await getSchool(req);
+    const classrooms = await Classroom.find({ school: school._id }).populate(
+      "teacher"
+    );
 
     res.status(200).json({
       message: "Classrooms fetched successfully",
@@ -239,6 +254,19 @@ export const updateClassroom = async (req: Request, res: Response) => {
     }
 
     const { name, days } = result.data;
+
+    const existingClassroomWithSameName = await Classroom.findOne({
+      name,
+      school: req.user.profile.school,
+    });
+
+    if (
+      existingClassroomWithSameName &&
+      existingClassroomWithSameName._id != classId
+    )
+      return res.status(401).json({
+        message: "Classroom with this name already present",
+      });
 
     const existingClassroom = await Classroom.findById(classId);
 

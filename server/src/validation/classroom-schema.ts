@@ -39,7 +39,14 @@ export const assignTeacherSchema = z.object({
   classroomId: z.string().min(1, "Classroom ID is required"),
 });
 
-export const assignStudentSchema = z.object({
-  studentId: z.string().min(1, "Student ID is required"),
+// export const assignStudentSchema = z.object({
+//   studentId: z.string().min(1, "Student ID is required"),
+//   classroomId: z.string().min(1, "Classroom ID is required"),
+// });
+
+export const assignStudentsSchema = z.object({
+  studentsIds: z
+    .array(z.string().min(1, "Student ID cannot be empty"))
+    .nonempty("At least one student must be selected"),
   classroomId: z.string().min(1, "Classroom ID is required"),
 });

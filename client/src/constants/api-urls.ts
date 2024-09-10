@@ -13,6 +13,7 @@ export const apiUrls = {
     getClassroomDays: "/get/classroom/days",
     removeClassroom: "/remove/classroom",
     updateClassroom: "/update/classroom",
+    assignStudents: "/assign/students",
   },
   user: {
     getMyProfile: "/get/my/profile",
@@ -23,7 +24,7 @@ export const apiUrls = {
   },
   student: {
     createStudent: "/create/student",
-    getAllStudents: "/get/all/students"
+    getAllStudents: "/get/all/students",
   },
   timetable: {
     getTimetable: "/get/timetable",

@@ -7,11 +7,13 @@ type ModalType =
   | "assign-teacher"
   | "confirm"
   | "edit-timetable"
+  | "assign-students"
   | null;
 
 type ModalData = {
   classId?: string;
   performingAction?: () => void;
+  selectedStudents?: string[]
 } | null;
 
 interface Modal {

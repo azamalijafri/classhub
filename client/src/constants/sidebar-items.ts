@@ -1,4 +1,4 @@
-import { LayoutDashboardIcon, UsersIcon } from "lucide-react";
+import { BookType, LayoutDashboardIcon, UsersIcon } from "lucide-react";
 
 export const PrincipalItems = [
   {
@@ -9,7 +9,7 @@ export const PrincipalItems = [
   {
     label: "Teachers",
     href: "/teachers",
-    icon: UsersIcon,
+    icon: BookType,
   },
   {
     label: "Students",

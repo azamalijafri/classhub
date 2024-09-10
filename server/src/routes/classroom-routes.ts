@@ -2,7 +2,7 @@ import { Router } from "express";
 import { authenticateUser } from "../middlewares/auth-middleware";
 import { requireRole } from "../middlewares/role-middleware";
 import {
-  assignStudentToClassroom,
+  assignStudentsToClassroom,
   assignTeacherToClassroom,
   createClassroom,
   deleteClassroom,
@@ -25,9 +25,9 @@ router.post(
 );
 
 router.post(
-  "/assign/student",
-  requireRole(["principal", "teacher"]),
-  assignStudentToClassroom
+  "/assign/students",
+  requireRole(["principal"]),
+  assignStudentsToClassroom
 );
 
 router.get("/get/all/classrooms", requireRole(["principal"]), getAllClassrooms);
