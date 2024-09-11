@@ -1,5 +1,11 @@
+import ClassStudentsList from "@/components/students/class-students-list";
+
 const ClassStudents = () => {
-  return <div>ClassStudents</div>;
+  return (
+    <div>
+      <ClassStudentsList queryKey="class" />
+    </div>
+  );
 };
 
 export default ClassStudents;

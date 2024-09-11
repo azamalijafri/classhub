@@ -161,16 +161,17 @@ export const assignStudentsToClassroom = async (
 
 export const getAllClassrooms = async (req: Request, res: Response) => {
   try {
-    const school = await getSchool(req);
-    const classrooms = await Classroom.find({ school: school._id }).populate(
-      "teacher"
-    );
+    const classrooms = await Classroom.find({
+      school: req.user.profile.school,
+    }).populate("teacher");
 
     res.status(200).json({
       message: "Classrooms fetched successfully",
       classrooms,
     });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({ message: "Error fetching classrooms", error });
   }
 };

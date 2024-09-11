@@ -1,11 +1,11 @@
-import StudentsList from "@/components/students-list"
+import StudentsList from "@/components/students/all-students-list";
 
 const Students = () => {
   return (
     <div>
-      <StudentsList queryKey="all"/>
+      <StudentsList queryKey="all" />
     </div>
-  )
-}
+  );
+};
 
-export default Students
+export default Students;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import axiosInstance from "@/lib/axios-instance";
@@ -150,9 +151,16 @@ const EditTimetableModal: React.FC = () => {
 
   const handleSaveTimetable = async () => {
     setIsLoading(true);
+
+    const timetableData = timetable.map((schedule: any) => {
+      return { ...schedule, day: schedule.day };
+    });
+
+    console.log(timetableData);
+
     const response = await axiosInstance.post(
       apiUrls.timetable.updateTimetable,
-      { timetableData: timetable, classroomId: classId }
+      { timetableData: timetableData, classroomId: classId }
     );
 
     if (response) {
@@ -166,6 +174,7 @@ const EditTimetableModal: React.FC = () => {
       });
       closeModal();
     }
+
     setIsLoading(false);
   };
 
@@ -319,7 +328,12 @@ const EditTimetableModal: React.FC = () => {
         </div>
       )}
       <DialogFooter className="mx-auto flex gap-x-4 mt-4">
-        <Button onClick={handleSaveTimetable} isLoading={isLoading}>
+        <Button
+          onClick={handleSaveTimetable}
+          isLoading={isLoading}
+          disabled={isLoading}
+          className="w-full"
+        >
           Save Timetable
         </Button>
         <Button variant={"outline"} onClick={() => closeModal()}>

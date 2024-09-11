@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Day } from "../enums/days"; // Ensure this is the correct path to your enums
+import { Day } from "../enums/days";
 
 const PeriodSchema = z.object({
   subject: z.string().min(1, "Subject is required"),
@@ -17,6 +17,6 @@ const TimetableEntrySchema = z.object({
 });
 
 export const updateTimetableSchema = z.object({
-  classroomId: z.string().length(24, "Invalid classroom ID"), // Adjust the length if needed
+  classroomId: z.string().length(24, "Invalid classroom ID"),
   timetableData: z.array(TimetableEntrySchema),
 });

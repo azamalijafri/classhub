@@ -1,9 +1,10 @@
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
-import { Button } from "./ui/button";
+import { Button, buttonVariants } from "./ui/button";
 import { useCallback, useEffect, useState } from "react";
 import axiosInstance from "../lib/axios-instance";
 import { apiUrls } from "../constants/api-urls";
 import { useModal } from "../stores/modal-store";
+import { cn } from "@/lib/utils";
 
 const tabs = [
   { label: "Timetable", path: "timetable" },
@@ -48,6 +49,9 @@ const ClassDetailsLayout = () => {
               <span>{tab.label}</span>
             </div>
           ))}
+        </div>
+        <div className={cn(buttonVariants({ variant: "outline" }))}>
+          <h3>{classroom?.name}</h3>
         </div>
         <div className="flex items-center gap-x-5">
           <div>
