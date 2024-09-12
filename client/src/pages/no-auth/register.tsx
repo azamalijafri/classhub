@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import { useToast } from "../../components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "@/lib/axios-instance";
 import { apiUrls } from "@/constants/api-urls";
@@ -25,7 +24,6 @@ const RegisterPage: React.FC = () => {
 
   const { isSubmitting, errors } = form.formState;
 
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleRegister = async (values: RegisterFormValues) => {
@@ -34,10 +32,6 @@ const RegisterPage: React.FC = () => {
       values
     );
     if (response) {
-      toast({
-        title: "Request Succes",
-        description: "Registered Successfully",
-      });
       navigate("/login", { replace: true });
     }
   };

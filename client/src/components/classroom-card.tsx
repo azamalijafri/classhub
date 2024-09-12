@@ -8,7 +8,6 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-import { useShowToast } from "@/hooks/useShowToast";
 import axiosInstance from "@/lib/axios-instance";
 import { apiUrls } from "@/constants/api-urls";
 import { useQueryClient } from "@tanstack/react-query";
@@ -16,7 +15,6 @@ import { useModal } from "@/stores/modal-store";
 
 const ClassroomCard = ({ classroom }: { classroom: IClassroom }) => {
   const navigate = useNavigate();
-  const { showToast } = useShowToast();
   const { openModal } = useModal();
 
   const queryClient = useQueryClient();
@@ -27,11 +25,6 @@ const ClassroomCard = ({ classroom }: { classroom: IClassroom }) => {
     );
     if (response) {
       queryClient.refetchQueries({ queryKey: ["classrooms"] });
-
-      showToast({
-        title: "Request Success",
-        description: "Classroom has been deleted successfully!",
-      });
     }
   };
 

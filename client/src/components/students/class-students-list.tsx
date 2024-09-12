@@ -12,11 +12,13 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useParams } from "react-router-dom";
+import { useModal } from "@/stores/modal-store";
 
 const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
   const { isLoading, startLoading, stopLoading } = useLoading();
   //   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const { classId } = useParams();
+  const { openModal } = useModal();
 
   const fetchStudents = async () => {
     startLoading();
@@ -27,7 +29,7 @@ const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
     return response.data.students;
   };
 
-  const { data: students = [] } = useQuery({
+  const { data: students = [], refetch } = useQuery({
     queryKey: [queryKey, "students"],
     queryFn: fetchStudents,
   });
@@ -39,6 +41,11 @@ const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
   //         : [...prevSelected, studentId]
   //     );
   //   };
+
+  const kickStudent = async (studentId: string) => {
+    await axiosInstance.put(`${apiUrls.classroom.kickStudent}/${studentId}`);
+    refetch();
+  };
 
   if (isLoading) return null;
 
@@ -90,7 +97,18 @@ const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
                 </TableCell>
                 <TableCell className="py-2 px-4 border border-gray-300">
                   <div className="flex space-x-2">
-                    <Button variant={"destructive"}>Kick</Button>
+                    <Button
+                      variant={"destructive"}
+                      onClick={() =>
+                        openModal("confirm", {
+                          performingAction() {
+                            kickStudent(student._id);
+                          },
+                        })
+                      }
+                    >
+                      Kick
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>

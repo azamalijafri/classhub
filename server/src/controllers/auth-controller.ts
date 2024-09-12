@@ -3,18 +3,10 @@ import User from "../models/user";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { userSchema } from "../validation/user-schema";
+import { validate } from "../libs/utils";
 
 export const login = async (req: Request, res: Response) => {
-  const result = userSchema.safeParse(req.body);
-
-  if (!result.success) {
-    return res.status(400).json({
-      message: "Validation failed",
-      errors: result.error.errors[0].path,
-    });
-  }
-
-  const { email, password } = result.data;
+  const { email, password } = validate(userSchema, req.body, res);
 
   try {
     const user = await User.findOne({ email });

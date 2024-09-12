@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useModal } from "../../stores/modal-store";
 import { Button } from "../ui/button";
 import { DialogDescription, DialogFooter } from "../ui/dialog";
@@ -7,6 +8,7 @@ const ConfirmModal = () => {
   const { modals, closeModal } = useModal();
   const modal = modals.find((modal) => modal.type == "confirm");
   const performingAction = modal?.data?.performingAction;
+  const [loading, setLoading] = useState(false);
 
   return (
     <ModalLayout isOpen={!!modal}>
@@ -15,9 +17,13 @@ const ConfirmModal = () => {
       </DialogDescription>
       <DialogFooter className="mx-auto flex gap-x-4">
         <Button
+          isLoading={loading}
+          disabled={loading}
           onClick={() => {
+            setLoading(true);
             performingAction!();
             closeModal();
+            setLoading(false);
           }}
         >
           Confirm

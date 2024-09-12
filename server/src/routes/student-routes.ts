@@ -2,8 +2,11 @@ import { Router } from "express";
 import { authenticateUser } from "../middlewares/auth-middleware";
 import { requireRole } from "../middlewares/role-middleware";
 import {
+  updateStudent,
   getAllStudent,
   getAllStudentByClass,
+  kickStudentFromClass,
+  blockStudent,
 } from "../controllers/student-controller";
 
 const router = Router();
@@ -16,6 +19,24 @@ router.get(
   "/get/students/:classroomId",
   requireRole(["principal", "student", "teacher"]),
   getAllStudentByClass
+);
+
+router.put(
+  "/update/student/:studentId",
+  requireRole(["principal"]),
+  updateStudent
+);
+
+router.put(
+  "/kick/student/:studentId",
+  requireRole(["principal", "teacher"]),
+  kickStudentFromClass
+);
+
+router.put(
+  "/block/student/:studentId",
+  requireRole(["principal"]),
+  blockStudent
 );
 
 export default router;

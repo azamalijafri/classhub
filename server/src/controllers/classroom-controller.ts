@@ -8,23 +8,11 @@ import {
 import { Types } from "mongoose";
 import Teacher from "../models/teacher";
 import Student from "../models/student";
-import { getSchool } from "../libs/utils";
+import { getSchool, validate } from "../libs/utils";
 
 export const createClassroom = async (req: Request, res: Response) => {
   try {
-    const result = createClassroomSchema.safeParse(req.body);
-
-    if (!result.success) {
-      return res.status(400).json({
-        message: "Validation failed",
-        errors: result.error.errors.map((err) => ({
-          path: err.path,
-          message: err.message,
-        })),
-      });
-    }
-
-    const { name, days } = result.data;
+    const { name, days } = validate(createClassroomSchema, req.body, res);
 
     const school = await getSchool(req);
 
@@ -48,6 +36,7 @@ export const createClassroom = async (req: Request, res: Response) => {
     return res.status(201).json({
       message: "Classroom created successfully",
       classroom,
+      showMessage: true,
     });
   } catch (error) {
     console.log("create-classroom: ", error);
@@ -57,7 +46,7 @@ export const createClassroom = async (req: Request, res: Response) => {
 };
 
 export const assignTeacherToClassroom = async (req: Request, res: Response) => {
-  const result = assignTeacherSchema.safeParse(req.body);
+  const result = validate(assignTeacherSchema, req.body, res);
 
   if (!result.success) {
     return res.status(400).json({
@@ -102,6 +91,7 @@ export const assignTeacherToClassroom = async (req: Request, res: Response) => {
     return res.status(200).json({
       message: "Teacher assigned to classroom successfully",
       classroom,
+      showMessage: true,
     });
   } catch (error) {
     return res.status(500).json({
@@ -116,7 +106,11 @@ export const assignStudentsToClassroom = async (
   res: Response
 ) => {
   try {
-    const { studentsIds, classroomId } = assignStudentsSchema.parse(req.body);
+    const { studentsIds, classroomId } = validate(
+      assignStudentsSchema,
+      req.body,
+      res
+    );
 
     const classroom = await Classroom.findById(classroomId);
     if (!classroom) {
@@ -151,6 +145,7 @@ export const assignStudentsToClassroom = async (
       message: "Students assigned to classroom successfully",
       assignedStudents: successfullyAssignedStudents,
       classroom,
+      showMessage: true,
     });
   } catch (error) {
     res
@@ -231,7 +226,8 @@ export const deleteClassroom = async (req: Request, res: Response) => {
     await Classroom.findByIdAndDelete(classroom?._id);
 
     res.status(200).json({
-      message: "Classroom has been deleted successfully",
+      message: "Classroom deleted successfully",
+      showMessage: true,
     });
   } catch (error) {
     res.status(500).json({ message: "Error deleting classroom", error });
@@ -242,19 +238,7 @@ export const updateClassroom = async (req: Request, res: Response) => {
   try {
     const { classId } = req.params;
 
-    const result = createClassroomSchema.safeParse(req.body);
-
-    if (!result.success) {
-      return res.status(400).json({
-        message: "Validation failed",
-        errors: result.error.errors.map((err) => ({
-          path: err.path,
-          message: err.message,
-        })),
-      });
-    }
-
-    const { name, days } = result.data;
+    const { name, days } = validate(createClassroomSchema, req.body, res);
 
     const existingClassroomWithSameName = await Classroom.findOne({
       name,
@@ -281,6 +265,7 @@ export const updateClassroom = async (req: Request, res: Response) => {
 
     return res.status(201).json({
       message: "Classroom updated successfully",
+      showMessage: true,
     });
   } catch (error) {
     return res.status(500).json({ message: "Error creating classroom", error });

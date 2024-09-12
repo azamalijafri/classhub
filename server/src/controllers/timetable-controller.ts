@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Timetable, { IPeriod } from "../models/timetable";
 import Classroom from "../models/classroom";
 import { updateTimetableSchema } from "../validation/timetable-schema";
+import { validate } from "../libs/utils";
 
 const timeToMinutes = (time: string): number => {
   const [hours, minutes] = time.split(":").map(Number);
@@ -27,16 +28,11 @@ const periodsOverlap = (periods: IPeriod[]): boolean => {
 
 export const updateTimetable = async (req: Request, res: Response) => {
   try {
-    const result = updateTimetableSchema.safeParse(req.body);
-
-    if (!result.success) {
-      return res.status(400).json({
-        message: "Validation failed",
-        errors: result.error.errors,
-      });
-    }
-
-    const { classroomId, timetableData } = result.data;
+    const { classroomId, timetableData } = validate(
+      updateTimetableSchema,
+      req.body,
+      res
+    );
 
     const classroom = await Classroom.findById(classroomId);
 
@@ -52,8 +48,6 @@ export const updateTimetable = async (req: Request, res: Response) => {
         message: "Access denied. You are not assigned to this classroom.",
       });
     }
-
-    console.log(classroom);
 
     for (const { day, periods } of timetableData) {
       const timeSlot = classroom.days.find((slot) => slot.day === day);
@@ -100,6 +94,7 @@ export const updateTimetable = async (req: Request, res: Response) => {
 
     return res.status(200).json({
       message: "Timetable updated successfully",
+      showMessage: true,
     });
   } catch (error) {
     return res.status(500).json({ message: "Server error", error });

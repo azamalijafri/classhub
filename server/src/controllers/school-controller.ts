@@ -6,11 +6,15 @@ import Principal from "../models/principal";
 import School from "../models/school";
 import { z } from "zod";
 import { Types } from "mongoose";
+import { validate } from "../libs/utils";
 
 export const registerPrincipal = async (req: Request, res: Response) => {
   try {
-    const { schoolName, principalName, email, password, schoolCode } =
-      registerSchema.parse(req.body);
+    const { schoolName, principalName, email, password, schoolCode } = validate(
+      registerSchema,
+      req.body,
+      res
+    );
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -38,6 +42,7 @@ export const registerPrincipal = async (req: Request, res: Response) => {
     principal.school = school._id as Types.ObjectId;
 
     res.status(201).json({
+      showMessage: true,
       message: "Principal and school registered successfully",
       principal: {
         id: principal._id,

@@ -14,6 +14,7 @@ export const apiUrls = {
     removeClassroom: "/remove/classroom",
     updateClassroom: "/update/classroom",
     assignStudents: "/assign/students",
+    kickStudent: "/kick/student",
   },
   user: {
     getMyProfile: "/get/my/profile",

@@ -1,7 +1,6 @@
 import { useModal } from "../../stores/modal-store";
 import { ModalLayout } from "./modal-layout";
 import { Button } from "../ui/button";
-import { useShowToast } from "../../hooks/useShowToast";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { Form } from "../ui/form";
 import { useForm } from "react-hook-form";
@@ -18,7 +17,6 @@ const CreateTeacherModal = () => {
   const { modals, closeModal } = useModal();
   const modal = modals.find((modal) => modal.type == "create-teacher");
 
-  const { showToast } = useShowToast();
   const form = useForm<CreateTeacherFormValues>({
     resolver: zodResolver(createTeacherSchema),
     defaultValues: {
@@ -36,10 +34,6 @@ const CreateTeacherModal = () => {
     );
 
     if (response) {
-      showToast({
-        title: "Request Success",
-        description: "Teacher has been created successfully",
-      });
       closeModal();
     }
   };

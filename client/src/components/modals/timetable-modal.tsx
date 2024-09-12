@@ -16,7 +16,7 @@ import {
 import { useModal } from "@/stores/modal-store";
 import { Label } from "../ui/label";
 import { useQueryClient } from "@tanstack/react-query";
-import { useShowToast } from "@/hooks/useShowToast";
+import { Loader2 } from "lucide-react";
 
 dayjs.extend(customParseFormat);
 
@@ -40,6 +40,7 @@ const EditTimetableModal: React.FC = () => {
   const modal = modals.find((modal) => modal?.type === "edit-timetable");
   const classId = modal?.data?.classId;
 
+  const [loadingTimetable, setLoadingTimetable] = useState(true);
   const [timetable, setTimetable] = useState<ITimetable[]>([]);
   const [activePeriod, setActivePeriod] = useState<IPeriod | null>(null);
   const [editingPeriod, setEditingPeriod] = useState<number | null>(null);
@@ -73,6 +74,8 @@ const EditTimetableModal: React.FC = () => {
         setTimetable(fetchedTimetable);
       } catch (error) {
         console.error("Failed to fetch timetable:", error);
+      } finally {
+        setLoadingTimetable(false);
       }
     };
 
@@ -147,16 +150,12 @@ const EditTimetableModal: React.FC = () => {
     );
   };
 
-  const { showToast } = useShowToast();
-
   const handleSaveTimetable = async () => {
     setIsLoading(true);
 
     const timetableData = timetable.map((schedule: any) => {
       return { ...schedule, day: schedule.day };
     });
-
-    console.log(timetableData);
 
     const response = await axiosInstance.post(
       apiUrls.timetable.updateTimetable,
@@ -168,10 +167,6 @@ const EditTimetableModal: React.FC = () => {
         queryKey: ["timetable", classId],
       });
 
-      showToast({
-        title: "Request Success",
-        description: "Timetable has been updated successfully!",
-      });
       closeModal();
     }
 
@@ -246,7 +241,11 @@ const EditTimetableModal: React.FC = () => {
                   Day timing: {formatTime(day.startTime)}-
                   {formatTime(day.endTime)}
                 </span>
-                <div>{renderPeriods(day.day)}</div>
+                {loadingTimetable ? (
+                  <Loader2 className="animate-spin size-6 mx-auto mt-4" />
+                ) : (
+                  <div>{renderPeriods(day.day)}</div>
+                )}
               </div>
 
               <div

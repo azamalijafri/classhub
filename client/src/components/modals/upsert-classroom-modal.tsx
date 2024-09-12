@@ -132,12 +132,6 @@ const UpsertClassroomModal = () => {
 
     if (response) {
       queryClient.refetchQueries({ queryKey: ["classrooms"] });
-      showToast({
-        title: "Request Success",
-        description: classId
-          ? "Classroom has been updated successfully"
-          : "Classroom has been created successfully",
-      });
       closeModal();
     }
   };

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Student from "../models/student";
-import { getSchool } from "../libs/utils";
+import { validate } from "../libs/utils";
+import { updateStudentSchema } from "../validation/user-schema";
 
 // get all students of a school
 export const getAllStudent = async (req: Request, res: Response) => {
@@ -31,5 +32,70 @@ export const getAllStudentByClass = async (req: Request, res: Response) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching students", error });
+  }
+};
+
+export const updateStudent = async (req: Request, res: Response) => {
+  try {
+    const { studentId } = req.params;
+
+    const student = await Student.findById(studentId);
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const { name, roll } = validate(updateStudentSchema, req.body, res);
+
+    await student.updateOne({ name, roll });
+    await student.save();
+
+    res
+      .status(200)
+      .json({ message: "Student updated successfully", showMessage: true });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating student", error });
+  }
+};
+
+export const kickStudentFromClass = async (req: Request, res: Response) => {
+  try {
+    const { studentId } = req.params;
+
+    const student = await Student.findById(studentId);
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    await student.updateOne({ classroom: null });
+    await student.save();
+
+    res
+      .status(200)
+      .json({ message: "Student kicked successfully", showMessage: true });
+  } catch (error) {
+    res.status(500).json({ message: "Error kicking student", error });
+  }
+};
+
+export const blockStudent = async (req: Request, res: Response) => {
+  try {
+    const { studentId } = req.params;
+
+    const student = await Student.findById(studentId);
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    await student.updateOne({ status: 0 });
+    await student.save();
+
+    res
+      .status(200)
+      .json({ message: "Student blocked successfully", showMessage: true });
+  } catch (error) {
+    res.status(500).json({ message: "Error blocking student", error });
   }
 };

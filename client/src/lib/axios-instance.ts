@@ -36,7 +36,16 @@ export const setupAxiosInterceptors = (
   );
 
   axiosInstance.interceptors.response.use(
-    (response: AxiosResponse) => response,
+    (response: AxiosResponse) => {
+      if (response.data.showMessage) {
+        showToast({
+          title: "Request Success",
+          description: response.data.message,
+        });
+      }
+
+      return response;
+    },
     (error: AxiosError<ErrorResponse>) => {
       if (error.response) {
         const errorMessage =

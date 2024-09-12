@@ -7,7 +7,11 @@ import Principal from "../models/principal";
 import passwordGenerator from "generate-password";
 import School, { ISchool } from "../models/school";
 import nodemailer from "nodemailer";
-import { getSchool } from "../libs/utils";
+import { getSchool, validate } from "../libs/utils";
+import {
+  createStudentSchema,
+  createTeacherSchema,
+} from "../validation/user-schema";
 
 let randomCount = 0;
 
@@ -99,7 +103,12 @@ const createUserAndProfile = async (
 
     let profile;
     if (role === "student") {
-      profile = new Student({ user: user._id, name, school: school._id, rollNo:rollNo });
+      profile = new Student({
+        user: user._id,
+        name,
+        school: school._id,
+        rollNo: rollNo,
+      });
     } else if (role === "teacher") {
       profile = new Teacher({ user: user._id, name, school: school._id });
     }
@@ -114,16 +123,16 @@ const createUserAndProfile = async (
       message: `${
         role.charAt(0).toUpperCase() + role.slice(1)
       } created successfully`,
+      showMessage: true,
     });
   } catch (error) {
     console.log(error);
-
     return res.status(500).json({ message: `Error creating ${role}`, error });
   }
 };
 
 export const createTeacher = async (req: Request, res: Response) => {
-  const { name, email } = req.body;
+  const { name, email } = validate(createTeacherSchema, req.body, res);
   try {
     const school = await getSchool(req);
     await createUserAndProfile(name, email, "teacher", res, school);
@@ -133,7 +142,7 @@ export const createTeacher = async (req: Request, res: Response) => {
 };
 
 export const createStudent = async (req: Request, res: Response) => {
-  const { name, email, roll } = req.body;
+  const { name, email, roll } = validate(createStudentSchema, req.body, res);
   try {
     const school = await getSchool(req);
     await createUserAndProfile(name, email, "student", res, school, roll);

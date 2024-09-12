@@ -1,7 +1,6 @@
 import { useModal } from "../../stores/modal-store";
 import { ModalLayout } from "./modal-layout";
 import { Button } from "../ui/button";
-import { useShowToast } from "../../hooks/useShowToast";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { Form } from "../ui/form";
 import { useForm } from "react-hook-form";
@@ -19,7 +18,6 @@ const CreateStudentModal = () => {
   const { modals, closeModal } = useModal();
   const modal = modals.find((modal) => modal.type == "create-student");
 
-  const { showToast } = useShowToast();
   const form = useForm<CreateStudentFormValues>({
     resolver: zodResolver(createStudentSchema),
     defaultValues: {
@@ -40,11 +38,7 @@ const CreateStudentModal = () => {
     );
 
     if (response) {
-      queryClient.refetchQueries({queryKey:["all","students"]})
-      showToast({
-        title: "Request Success",
-        description: "Student has been created successfully",
-      });
+      queryClient.refetchQueries({ queryKey: ["all", "students"] });
       closeModal();
     }
   };
