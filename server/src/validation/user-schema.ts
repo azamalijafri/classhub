@@ -5,11 +5,6 @@ export const userSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-export const createTeacherSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email"),
-});
-
 export const createStudentSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email"),

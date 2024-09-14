@@ -4,15 +4,17 @@ export interface ITeacher extends Document {
   name: string;
   user: Types.ObjectId;
   school: Types.ObjectId;
+  subject: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
 
 const TeacherSchema = new Schema<ITeacher>(
   {
-    name: { type: String },
+    name: { type: String, required: true },
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     school: { type: Schema.Types.ObjectId, ref: "School", required: true },
+    subject: { type: Schema.Types.ObjectId, ref: "Subject" },
   },
   { timestamps: true }
 );

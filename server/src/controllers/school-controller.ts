@@ -10,11 +10,12 @@ import { validate } from "../libs/utils";
 
 export const registerPrincipal = async (req: Request, res: Response) => {
   try {
-    const { schoolName, principalName, email, password, schoolCode } = validate(
-      registerSchema,
-      req.body,
-      res
-    );
+    const validatedData = validate(registerSchema, req.body, res);
+
+    if (!validatedData) return;
+
+    const { schoolName, principalName, email, password, schoolCode } =
+      validatedData;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {

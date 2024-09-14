@@ -12,7 +12,11 @@ import { getSchool, validate } from "../libs/utils";
 
 export const createClassroom = async (req: Request, res: Response) => {
   try {
-    const { name, days } = validate(createClassroomSchema, req.body, res);
+    const validatedData = validate(createClassroomSchema, req.body, res);
+
+    if (!validatedData) return;
+
+    const { name, days } = validatedData;
 
     const school = await getSchool(req);
 
@@ -46,16 +50,13 @@ export const createClassroom = async (req: Request, res: Response) => {
 };
 
 export const assignTeacherToClassroom = async (req: Request, res: Response) => {
-  const result = validate(assignTeacherSchema, req.body, res);
+  const validatedData = validate(assignTeacherSchema, req.body, res);
 
-  if (!result.success) {
-    return res.status(400).json({
-      message: "Validation failed",
-      errors: result.error.errors,
-    });
+  if (!validatedData) {
+    return;
   }
 
-  const { teacherId, classroomId } = result.data;
+  const { teacherId, classroomId } = validatedData.data;
 
   console.log(teacherId, classroomId);
 
@@ -106,12 +107,11 @@ export const assignStudentsToClassroom = async (
   res: Response
 ) => {
   try {
-    const { studentsIds, classroomId } = validate(
-      assignStudentsSchema,
-      req.body,
-      res
-    );
+    const validatedData = validate(assignStudentsSchema, req.body, res);
 
+    if (!validatedData) return;
+
+    const { studentsIds, classroomId } = validatedData;
     const classroom = await Classroom.findById(classroomId);
     if (!classroom) {
       return res.status(404).json({ message: "Classroom not found" });
@@ -238,7 +238,11 @@ export const updateClassroom = async (req: Request, res: Response) => {
   try {
     const { classId } = req.params;
 
-    const { name, days } = validate(createClassroomSchema, req.body, res);
+    const validatedData = validate(createClassroomSchema, req.body, res);
+
+    if (!validatedData) return;
+
+    const { name, days } = validatedData;
 
     const existingClassroomWithSameName = await Classroom.findOne({
       name,

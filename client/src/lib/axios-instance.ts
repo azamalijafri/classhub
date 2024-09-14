@@ -69,6 +69,7 @@ export const setupAxiosInterceptors = (
           isDestructive: true,
         });
       }
+
       return Promise.reject(error);
     }
   );

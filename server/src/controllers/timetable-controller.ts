@@ -28,11 +28,11 @@ const periodsOverlap = (periods: IPeriod[]): boolean => {
 
 export const updateTimetable = async (req: Request, res: Response) => {
   try {
-    const { classroomId, timetableData } = validate(
-      updateTimetableSchema,
-      req.body,
-      res
-    );
+    const validatedData = validate(updateTimetableSchema, req.body, res);
+
+    if (!validatedData) return;
+
+    const { classroomId, timetableData } = validatedData;
 
     const classroom = await Classroom.findById(classroomId);
 

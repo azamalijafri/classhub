@@ -21,6 +21,7 @@ export const apiUrls = {
   },
   teacher: {
     createTeacher: "/create/teacher",
+    createBulkTeachers: "/create/bulk/teachers",
     getAllTeachers: "/get/all/teachers",
   },
   student: {
@@ -31,5 +32,9 @@ export const apiUrls = {
   timetable: {
     getTimetable: "/get/timetable",
     updateTimetable: "/update/timetable",
+  },
+  subject: {
+    createSubjects: "/create/subjects",
+    getAllSubjects: "/get/all/subjects",
   },
 };

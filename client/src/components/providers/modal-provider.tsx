@@ -6,6 +6,7 @@ import AssignTeacherModal from "../modals/assign-teacher-modal";
 import TimetableModal from "../modals/timetable-modal";
 import CreateStudentModal from "../modals/create-student-modal";
 import AssignStudentModal from "../modals/assign-student-modal";
+import CreateSubjectsModal from "../modals/create-subject-modal";
 
 const ModalProvider = () => {
   const { modals } = useModal();
@@ -28,6 +29,8 @@ const ModalProvider = () => {
             return <TimetableModal key={index} />;
           case "assign-students":
             return <AssignStudentModal key={index} />;
+          case "create-subject":
+            return <CreateSubjectsModal key={index} />;
         }
       })}
     </>

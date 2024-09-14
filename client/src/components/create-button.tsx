@@ -1,4 +1,10 @@
-import { Plus } from "lucide-react";
+import {
+  BellElectricIcon,
+  BookTypeIcon,
+  Plus,
+  SchoolIcon,
+  UsersIcon,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,7 +12,30 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import { Button } from "./ui/button";
-import { useModal } from "../stores/modal-store";
+import { ModalType, useModal } from "../stores/modal-store";
+
+const navs = [
+  {
+    label: "Classroom",
+    key: "upsert-classroom",
+    icon: SchoolIcon,
+  },
+  {
+    label: "Teacher",
+    key: "create-teacher",
+    icon: BookTypeIcon,
+  },
+  {
+    label: "Student",
+    key: "create-student",
+    icon: UsersIcon,
+  },
+  {
+    label: "Subject",
+    key: "create-subject",
+    icon: BellElectricIcon,
+  },
+];
 
 const CreateButton = () => {
   const { openModal } = useModal();
@@ -19,15 +48,17 @@ const CreateButton = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={() => openModal("upsert-classroom")}>
-          Classroom
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => openModal("create-teacher")}>
-          Teacher
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => openModal("create-student")}>
-          Student
-        </DropdownMenuItem>
+        {navs.map((item) => (
+          <DropdownMenuItem
+            key={item.label}
+            onClick={() => openModal(item.key as ModalType)}
+          >
+            <div className="flex gap-x-4 justify-between items-center">
+              <item.icon className="size-4" />
+              <span>{item.label}</span>
+            </div>
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

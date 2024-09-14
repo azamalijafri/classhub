@@ -7,11 +7,14 @@ import {
   getAllStudentByClass,
   kickStudentFromClass,
   blockStudent,
+  createStudent,
 } from "../controllers/student-controller";
 
 const router = Router();
 
 router.use(authenticateUser);
+
+router.post("/create/student", requireRole(["principal"]), createStudent);
 
 router.get("/get/all/students", requireRole(["principal"]), getAllStudent);
 

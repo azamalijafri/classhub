@@ -151,26 +151,28 @@ const EditTimetableModal: React.FC = () => {
   };
 
   const handleSaveTimetable = async () => {
-    setIsLoading(true);
+    try {
+      setIsLoading(true);
 
-    const timetableData = timetable.map((schedule: any) => {
-      return { ...schedule, day: schedule.day };
-    });
-
-    const response = await axiosInstance.post(
-      apiUrls.timetable.updateTimetable,
-      { timetableData: timetableData, classroomId: classId }
-    );
-
-    if (response) {
-      queryClient.refetchQueries({
-        queryKey: ["timetable", classId],
+      const timetableData = timetable.map((schedule: any) => {
+        return { ...schedule, day: schedule.day };
       });
 
-      closeModal();
-    }
+      const response = await axiosInstance.post(
+        apiUrls.timetable.updateTimetable,
+        { timetableData: timetableData, classroomId: classId }
+      );
 
-    setIsLoading(false);
+      if (response) {
+        queryClient.refetchQueries({
+          queryKey: ["timetable", classId],
+        });
+
+        closeModal();
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderPeriods = (day: string) => {

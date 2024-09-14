@@ -2,9 +2,10 @@ import { Schema, model, Document, Types } from "mongoose";
 import { Day } from "../enums/days";
 
 export interface IPeriod {
-  subject: string;
+  subject: Types.ObjectId;
   startTime: string;
   endTime: string;
+  teacher: Types.ObjectId;
 }
 
 export interface ITimetable extends Document {
@@ -14,9 +15,10 @@ export interface ITimetable extends Document {
 }
 
 const PeriodSchema = new Schema<IPeriod>({
-  subject: { type: String, required: true },
+  subject: { type: Schema.Types.ObjectId, ref: "Subject", required: true },
   startTime: { type: String, required: true },
   endTime: { type: String, required: true },
+  teacher: { type: Schema.Types.ObjectId, ref: "Teacher", required: true },
 });
 
 const TimetableSchema = new Schema<ITimetable>({

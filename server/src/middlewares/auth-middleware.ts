@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import User, { IUser } from "../models/user";
-import Principal from "../models/principal";
-import Teacher from "../models/teacher";
-import Student from "../models/student";
+import Principal, { IPrincipal } from "../models/principal";
+import Teacher, { ITeacher } from "../models/teacher";
+import Student, { IStudent } from "../models/student";
+import { log } from "console";
 
 export const authenticateUser = async (
   req: Request,
@@ -18,32 +19,33 @@ export const authenticateUser = async (
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
 
-    const user: (IUser & { profile: any }) | null = await User.findById(
-      decoded.id
-    );
+    const user: (IUser & { profile: IPrincipal | ITeacher | IStudent }) | null =
+      await User.findById(decoded.id).lean();
+
     if (!user) {
       return res.status(401).json({ message: "Invalid token" });
     }
 
-    let userProfile;
+    let profile;
 
     switch (user.role) {
       case "principal":
-        userProfile = await Principal.findOne({ user: user._id });
+        profile = await Principal.findOne({ user: user._id });
         break;
       case "teacher":
-        userProfile = await Teacher.findOne({ user: user._id });
+        profile = await Teacher.findOne({ user: user._id });
         break;
       case "student":
-        userProfile = await Student.findOne({ user: user._id });
+        profile = await Student.findOne({ user: user._id });
         break;
     }
 
-    if (!userProfile) {
+    if (!profile) {
       return res.status(404).json({ message: "User Profile Not Found" });
     }
 
-    user.profile = userProfile;
+    user.profile = profile;
+
     req.user = user;
 
     next();

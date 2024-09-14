@@ -1,4 +1,3 @@
-
 interface IUser {
   email: string;
   role: "principal" | "teacher" | "student";
@@ -29,11 +28,18 @@ interface IClassroom {
 }
 
 interface IStudent {
-  _id:string;
+  _id: string;
   name: string;
   user: IUser;
-  rollNo:string;
-  classroom: IClassroom
+  rollNo: string;
+  classroom: IClassroom;
+}
+
+interface ISubject {
+  _id: string;
+  name: string;
+  school: Types.ObjectId;
+  createdBy: Date;
 }
 
 enum Day {
