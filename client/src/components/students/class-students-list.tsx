@@ -1,121 +1,42 @@
-import { useQuery } from "@tanstack/react-query";
-import { useLoading } from "@/stores/loader-store";
-import axiosInstance from "@/lib/axios-instance";
-import { apiUrls } from "@/constants/api-urls";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { useParams } from "react-router-dom";
+import { useFetchData } from "@/hooks/useFetchData";
+import DataTable from "@/components/data-table";
+import { apiUrls } from "@/constants/api-urls";
+import { Button } from "@/components/ui/button";
 import { useModal } from "@/stores/modal-store";
 
 const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
-  const { isLoading, startLoading, stopLoading } = useLoading();
-  //   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const { classId } = useParams();
+  const { data = [] } = useFetchData(
+    [queryKey, "classStudents"],
+    `${apiUrls.student.getClassStudents}/${classId}`
+  );
   const { openModal } = useModal();
 
-  const fetchStudents = async () => {
-    startLoading();
-    const response = await axiosInstance.get(
-      `${apiUrls.student.getClassStudents}/${classId}`
-    );
-    stopLoading();
-    return response.data.students;
-  };
+  const columns = [
+    { label: "Name", render: (student: IStudent) => student.name },
+    { label: "Email", render: (student: IStudent) => student.user.email },
+    { label: "Roll No", render: (student: IStudent) => student.rollNo },
+  ];
 
-  const { data: students = [], refetch } = useQuery({
-    queryKey: [queryKey, "students"],
-    queryFn: fetchStudents,
-  });
-
-  //   const toggleSelectStudent = (studentId: string) => {
-  //     setSelectedStudents((prevSelected) =>
-  //       prevSelected.includes(studentId)
-  //         ? prevSelected.filter((id) => id !== studentId)
-  //         : [...prevSelected, studentId]
-  //     );
-  //   };
-
-  const kickStudent = async (studentId: string) => {
-    await axiosInstance.put(`${apiUrls.classroom.kickStudent}/${studentId}`);
-    refetch();
-  };
-
-  if (isLoading) return null;
+  const actions = (student: IStudent) => (
+    <div className="flex space-x-2">
+      <Button
+        variant="destructive"
+        onClick={() =>
+          openModal("confirm", {
+            performingAction: () => console.log("Kick", student._id),
+          })
+        }
+      >
+        Kick
+      </Button>
+    </div>
+  );
 
   return (
-    <div className="p-4 flex flex-col space-y-4">
-      {students.length === 0 ? (
-        <p className="mx-auto">No students found.</p>
-      ) : (
-        <Table className="border border-gray-300">
-          <TableHeader>
-            <TableRow className="bg-gray-100">
-              {/* <TableHead className="py-2 px-4 border border-gray-300">
-                Select
-              </TableHead> */}
-              <TableHead className="py-2 px-4 border border-gray-300">
-                Name
-              </TableHead>
-              <TableHead className="py-2 px-4 border border-gray-300">
-                Email
-              </TableHead>
-              <TableHead className="py-2 px-4 border border-gray-300">
-                Roll No
-              </TableHead>
-              <TableHead className="py-2 px-4 border border-gray-300">
-                Actions
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {students.map((student: IStudent) => (
-              <TableRow
-                key={student._id}
-                className="even:bg-gray-50 odd:bg-white"
-              >
-                {/* <TableCell className="py-2 px-4 border border-gray-300">
-                  <Checkbox
-                    checked={selectedStudents.includes(student._id)}
-                    onClick={() => toggleSelectStudent(student._id)}
-                  />
-                </TableCell> */}
-                <TableCell className="py-2 px-4 border border-gray-300">
-                  {student.name}
-                </TableCell>
-                <TableCell className="py-2 px-4 border border-gray-300">
-                  {student.user.email}
-                </TableCell>
-                <TableCell className="py-2 px-4 border border-gray-300">
-                  {student.rollNo}
-                </TableCell>
-                <TableCell className="py-2 px-4 border border-gray-300">
-                  <div className="flex space-x-2">
-                    <Button
-                      variant={"destructive"}
-                      onClick={() =>
-                        openModal("confirm", {
-                          performingAction() {
-                            kickStudent(student._id);
-                          },
-                        })
-                      }
-                    >
-                      Kick
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+    <div className="p-4 ">
+      <DataTable data={data.students} columns={columns} actions={actions} />
     </div>
   );
 };

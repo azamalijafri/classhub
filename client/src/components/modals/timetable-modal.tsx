@@ -17,6 +17,7 @@ import { useModal } from "@/stores/modal-store";
 import { Label } from "../ui/label";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import ComboBox from "../inputs/combo-box";
 
 dayjs.extend(customParseFormat);
 
@@ -24,6 +25,7 @@ interface IPeriod {
   subject: string;
   startTime: string;
   endTime: string;
+  teacher?: string;
 }
 
 interface ITimetable {
@@ -49,6 +51,28 @@ const EditTimetableModal: React.FC = () => {
     { day: string; startTime: string; endTime: string }[]
   >([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState<string | null>(null);
+  const [teachers, setTeachers] = useState<{ id: string; label: string }[]>([]);
+
+  useEffect(() => {
+    // Fetch teachers data from backend
+    const fetchTeachers = async () => {
+      try {
+        const response = await axiosInstance.get(
+          apiUrls.teacher.getAllTeachers
+        );
+        const fetchedTeachers = response.data.teachers.map((teacher: any) => ({
+          id: teacher._id,
+          label: teacher.name,
+        }));
+        setTeachers(fetchedTeachers);
+      } catch (error) {
+        console.error("Failed to fetch teachers:", error);
+      }
+    };
+
+    fetchTeachers();
+  }, []);
 
   const queryClient = useQueryClient();
 
@@ -118,6 +142,13 @@ const EditTimetableModal: React.FC = () => {
   const handleSavePeriod = () => {
     if (!activePeriod) return;
 
+    // Ensure teacher is selected before saving
+    if (!selectedTeacher) {
+      alert("Please select a teacher for the period.");
+      return;
+    }
+
+    // Save the period along with the selected teacher
     setTimetable((prevTimetable) =>
       prevTimetable.map((schedule) =>
         schedule.day === activeDay
@@ -126,15 +157,21 @@ const EditTimetableModal: React.FC = () => {
               periods:
                 editingPeriod !== null
                   ? schedule.periods.map((period, idx) =>
-                      idx === editingPeriod ? activePeriod : period
+                      idx === editingPeriod
+                        ? { ...activePeriod, teacher: selectedTeacher }
+                        : period
                     )
-                  : [...schedule.periods, activePeriod],
+                  : [
+                      ...schedule.periods,
+                      { ...activePeriod, teacher: selectedTeacher },
+                    ],
             }
           : schedule
       )
     );
     setActivePeriod(null);
     setEditingPeriod(null);
+    setSelectedTeacher(null); // Reset teacher after saving
   };
 
   const handleRemovePeriod = (day: string, index: number) => {
@@ -251,14 +288,14 @@ const EditTimetableModal: React.FC = () => {
               </div>
 
               <div
-                className={`grid grid-cols-5 gap-x-3 my-6 transition-all duration-500 ease-out ${
+                className={`grid grid-cols-2 gap-x-3 my-6 transition-all duration-500 ease-out ${
                   activePeriod && activeDay === day.day
                     ? "opacity-100 visible max-h-[200px]"
                     : "opacity-0 invisible max-h-0"
                 }`}
               >
-                <div className="flex flex-col gap-y-1 col-span-3">
-                  <Label>Name</Label>
+                <div className="space-y-2">
+                  <Label>Subject Name</Label>
                   <Input
                     placeholder="Subject Name"
                     value={activePeriod?.subject || ""}
@@ -271,7 +308,8 @@ const EditTimetableModal: React.FC = () => {
                     className="mb-2"
                   />
                 </div>
-                <div className="flex flex-col gap-y-1 col-span-1">
+
+                <div className="space-y-2">
                   <Label>Start</Label>
                   <Input
                     type="time"
@@ -285,7 +323,8 @@ const EditTimetableModal: React.FC = () => {
                     className="mb-2"
                   />
                 </div>
-                <div className="flex flex-col gap-y-1 col-span-1">
+
+                <div className="space-y-2">
                   <Label>End</Label>{" "}
                   <Input
                     type="time"
@@ -300,7 +339,17 @@ const EditTimetableModal: React.FC = () => {
                   />
                 </div>
 
-                <div className="flex gap-x-4 col-span-5">
+                <div>
+                  {activePeriod && activeDay === day.day && (
+                    <ComboBox
+                      items={teachers}
+                      placeholder="Select a teacher"
+                      label="Teacher"
+                      onSelect={(selectedId) => setSelectedTeacher(selectedId)}
+                    />
+                  )}
+                </div>
+                <div className="flex gap-x-4 col-span-5 mt-4">
                   <Button onClick={handleSavePeriod}>Save Period</Button>
                   <Button
                     onClick={() => {

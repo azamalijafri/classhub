@@ -1,35 +1,21 @@
+import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "@/lib/axios-instance";
-import { useQuery, QueryKey } from "@tanstack/react-query";
+import { useLoading } from "@/stores/loader-store";
 
-interface FetchOptions<T> {
-  queryKey: QueryKey;
-  url: string;
-  params?: object;
-  enabled?: boolean;
-  initialData?: T;
-}
+export const useFetchData = (queryKey: string[], apiUrl: string) => {
+  const { isLoading, startLoading, stopLoading } = useLoading();
 
-export function useFetchData<T>({
-  queryKey,
-  url,
-  params = {},
-  enabled = true,
-  initialData,
-}: FetchOptions<T>) {
   const fetchData = async () => {
-    const response = await axiosInstance.get(url, { params });
+    startLoading();
+    const response = await axiosInstance.get(apiUrl);
+    stopLoading();
     return response.data;
   };
 
-  const query = useQuery<T>({
+  const { data, refetch } = useQuery({
     queryKey,
     queryFn: fetchData,
-    enabled,
-    initialData,
   });
 
-  return {
-    ...query,
-    refetchData: query.refetch,
-  };
-}
+  return { data, isLoading, refetch };
+};

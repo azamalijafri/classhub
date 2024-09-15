@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Teacher from "../models/teacher";
+import Teacher, { ITeacher } from "../models/teacher";
 import { getSchool, validate } from "../libs/utils";
 import { createUserAndProfile } from "./profile-controller";
 import {
@@ -7,10 +7,17 @@ import {
   createTeacherSchema,
 } from "../validation/teacher-schema";
 import Subject from "../models/subject";
+import Classroom, { IClassroom } from "../models/classroom";
 
 export const getAllTeachers = async (req: Request, res: Response) => {
   try {
-    const teachers = await Teacher.find().populate("user");
+    const teachers: (ITeacher & { classroom: IClassroom })[] =
+      await Teacher.find().populate("user").lean();
+
+    for (let teacher of teachers) {
+      const classroom = await Classroom.findOne({ teacher: teacher._id });
+      if (classroom) teacher.classroom = classroom;
+    }
 
     res.status(200).json({
       message: "Teachers fetched successfully",

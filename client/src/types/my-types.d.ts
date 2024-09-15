@@ -35,6 +35,16 @@ interface IStudent {
   classroom: IClassroom;
 }
 
+interface ITeacher {
+  _id: string;
+  name: string;
+  user: Types.ObjectId;
+  school: Types.ObjectId;
+  subject: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 interface ISubject {
   _id: string;
   name: string;

@@ -4,6 +4,7 @@ import ClassDetailsLayout from "../components/class-detail-layout";
 import Timetable from "../pages/common/timetable";
 import ClassStudents from "../pages/common/class-students";
 import AllStudents from "@/pages/principal/students";
+import Teachers from "@/pages/principal/teachers";
 
 function PrincipalRoutes() {
   return (
@@ -13,6 +14,7 @@ function PrincipalRoutes() {
         <Route path="timetable" element={<Timetable />} />
         <Route path="students" element={<ClassStudents />} />
       </Route>
+      <Route path="/teachers" element={<Teachers />} />
       <Route path="/students" element={<AllStudents />} />
     </Routes>
   );

@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import axiosInstance from "../../lib/axios-instance";
 import { apiUrls } from "../../constants/api-urls";
 import { useState, useEffect } from "react";
-import ComboBox from "../inputs/combo-box";
+import ComboBox from "../inputs/useform-combo-box";
 import * as XLSX from "xlsx";
 import Papa from "papaparse";
 import { Input } from "../ui/input";

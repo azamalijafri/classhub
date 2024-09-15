@@ -56,9 +56,7 @@ export const assignTeacherToClassroom = async (req: Request, res: Response) => {
     return;
   }
 
-  const { teacherId, classroomId } = validatedData.data;
-
-  console.log(teacherId, classroomId);
+  const { teacherId, classroomId } = validatedData;
 
   try {
     const teacher = await Teacher.findOne({ _id: teacherId });
