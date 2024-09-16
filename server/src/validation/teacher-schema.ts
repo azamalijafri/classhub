@@ -11,3 +11,8 @@ export const createBulkTeacherSchema = z.object({
     .array(createTeacherSchema)
     .min(1, "At least one teacher is required"),
 });
+
+export const updateTeacherSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  subject: z.string().min(1, "Subject is required"),
+});

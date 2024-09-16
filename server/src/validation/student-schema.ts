@@ -1,0 +1,12 @@
+import { z } from "zod";
+
+export const createStudentSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email"),
+  roll: z.string().min(1, "Roll No is required"),
+});
+
+export const updateStudentSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  // roll: z.string().min(1, "Roll No is required"),
+});

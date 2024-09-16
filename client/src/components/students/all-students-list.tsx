@@ -5,9 +5,10 @@ import { apiUrls } from "@/constants/api-urls";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useModal } from "@/stores/modal-store";
+import axiosInstance from "@/lib/axios-instance";
 
 const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
-  const { data = [] } = useFetchData(
+  const { data = [], refetch } = useFetchData(
     [queryKey, "students"],
     apiUrls.student.getAllStudents
   );
@@ -52,9 +53,19 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
       </Button>
       <Button
         variant="destructive"
-        onClick={() => console.log("Block", student)}
+        onClick={() => {
+          openModal("confirm", {
+            performingAction: async () => {
+              const response = await axiosInstance.put(
+                `${apiUrls.student.removeStudent}/${student._id}`
+              );
+
+              if (response) refetch();
+            },
+          });
+        }}
       >
-        Block
+        Remove
       </Button>
     </div>
   );

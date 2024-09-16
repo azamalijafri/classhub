@@ -89,10 +89,10 @@ export const getMyProfile = async (req: Request, res: Response) => {
 
     switch (role) {
       case "student":
-        profile = await Student.findOne({ user: req.user?._id });
+        profile = await Student.findOne({ user: req.user?._id, status: 1 });
         break;
       case "teacher":
-        profile = await Teacher.findOne({ user: req.user?._id });
+        profile = await Teacher.findOne({ user: req.user?._id, status: 1 });
         break;
       case "principal":
         profile = await Principal.findOne({ user: req.user?._id });
@@ -102,7 +102,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
     }
 
     if (!profile) {
-      return res.status(404).json({ message: "Profile not found" });
+      return res.status(404).json({ message: "Profile not found or removed" });
     }
 
     res.json({ profile, user: req.user });

@@ -1,7 +1,7 @@
 import CreateClassroomModal from "../modals/upsert-classroom-modal";
 import ConfirmModal from "../modals/confirm-modal";
 import { useModal } from "../../stores/modal-store";
-import CreateTeacherModal from "../modals/create-teacher-modal";
+import CreateTeacherModal from "../modals/upsert-teacher-modal";
 import AssignTeacherModal from "../modals/assign-teacher-modal";
 import TimetableModal from "../modals/timetable-modal";
 import CreateStudentModal from "../modals/create-student-modal";
@@ -17,7 +17,7 @@ const ModalProvider = () => {
         switch (modal.type) {
           case "upsert-classroom":
             return <CreateClassroomModal key={index} />;
-          case "create-teacher":
+          case "upsert-teacher":
             return <CreateTeacherModal key={index} />;
           case "create-student":
             return <CreateStudentModal key={index} />;

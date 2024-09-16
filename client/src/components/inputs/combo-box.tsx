@@ -22,6 +22,8 @@ interface ComboBoxProps {
   placeholder?: string;
   label?: string;
   onSelect: (selectedId: string) => void;
+  selectedValue: string;
+  disabled?: boolean;
 }
 
 const ComboBox: React.FC<ComboBoxProps> = ({
@@ -29,9 +31,13 @@ const ComboBox: React.FC<ComboBoxProps> = ({
   placeholder = "Select an item",
   label,
   onSelect,
+  selectedValue,
+  disabled,
 }) => {
   const [open, setOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<string | undefined>(
+    selectedValue
+  );
 
   const handleSelect = (itemId: string) => {
     setSelectedItem(itemId);
@@ -45,15 +51,16 @@ const ComboBox: React.FC<ComboBoxProps> = ({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
+            disabled={disabled}
             variant={"outline"}
             className="w-full border border-gray-300 rounded p-2 text-left"
             role="combobox"
             aria-expanded={open}
             aria-controls="item-list"
           >
-            {selectedItem
-              ? items.find((item) => item.id === selectedItem)?.label
-              : placeholder}
+            {selectedItem &&
+              (items.find((item) => item.id === selectedItem)?.label ??
+                placeholder)}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 float-right" />
           </Button>
         </PopoverTrigger>

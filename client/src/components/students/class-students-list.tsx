@@ -4,10 +4,11 @@ import DataTable from "@/components/data-table";
 import { apiUrls } from "@/constants/api-urls";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/stores/modal-store";
+import axiosInstance from "@/lib/axios-instance";
 
 const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
   const { classId } = useParams();
-  const { data = [] } = useFetchData(
+  const { data = [], refetch } = useFetchData(
     [queryKey, "classStudents"],
     `${apiUrls.student.getClassStudents}/${classId}`
   );
@@ -25,7 +26,14 @@ const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
         variant="destructive"
         onClick={() =>
           openModal("confirm", {
-            performingAction: () => console.log("Kick", student._id),
+            performingAction: async () => {
+              const response = await axiosInstance.put(
+                `${apiUrls.student.kickStudent}/${student._id}`
+              );
+              if (response) {
+                refetch();
+              }
+            },
           })
         }
       >

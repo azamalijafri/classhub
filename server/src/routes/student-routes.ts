@@ -6,7 +6,7 @@ import {
   getAllStudent,
   getAllStudentByClass,
   kickStudentFromClass,
-  blockStudent,
+  removeStudentFromSchool,
   createStudent,
 } from "../controllers/student-controller";
 
@@ -37,9 +37,9 @@ router.put(
 );
 
 router.put(
-  "/block/student/:studentId",
+  "/remove/student/:studentId",
   requireRole(["principal"]),
-  blockStudent
+  removeStudentFromSchool
 );
 
 export default router;

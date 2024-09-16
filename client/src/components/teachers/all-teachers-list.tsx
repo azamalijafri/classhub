@@ -2,20 +2,22 @@ import { useFetchData } from "@/hooks/useFetchData";
 import DataTable from "@/components/data-table";
 import { apiUrls } from "@/constants/api-urls";
 import { Button } from "@/components/ui/button";
-// import { useModal } from "@/stores/modal-store";
+import { useModal } from "@/stores/modal-store";
+import axiosInstance from "@/lib/axios-instance";
 
 type Teacher = ITeacher & { classroom: IClassroom };
 
 const TeachersList = ({ queryKey }: { queryKey: string }) => {
-  const { data = [] } = useFetchData(
+  const { data = [], refetch } = useFetchData(
     [queryKey, "teachers"],
     apiUrls.teacher.getAllTeachers
   );
-  //   const { openModal } = useModal();
+  const { openModal } = useModal();
 
   const columns = [
     { label: "Name", render: (teacher: Teacher) => teacher.name },
     { label: "Email", render: (teacher: Teacher) => teacher.user.email },
+    { label: "Subject", render: (teacher: Teacher) => teacher.subject.name },
     {
       label: "Class",
       render: (teacher: Teacher) => teacher.classroom?.name ?? "N/A",
@@ -24,14 +26,29 @@ const TeachersList = ({ queryKey }: { queryKey: string }) => {
 
   const actions = (teacher: Teacher) => (
     <div className="flex space-x-2">
-      <Button variant="default" onClick={() => console.log("Edit", teacher)}>
+      <Button
+        variant="default"
+        onClick={() => {
+          openModal("upsert-teacher", { teacher });
+        }}
+      >
         Edit
       </Button>
       <Button
         variant="destructive"
-        onClick={() => console.log("Block", teacher)}
+        onClick={() => {
+          openModal("confirm", {
+            performingAction: async () => {
+              const response = await axiosInstance.put(
+                `${apiUrls.teacher.removeTeacher}/${teacher._id}`
+              );
+
+              if (response) refetch();
+            },
+          });
+        }}
       >
-        Block
+        Remove
       </Button>
     </div>
   );

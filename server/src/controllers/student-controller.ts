@@ -4,7 +4,7 @@ import { getSchool, validate } from "../libs/utils";
 import {
   createStudentSchema,
   updateStudentSchema,
-} from "../validation/user-schema";
+} from "../validation/student-schema";
 import { createUserAndProfile } from "./profile-controller";
 
 export const createStudent = async (req: Request, res: Response) => {
@@ -31,7 +31,10 @@ export const createStudent = async (req: Request, res: Response) => {
 
 export const getAllStudent = async (req: Request, res: Response) => {
   try {
-    const students = await Student.find({ school: req.user.profile.school })
+    const students = await Student.find({
+      school: req.user.profile.school,
+      status: 1,
+    })
       .populate("user")
       .populate("classroom");
 
@@ -74,9 +77,9 @@ export const updateStudent = async (req: Request, res: Response) => {
 
     if (!validatedData) return;
 
-    const { name, roll } = validatedData;
+    const { name } = validatedData;
 
-    await student.updateOne({ name, roll });
+    await student.updateOne({ name });
     await student.save();
 
     res
@@ -108,7 +111,7 @@ export const kickStudentFromClass = async (req: Request, res: Response) => {
   }
 };
 
-export const blockStudent = async (req: Request, res: Response) => {
+export const removeStudentFromSchool = async (req: Request, res: Response) => {
   try {
     const { studentId } = req.params;
 
@@ -123,8 +126,8 @@ export const blockStudent = async (req: Request, res: Response) => {
 
     res
       .status(200)
-      .json({ message: "Student blocked successfully", showMessage: true });
+      .json({ message: "Student removed successfully", showMessage: true });
   } catch (error) {
-    res.status(500).json({ message: "Error blocking student", error });
+    res.status(500).json({ message: "Error removing student", error });
   }
 };

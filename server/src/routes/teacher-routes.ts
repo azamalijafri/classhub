@@ -5,6 +5,8 @@ import {
   createBulkTeachers,
   createTeacher,
   getAllTeachers,
+  removeTeacherFromSchool,
+  updateTeacher,
 } from "../controllers/teacher-controller";
 
 const router = Router();
@@ -19,6 +21,18 @@ router.post(
   "/create/bulk/teachers",
   requireRole(["principal"]),
   createBulkTeachers
+);
+
+router.put(
+  "/update/teacher/:teacherId",
+  requireRole(["principal"]),
+  updateTeacher
+);
+
+router.put(
+  "/remove/teacher/:teacherId",
+  requireRole(["principal"]),
+  removeTeacherFromSchool
 );
 
 export default router;

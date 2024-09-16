@@ -14,7 +14,6 @@ export const apiUrls = {
     removeClassroom: "/remove/classroom",
     updateClassroom: "/update/classroom",
     assignStudents: "/assign/students",
-    kickStudent: "/kick/student",
   },
   user: {
     getMyProfile: "/get/my/profile",
@@ -23,11 +22,16 @@ export const apiUrls = {
     createTeacher: "/create/teacher",
     createBulkTeachers: "/create/bulk/teachers",
     getAllTeachers: "/get/all/teachers",
+    removeTeacher: "/remove/teacher",
+    updateTeacher: "/update/teacher",
   },
   student: {
     createStudent: "/create/student",
     getAllStudents: "/get/all/students",
     getClassStudents: "/get/students",
+    kickStudent: "/kick/student",
+    removeStudent: "/remove/student",
+    updateStudent: "/update/student",
   },
   timetable: {
     getTimetable: "/get/timetable",

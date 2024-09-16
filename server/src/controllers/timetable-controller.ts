@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
-import Timetable, { IPeriod } from "../models/timetable";
+import Timetable, { IPeriod, ITimetable } from "../models/timetable";
 import Classroom from "../models/classroom";
 import { updateTimetableSchema } from "../validation/timetable-schema";
 import { validate } from "../libs/utils";
+import Teacher from "../models/teacher";
+import Subject from "../models/subject";
 
 const timeToMinutes = (time: string): number => {
   const [hours, minutes] = time.split(":").map(Number);
@@ -68,6 +70,18 @@ export const updateTimetable = async (req: Request, res: Response) => {
             message: `Period ${period.subject} on ${day} is outside the classroom's designated time slot.`,
           });
         }
+
+        const teacher = await Teacher.findById(period.teacher);
+
+        if (!teacher) {
+          return res.status(404).json({ message: "Teacher not found" });
+        }
+
+        const subject = await Subject.findById(period.subject);
+
+        if (!subject) {
+          return res.status(404).json({ message: "subject not found" });
+        }
       }
 
       if (periodsOverlap(periods)) {
@@ -104,14 +118,23 @@ export const updateTimetable = async (req: Request, res: Response) => {
 export const getTimetable = async (req: Request, res: Response) => {
   try {
     const { classId } = req.params;
-
-    const timetable = await Timetable.find({ classroom: classId });
+    const timetable = await Timetable.find({ classroom: classId })
+      .populate({
+        path: "periods.teacher",
+        select: "name",
+      })
+      .populate({
+        path: "periods.subject",
+        select: "name",
+      });
 
     if (!timetable)
       return res.status(404).json({ message: "Timetable not found" });
 
     res.status(200).json({ timetable });
   } catch (error) {
+    console.log(error);
+
     return res.status(500).json({ message: "Server error", error });
   }
 };

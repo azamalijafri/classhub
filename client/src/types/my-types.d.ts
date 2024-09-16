@@ -38,18 +38,48 @@ interface IStudent {
 interface ITeacher {
   _id: string;
   name: string;
-  user: Types.ObjectId;
-  school: Types.ObjectId;
-  subject: Types.ObjectId;
+  user: IUser;
+  school: ISchool;
+  subject: ISubject;
   createdAt: Date;
   updatedAt: Date;
+}
+
+interface ISchool {
+  _id: string;
+  name: string;
+  principal: IPrincipal;
+  schoolCode: string;
+  address?: string;
+  contactInfo?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface IPrincipal {
+  _id: string;
+  name: string;
+  user: IUser;
+  school?: ISchool;
 }
 
 interface ISubject {
   _id: string;
   name: string;
-  school: Types.ObjectId;
+  school: ISchool;
   createdBy: Date;
+}
+
+interface IPeriod {
+  teacher: ITeacher;
+  subject: ISubject;
+  startTime: string;
+  endTime: string;
+}
+
+interface ITimetable {
+  day: string;
+  periods: IPeriod[];
 }
 
 enum Day {

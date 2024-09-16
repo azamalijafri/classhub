@@ -26,10 +26,13 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CreateTeacherModal = () => {
   const { modals, closeModal } = useModal();
-  const modal = modals.find((modal) => modal.type == "create-teacher");
+  const modal = modals.find((modal) => modal.type == "upsert-teacher");
+  const teacher = modal?.data?.teacher;
+  const isUpdateMode = !!teacher;
 
   const [isLoading, setIsLoading] = useState(false);
   const [subjects, setSubjects] = useState<{ id: string; label: string }[]>([]);
@@ -56,23 +59,30 @@ const CreateTeacherModal = () => {
   const form = useForm<CreateTeacherFormValues>({
     resolver: zodResolver(createSingleTeacherSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      subject: "",
+      name: teacher?.name || "",
+      email: teacher?.user.email || "",
+      subject: teacher?.subject._id || "",
     },
   });
+
+  const queryClient = useQueryClient();
 
   const { isValid, isSubmitting, errors } = form.formState;
 
   const handleSubmit = async (values: CreateTeacherFormValues) => {
     try {
       setIsLoading(true);
-      const response = await axiosInstance.post(
-        apiUrls.teacher.createTeacher,
-        values
-      );
+
+      const apiUrl = isUpdateMode
+        ? `${apiUrls.teacher.updateTeacher}/${teacher._id}`
+        : apiUrls.teacher.createTeacher;
+
+      const response = isUpdateMode
+        ? await axiosInstance.put(apiUrl, values)
+        : await axiosInstance.post(apiUrl, values);
 
       if (response) {
+        queryClient.refetchQueries({ queryKey: ["all", "teachers"] });
         closeModal();
       }
     } finally {
@@ -158,9 +168,14 @@ const CreateTeacherModal = () => {
     <ModalLayout isOpen={!!modal}>
       <div className="flex flex-col gap-y-4">
         <DialogTitle className="font-bold mb-4 text-xl">
-          {isBulkUpload ? "Bulk Upload Teachers" : "Create Teacher"}
+          {isUpdateMode
+            ? "Update Teacher"
+            : isBulkUpload
+            ? "Bulk Upload Teachers"
+            : "Create Teacher"}
         </DialogTitle>
-        {isBulkUpload ? (
+
+        {!isUpdateMode && isBulkUpload ? ( // Only show bulk upload for create mode
           <>
             <Input
               type="file"
@@ -210,15 +225,17 @@ const CreateTeacherModal = () => {
                 type="text"
                 error={errors.name?.message}
               />
-              <TextInput
-                label="Email"
-                control={form.control}
-                name="email"
-                placeholder="Enter Email"
-                type="email"
-                description="We will send teacher's credentials on this email"
-                error={errors.email?.message}
-              />
+              {!isUpdateMode && (
+                <TextInput
+                  label="Email"
+                  control={form.control}
+                  name="email"
+                  placeholder="Enter Email"
+                  type="email"
+                  description="We will send teacher's credentials on this email"
+                  error={errors.email?.message}
+                />
+              )}
               <ComboBox
                 items={subjects}
                 control={form.control}
@@ -230,17 +247,20 @@ const CreateTeacherModal = () => {
                 isLoading={isSubmitting}
                 disabled={isSubmitting || !isValid || isLoading}
               >
-                Create
+                {isUpdateMode ? "Update Teacher" : "Create"}
               </Button>
             </form>
           </Form>
         )}
-        <Button
-          variant="secondary"
-          onClick={() => setIsBulkUpload(!isBulkUpload)}
-        >
-          {isBulkUpload ? "Create Single Teacher" : "Bulk Upload"}
-        </Button>
+
+        {!isUpdateMode && ( // Hide bulk upload toggle for update mode
+          <Button
+            variant="secondary"
+            onClick={() => setIsBulkUpload(!isBulkUpload)}
+          >
+            {isBulkUpload ? "Create Single Teacher" : "Bulk Upload"}
+          </Button>
+        )}
       </div>
     </ModalLayout>
   );

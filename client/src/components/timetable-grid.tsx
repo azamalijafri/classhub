@@ -11,17 +11,6 @@ import { useLoading } from "@/stores/loader-store";
 
 dayjs.extend(customParseFormat);
 
-interface IPeriod {
-  subject: string;
-  startTime: string;
-  endTime: string;
-}
-
-interface ITimetable {
-  day: string;
-  periods: IPeriod[];
-}
-
 const formatTime = (time: string) => {
   return dayjs(time, "HH:mm").format("h:mm A");
 };
@@ -50,18 +39,10 @@ const TimetableTabs: React.FC = () => {
     queryFn: fetchDays,
   });
 
-  const {
-    data: timetable,
-    isLoading: isLoadingTimetable,
-    isFetching,
-  } = useQuery({
+  const { data: timetable, isLoading: isLoadingTimetable } = useQuery({
     queryKey: ["timetable", classId],
     queryFn: fetchTimetable,
   });
-
-  useEffect(() => {
-    console.log("is fetching");
-  }, [isFetching]);
 
   useEffect(() => {
     startLoading();
@@ -82,9 +63,13 @@ const TimetableTabs: React.FC = () => {
     }
 
     return daySchedule.periods.map((period: IPeriod, index: number) => (
-      <div key={index} className="p-2 border-[1px] border-primary rounded mb-2">
-        <div className="font-medium">{period.subject}</div>
-        <div className="text-sm">
+      <div
+        key={index}
+        className="p-2 border-[1px] border-primary rounded mb-2 space-y-1"
+      >
+        <div className="">{period.subject.name}</div>
+        <div className=" text-sm">Taking by {period.teacher.name}</div>
+        <div className="text-xs ">
           {formatTime(period.startTime)} - {formatTime(period.endTime)}
         </div>
       </div>

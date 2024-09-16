@@ -3,6 +3,7 @@ import { Day } from "../enums/days";
 
 const PeriodSchema = z.object({
   subject: z.string().min(1, "Subject is required"),
+  teacher: z.string().min(1, "Teacher is required"),
   startTime: z
     .string()
     .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid start time format"),
