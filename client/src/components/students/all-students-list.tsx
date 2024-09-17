@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useFetchData } from "@/hooks/useFetchData";
 import DataTable from "@/components/data-table";
 import { apiUrls } from "@/constants/api-urls";
@@ -6,13 +7,30 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useModal } from "@/stores/modal-store";
 import axiosInstance from "@/lib/axios-instance";
+import queryString from "query-string";
 
 const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
-  const { data = [], refetch } = useFetchData(
-    [queryKey, "students"],
-    apiUrls.student.getAllStudents
+  const location = useLocation();
+
+  const {
+    search,
+    class: classFilter,
+    page = 1,
+  } = Object.fromEntries(new URLSearchParams(location.search).entries());
+
+  const apiUrl = queryString.stringifyUrl(
+    {
+      url: apiUrls.student.getAllStudents,
+      query: { search, class: classFilter, page },
+    },
+    { skipEmptyString: true, skipNull: true }
   );
+
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const { data = [], refetch } = useFetchData(
+    [queryKey, "students", search, classFilter, page.toString()],
+    apiUrl
+  );
   const { openModal } = useModal();
 
   const toggleSelectStudent = (studentId: string) => {
@@ -48,7 +66,12 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
 
   const actions = (student: IStudent) => (
     <div className="flex space-x-2">
-      <Button variant="default" onClick={() => console.log("Edit", student)}>
+      <Button
+        variant="default"
+        onClick={() => {
+          openModal("upsert-student", { student: student });
+        }}
+      >
         Edit
       </Button>
       <Button
@@ -72,7 +95,6 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
 
   return (
     <div className="p-4 flex flex-col space-y-4">
-      {/* Assign button at the top */}
       <div className="flex justify-between items-center">
         <h3 className="font-normal text-2xl">All Students</h3>
         <Button
@@ -84,11 +106,13 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
         </Button>
       </div>
 
-      {data?.students?.length === 0 ? (
-        <p className="mx-auto">No students found.</p>
-      ) : (
-        <DataTable data={data?.students} columns={columns} actions={actions} />
-      )}
+      <DataTable
+        data={data?.students}
+        columns={columns}
+        actions={actions}
+        totalItems={data?.totalStudents}
+        classFilter={true}
+      />
     </div>
   );
 };

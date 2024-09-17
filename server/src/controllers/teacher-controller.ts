@@ -9,32 +9,101 @@ import {
 } from "../validation/teacher-schema";
 import Subject from "../models/subject";
 import Classroom, { IClassroom } from "../models/classroom";
+import { DEFAULT_PAGE_LIMIT } from "../constants/variables";
+import { Types } from "mongoose";
 
 export const getAllTeachers = async (req: Request, res: Response) => {
   try {
-    const { subject: subjectId } = req.query;
-    const queryOptions: any = { status: 1, school: req.user.profile.school };
+    const {
+      search,
+      class: classId,
+      page = 1,
+      pageLimit = DEFAULT_PAGE_LIMIT,
+      subject: subjectId,
+    } = req.query;
 
-    if (subjectId) queryOptions.subject = subjectId;
+    const queryOptions: any = {
+      school: req.user.profile.school,
+      status: 1,
+    };
 
-    const teachers: (ITeacher & { classroom: IClassroom })[] =
-      await Teacher.find(queryOptions)
-        .populate("user")
-        .populate("subject")
-        .lean();
-
-    for (let teacher of teachers) {
-      const classroom = await Classroom.findOne({
-        teacher: teacher._id,
-      });
-      if (classroom) teacher.classroom = classroom;
+    if (search) {
+      queryOptions.name = { $regex: search, $options: "i" };
     }
+
+    if (subjectId) {
+      queryOptions.subject = new Types.ObjectId(subjectId as string);
+    }
+
+    const limit = parseInt(pageLimit as string, 10);
+    const skip = (parseInt(page as string, 10) - 1) * limit;
+
+    const teachers = await Teacher.aggregate([
+      {
+        $match: queryOptions,
+      },
+      {
+        $lookup: {
+          from: "classrooms",
+          localField: "_id",
+          foreignField: "teacher",
+          as: "classroom",
+        },
+      },
+      {
+        $unwind: {
+          path: "$classroom",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: classId
+          ? { "classroom._id": new Types.ObjectId(classId as string) }
+          : {},
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $unwind: {
+          path: "$user",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "subject",
+          foreignField: "_id",
+          as: "subject",
+        },
+      },
+      {
+        $unwind: {
+          path: "$subject",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      { $sort: { name: 1 } },
+      { $skip: skip },
+      { $limit: limit },
+    ]);
+
+    const totalTeachers = await Teacher.countDocuments(queryOptions);
 
     res.status(200).json({
       message: "Teachers fetched successfully",
       teachers,
+      totalTeachers,
     });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({ message: "Error fetching teachers", error });
   }
 };
@@ -89,42 +158,47 @@ export const createBulkTeachers = async (req: Request, res: Response) => {
       [];
     const createdTeachers: { name: string; email: string }[] = [];
 
-    for (const teacher of teachers) {
-      const { name, email, subject } = teacher;
+    await Promise.all(
+      teachers.map(
+        async (teacher: { name: string; email: string; subject: string }) => {
+          const { name, email, subject } = teacher;
 
-      const doesSubjectExist = await Subject.findOne({
-        name: subject,
-        school: req.user.profile.school,
-      });
+          try {
+            const doesSubjectExist = await Subject.findOne({
+              name: subject,
+              school: req.user.profile.school,
+            });
 
-      if (!doesSubjectExist) {
-        failedTeachers.push({
-          name,
-          email,
-          reason: "Subject doesn't exist",
-        });
-        continue;
-      }
+            if (!doesSubjectExist) {
+              failedTeachers.push({
+                name,
+                email,
+                reason: "Subject doesn't exist",
+              });
+              return; // Skip to the next teacher if the subject doesn't exist
+            }
 
-      try {
-        await createUserAndProfile({
-          name,
-          email,
-          role: "teacher",
-          res,
-          school,
-          subject: doesSubjectExist?._id?.toString(),
-        });
+            // Create the user and teacher profile
+            await createUserAndProfile({
+              name,
+              email,
+              role: "teacher",
+              res,
+              school,
+              subject: doesSubjectExist?._id?.toString(),
+            });
 
-        createdTeachers.push({ name, email });
-      } catch (error: any) {
-        failedTeachers.push({
-          name,
-          email,
-          reason: error.message || "Error creating teacher",
-        });
-      }
-    }
+            createdTeachers.push({ name, email });
+          } catch (error: any) {
+            failedTeachers.push({
+              name,
+              email,
+              reason: error.message || "Error creating teacher",
+            });
+          }
+        }
+      )
+    );
 
     return res.status(200).json({
       message: `${createdTeachers.length} teacher(s) created successfully`,

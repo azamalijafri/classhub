@@ -5,7 +5,10 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "@/lib/axios-instance";
 import { apiUrls } from "@/constants/api-urls";
 import { useForm } from "react-hook-form";
-import { RegisterFormValues, registerSchema } from "@/validators/register";
+import {
+  RegisterFormValues,
+  registerSchema,
+} from "@/validators/onboard-validator";
 import { Form } from "@/components/ui/form";
 import TextInput from "@/components/inputs/text-input";
 import { zodResolver } from "@hookform/resolvers/zod";

@@ -22,12 +22,12 @@ const navs = [
   },
   {
     label: "Teacher",
-    key: "create-teacher",
+    key: "upsert-teacher",
     icon: BookTypeIcon,
   },
   {
     label: "Student",
-    key: "create-student",
+    key: "upsert-student",
     icon: UsersIcon,
   },
   {

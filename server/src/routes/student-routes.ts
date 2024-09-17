@@ -8,6 +8,7 @@ import {
   kickStudentFromClass,
   removeStudentFromSchool,
   createStudent,
+  createBulkStudents,
 } from "../controllers/student-controller";
 
 const router = Router();
@@ -15,6 +16,12 @@ const router = Router();
 router.use(authenticateUser);
 
 router.post("/create/student", requireRole(["principal"]), createStudent);
+
+router.post(
+  "/create/bulk/students",
+  requireRole(["principal"]),
+  createBulkStudents
+);
 
 router.get("/get/all/students", requireRole(["principal"]), getAllStudent);
 

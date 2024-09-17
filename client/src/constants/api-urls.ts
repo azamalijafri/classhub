@@ -32,6 +32,7 @@ export const apiUrls = {
     kickStudent: "/kick/student",
     removeStudent: "/remove/student",
     updateStudent: "/update/student",
+    createBulkStudents: "/create/bulk/students",
   },
   timetable: {
     getTimetable: "/get/timetable",

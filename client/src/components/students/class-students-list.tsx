@@ -1,16 +1,31 @@
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { useFetchData } from "@/hooks/useFetchData";
 import DataTable from "@/components/data-table";
 import { apiUrls } from "@/constants/api-urls";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/stores/modal-store";
 import axiosInstance from "@/lib/axios-instance";
+import queryString from "query-string";
 
 const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
+  const location = useLocation();
   const { classId } = useParams();
+
+  const { search, page = 1 } = Object.fromEntries(
+    new URLSearchParams(location.search).entries()
+  );
+
+  const apiUrl = queryString.stringifyUrl(
+    {
+      url: `${apiUrls.student.getClassStudents}/${classId}`,
+      query: { search, page },
+    },
+    { skipEmptyString: true, skipNull: true }
+  );
+
   const { data = [], refetch } = useFetchData(
-    [queryKey, "classStudents"],
-    `${apiUrls.student.getClassStudents}/${classId}`
+    [queryKey, "classStudents", search, page.toString()],
+    apiUrl
   );
   const { openModal } = useModal();
 
@@ -44,7 +59,12 @@ const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
 
   return (
     <div className="p-4 ">
-      <DataTable data={data.students} columns={columns} actions={actions} />
+      <DataTable
+        data={data.students}
+        columns={columns}
+        actions={actions}
+        totalItems={data.totalStudents}
+      />
     </div>
   );
 };

@@ -40,8 +40,14 @@ const ComboBox: React.FC<ComboBoxProps> = ({
   );
 
   const handleSelect = (itemId: string) => {
-    setSelectedItem(itemId);
-    onSelect(itemId);
+    if (selectedItem == itemId) {
+      onSelect("");
+      setSelectedItem(undefined);
+    } else {
+      setSelectedItem(itemId);
+      onSelect(itemId);
+    }
+
     setOpen(false);
   };
 
@@ -53,14 +59,15 @@ const ComboBox: React.FC<ComboBoxProps> = ({
           <Button
             disabled={disabled}
             variant={"outline"}
-            className="w-full border border-gray-300 rounded p-2 text-left"
+            className="w-full border border-gray-300 rounded p-2 text-left overflow-hidden text-ellipsis"
             role="combobox"
             aria-expanded={open}
             aria-controls="item-list"
           >
-            {selectedItem &&
-              (items.find((item) => item.id === selectedItem)?.label ??
-                placeholder)}
+            {selectedItem
+              ? items.find((item) => item.id === selectedItem)?.label ??
+                placeholder
+              : placeholder}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 float-right" />
           </Button>
         </PopoverTrigger>

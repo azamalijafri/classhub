@@ -5,16 +5,15 @@ import { DialogTitle } from "@radix-ui/react-dialog";
 import { Form } from "../ui/form";
 import { useForm } from "react-hook-form";
 import {
-  CreateBulkTeacherFormValues,
-  createSingleTeacherSchema,
-  CreateTeacherFormValues,
-} from "../../validators/teacher-validator";
+  CreateStudentFormValues,
+  CreateSingleStudentSchema,
+  CreateBulkStudentFormValues,
+} from "../../validators/student-validator";
 import TextInput from "../inputs/text-input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axiosInstance from "../../lib/axios-instance";
 import { apiUrls } from "../../constants/api-urls";
-import { useState, useEffect } from "react";
-import ComboBox from "../inputs/useform-combo-box";
+import { useState } from "react";
 import * as XLSX from "xlsx";
 import Papa from "papaparse";
 import { Input } from "../ui/input";
@@ -28,61 +27,44 @@ import {
 } from "../ui/table";
 import { useQueryClient } from "@tanstack/react-query";
 
-const UpsertTeacherModal = () => {
+const UpsertStudentModal = () => {
   const { modals, closeModal } = useModal();
-  const modal = modals.find((modal) => modal.type == "upsert-teacher");
-  const teacher = modal?.data?.teacher;
-  const isUpdateMode = !!teacher;
+  const modal = modals.find((modal) => modal.type == "upsert-student");
+  const student = modal?.data?.student;
+  const isUpdateMode = !!student;
 
   const [isLoading, setIsLoading] = useState(false);
-  const [subjects, setSubjects] = useState<{ id: string; label: string }[]>([]);
   const [isBulkUpload, setIsBulkUpload] = useState(false);
-  const [fileTeachers, setFileTeachers] = useState<
-    CreateBulkTeacherFormValues["teachers"]
+  const [fileStudents, setFileStudents] = useState<
+    CreateBulkStudentFormValues["students"]
   >([]);
 
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      const response = await axiosInstance.get(apiUrls.subject.getAllSubjects);
-      if (response) {
-        setSubjects(
-          response.data.subjects.map((subject: ISubject) => ({
-            id: subject._id,
-            label: subject.name,
-          }))
-        );
-      }
-    };
-    fetchSubjects();
-  }, []);
-
-  const form = useForm<CreateTeacherFormValues>({
-    resolver: zodResolver(createSingleTeacherSchema),
+  const form = useForm<CreateStudentFormValues>({
+    resolver: zodResolver(CreateSingleStudentSchema),
     defaultValues: {
-      name: teacher?.name || "",
-      email: teacher?.user.email || "",
-      subject: teacher?.subject._id || "",
+      name: student?.name || "",
+      email: student?.user?.email || "",
+      roll: student?.rollNo || "",
     },
   });
 
   const queryClient = useQueryClient();
-
   const { isValid, isSubmitting, errors } = form.formState;
 
-  const handleSubmit = async (values: CreateTeacherFormValues) => {
+  const handleSubmit = async (values: CreateStudentFormValues) => {
     try {
       setIsLoading(true);
 
       const apiUrl = isUpdateMode
-        ? `${apiUrls.teacher.updateTeacher}/${teacher._id}`
-        : apiUrls.teacher.createTeacher;
+        ? `${apiUrls.student.updateStudent}/${student._id}`
+        : apiUrls.student.createStudent;
 
       const response = isUpdateMode
         ? await axiosInstance.put(apiUrl, values)
         : await axiosInstance.post(apiUrl, values);
 
       if (response) {
-        queryClient.refetchQueries({ queryKey: ["all", "teachers"] });
+        queryClient.refetchQueries({ queryKey: ["all", "students"] });
         closeModal();
       }
     } finally {
@@ -100,17 +82,15 @@ const UpsertTeacherModal = () => {
       Papa.parse(file, {
         complete: (result) => {
           const parsedData = result.data as string[][];
-          const parsedTeachers = parsedData
+          const parsedStudents = parsedData
             .slice(1)
             .map((row) => ({
               name: row[0],
               email: row[1],
-              subject: subjects.find((subject) => subject.label == row[2])
-                ? row[2]
-                : "",
+              roll: row[2] ? String(row[2]) : "",
             }))
-            .filter((teacher) => teacher.name && teacher.email);
-          setFileTeachers(parsedTeachers);
+            .filter((student) => student.name && student.email && student.roll);
+          setFileStudents(parsedStudents);
         },
         header: false,
       });
@@ -124,17 +104,15 @@ const UpsertTeacherModal = () => {
           header: 1,
         });
 
-        const parsedTeachers = (sheet as string[][])
+        const parsedStudents = (sheet as string[][])
           .slice(1)
           .map((row) => ({
             name: row[0],
             email: row[1],
-            subject: subjects.find((subject) => subject.label == row[2])
-              ? row[2]
-              : "",
+            roll: row[2] ? String(row[2]) : "",
           }))
-          .filter((teacher) => teacher.name && teacher.email);
-        setFileTeachers(parsedTeachers);
+          .filter((student) => student.name && student.email && student.roll);
+        setFileStudents(parsedStudents);
       };
       reader.readAsArrayBuffer(file);
     } else {
@@ -145,16 +123,16 @@ const UpsertTeacherModal = () => {
   const handleBulkSubmit = async () => {
     try {
       setIsLoading(true);
-      if (fileTeachers.length > 0) {
+      if (fileStudents.length > 0) {
         const response = await axiosInstance.post(
-          apiUrls.teacher.createBulkTeachers,
+          apiUrls.student.createBulkStudents,
           {
-            teachers: fileTeachers,
+            students: fileStudents,
           }
         );
 
         if (response) {
-          queryClient.refetchQueries({ queryKey: ["all", "teachers"] });
+          queryClient.refetchQueries({ queryKey: ["all", "students"] });
           closeModal();
         }
       }
@@ -170,36 +148,36 @@ const UpsertTeacherModal = () => {
       <div className="flex flex-col gap-y-4">
         <DialogTitle className="font-bold mb-4 text-xl">
           {isUpdateMode
-            ? "Update Teacher"
+            ? "Update Student"
             : isBulkUpload
-            ? "Bulk Upload Teachers"
-            : "Create Teacher"}
+            ? "Bulk Upload Students"
+            : "Create Student"}
         </DialogTitle>
 
         {!isUpdateMode && isBulkUpload ? (
           <>
             <span className="text-xs text-zinc-600">
-              Upload only csv and excel file
+              Upload only csv or excel file
             </span>
             <Input
               type="file"
               accept=".csv, .xls, .xlsx"
               onChange={handleFileUpload}
             />
-            {fileTeachers.length > 0 && (
-              <div className="mt-4 max-h-80">
+            {fileStudents.length > 0 && (
+              <div className="mt-4 overflow-y-scroll max-h-80">
                 <Table>
                   <TableHeader>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Subject</TableHead>
+                    <TableHead>Roll No</TableHead>
                   </TableHeader>
                   <TableBody>
-                    {fileTeachers.map((teacher, index) => (
+                    {fileStudents.map((student, index) => (
                       <TableRow key={index}>
-                        <TableCell>{teacher.name}</TableCell>
-                        <TableCell>{teacher.email}</TableCell>
-                        <TableCell>{teacher.subject}</TableCell>
+                        <TableCell>{student.name}</TableCell>
+                        <TableCell>{student.email}</TableCell>
+                        <TableCell>{student.roll}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -212,7 +190,7 @@ const UpsertTeacherModal = () => {
               disabled={isLoading}
               className="mt-4"
             >
-              Submit Bulk Teachers
+              Submit Bulk Students
             </Button>
           </>
         ) : (
@@ -236,22 +214,25 @@ const UpsertTeacherModal = () => {
                   name="email"
                   placeholder="Enter Email"
                   type="email"
-                  description="We will send teacher's credentials on this email"
+                  description="We will send student's credentials on this email"
                   error={errors.email?.message}
                 />
               )}
-              <ComboBox
-                items={subjects}
-                control={form.control}
-                placeholder="Select Subject"
-                label="Subject"
-                name="subject"
-              />
+              {!isUpdateMode && (
+                <TextInput
+                  label="Roll No"
+                  control={form.control}
+                  name="roll"
+                  placeholder="Enter Roll No"
+                  type="text"
+                  error={errors.roll?.message}
+                />
+              )}
               <Button
                 isLoading={isSubmitting}
                 disabled={isSubmitting || !isValid || isLoading}
               >
-                {isUpdateMode ? "Update Teacher" : "Create"}
+                {isUpdateMode ? "Update Student" : "Create"}
               </Button>
             </form>
           </Form>
@@ -262,7 +243,7 @@ const UpsertTeacherModal = () => {
             variant="secondary"
             onClick={() => setIsBulkUpload(!isBulkUpload)}
           >
-            {isBulkUpload ? "Create Single Teacher" : "Bulk Upload"}
+            {isBulkUpload ? "Create Single Student" : "Bulk Upload"}
           </Button>
         )}
       </div>
@@ -270,4 +251,4 @@ const UpsertTeacherModal = () => {
   );
 };
 
-export default UpsertTeacherModal;
+export default UpsertStudentModal;

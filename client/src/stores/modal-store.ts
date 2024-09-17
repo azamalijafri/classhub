@@ -3,7 +3,7 @@ import { create } from "zustand";
 export type ModalType =
   | "upsert-classroom"
   | "upsert-teacher"
-  | "create-student"
+  | "upsert-student"
   | "assign-teacher"
   | "confirm"
   | "edit-timetable"
@@ -16,6 +16,7 @@ type ModalData = {
   performingAction?: () => void;
   selectedStudents?: string[];
   teacher?: ITeacher;
+  student?: IStudent;
 } | null;
 
 interface Modal {

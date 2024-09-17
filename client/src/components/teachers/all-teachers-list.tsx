@@ -4,13 +4,32 @@ import { apiUrls } from "@/constants/api-urls";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/stores/modal-store";
 import axiosInstance from "@/lib/axios-instance";
+import queryString from "query-string";
+import { useLocation } from "react-router-dom";
 
 type Teacher = ITeacher & { classroom: IClassroom };
 
 const TeachersList = ({ queryKey }: { queryKey: string }) => {
+  const location = useLocation();
+
+  const {
+    search,
+    class: classFilter,
+    subject,
+    page = 1,
+  } = Object.fromEntries(new URLSearchParams(location.search).entries());
+
+  const apiUrl = queryString.stringifyUrl(
+    {
+      url: apiUrls.teacher.getAllTeachers,
+      query: { search, class: classFilter, page, subject },
+    },
+    { skipEmptyString: true, skipNull: true }
+  );
+
   const { data = [], refetch } = useFetchData(
-    [queryKey, "teachers"],
-    apiUrls.teacher.getAllTeachers
+    [queryKey, "teachers", search, classFilter, subject, page.toString()],
+    apiUrl
   );
   const { openModal } = useModal();
 
@@ -56,7 +75,14 @@ const TeachersList = ({ queryKey }: { queryKey: string }) => {
   return (
     <div className="p-4 flex flex-col space-y-4">
       <h3 className="font-normal text-2xl">All Teachers</h3>
-      <DataTable data={data.teachers} columns={columns} actions={actions} />
+      <DataTable
+        data={data.teachers}
+        columns={columns}
+        actions={actions}
+        classFilter={true}
+        subjectFilter={true}
+        totalItems={data.totalTeachers}
+      />
     </div>
   );
 };

@@ -14,7 +14,7 @@ export function ModalLayout({
   const { closeModal } = useModal();
   return (
     <Dialog open={isOpen} onOpenChange={closeModal}>
-      <DialogContent className={`min-w-fit ${maxWidth && "max-w-3xl"}`}>
+      <DialogContent className={`min-w-fit ${maxWidth && "max-w-3xl"} `}>
         {children}
       </DialogContent>
     </Dialog>
