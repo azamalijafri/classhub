@@ -30,8 +30,8 @@ function App() {
   }, [initializeAuth]);
 
   return (
-    <RootProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <RootProvider>
         {isLoading ? (
           <SplashScreen />
         ) : (
@@ -56,8 +56,8 @@ function App() {
             </Routes>
           </Suspense>
         )}
-      </BrowserRouter>
-    </RootProvider>
+      </RootProvider>
+    </BrowserRouter>
   );
 }
 

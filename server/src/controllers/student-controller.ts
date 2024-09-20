@@ -92,6 +92,8 @@ export const getAllStudent = async (req: Request, res: Response) => {
       class: classId,
       page = 1,
       pageLimit = DEFAULT_PAGE_LIMIT,
+      sortField = "name",
+      sortOrder = 1,
     } = req.query;
 
     const queryOptions: any = {
@@ -110,17 +112,24 @@ export const getAllStudent = async (req: Request, res: Response) => {
     const limit = parseInt(pageLimit as string, 10);
     const skip = (parseInt(page as string, 10) - 1) * limit;
 
+    const sortOptions: any = {};
+    if (sortField && (sortOrder === "asc" || sortOrder === "desc")) {
+      sortOptions[sortField as string] = sortOrder === "asc" ? 1 : -1;
+    } else {
+      sortOptions["createdAt"] = -1;
+    }
+
     const students = await Student.find(queryOptions)
       .populate("user")
       .populate("classroom")
-      .sort({ name: 1 })
+      .sort(sortOptions)
       .skip(skip)
       .limit(limit);
 
     const totalStudents = await Student.countDocuments(queryOptions);
 
     res.status(200).json({
-      message: "students fetched successfully",
+      message: "Students fetched successfully",
       students,
       currentPage: parseInt(page as string, 10),
       totalPages: Math.ceil(totalStudents / limit),
@@ -134,7 +143,13 @@ export const getAllStudent = async (req: Request, res: Response) => {
 export const getAllStudentByClass = async (req: Request, res: Response) => {
   try {
     const { classroomId } = req.params;
-    const { search, page = 1, pageLimit = DEFAULT_PAGE_LIMIT } = req.query;
+    const {
+      search,
+      page = 1,
+      pageLimit = DEFAULT_PAGE_LIMIT,
+      sortOrder,
+      sortField,
+    } = req.query;
 
     const queryOptions: any = {
       school: req.user.profile.school,
@@ -149,9 +164,16 @@ export const getAllStudentByClass = async (req: Request, res: Response) => {
     const limit = parseInt(pageLimit as string, 10);
     const skip = (parseInt(page as string, 10) - 1) * limit;
 
+    const sortOptions: any = {};
+    if (sortField && (sortOrder === "asc" || sortOrder === "desc")) {
+      sortOptions[sortField as string] = sortOrder === "asc" ? 1 : -1;
+    } else {
+      sortOptions["createdAt"] = -1;
+    }
+
     const students = await Student.find(queryOptions)
       .populate("user")
-      .sort({ name: 1 })
+      .sort(sortOptions)
       .skip(skip)
       .limit(limit);
 

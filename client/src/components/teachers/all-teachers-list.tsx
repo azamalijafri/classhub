@@ -17,29 +17,60 @@ const TeachersList = ({ queryKey }: { queryKey: string }) => {
     class: classFilter,
     subject,
     page = 1,
+    sortField,
+    sortOrder,
   } = Object.fromEntries(new URLSearchParams(location.search).entries());
 
   const apiUrl = queryString.stringifyUrl(
     {
       url: apiUrls.teacher.getAllTeachers,
-      query: { search, class: classFilter, page, subject },
+      query: {
+        search,
+        class: classFilter,
+        page,
+        subject,
+        sortField,
+        sortOrder,
+      },
     },
     { skipEmptyString: true, skipNull: true }
   );
 
   const { data = [], refetch } = useFetchData(
-    [queryKey, "teachers", search, classFilter, subject, page.toString()],
+    [
+      queryKey,
+      "teachers",
+      search,
+      classFilter,
+      subject,
+      page.toString(),
+      sortField,
+      sortOrder,
+    ],
     apiUrl
   );
   const { openModal } = useModal();
 
   const columns = [
-    { label: "Name", render: (teacher: Teacher) => teacher.name },
-    { label: "Email", render: (teacher: Teacher) => teacher.user.email },
-    { label: "Subject", render: (teacher: Teacher) => teacher.subject.name },
+    {
+      label: "Name",
+      render: (teacher: Teacher) => teacher.name,
+      value: "name",
+    },
+    {
+      label: "Email",
+      render: (teacher: Teacher) => teacher.user.email,
+      value: "email",
+    },
+    {
+      label: "Subject",
+      render: (teacher: Teacher) => teacher.subject.name,
+      value: "subject",
+    },
     {
       label: "Class",
       render: (teacher: Teacher) => teacher.classroom?.name ?? "N/A",
+      value: "classroom",
     },
   ];
 

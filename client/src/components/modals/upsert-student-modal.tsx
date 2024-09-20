@@ -25,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { useQueryClient } from "@tanstack/react-query";
+import { useRefetchQuery } from "@/hooks/useRefetchQuery";
 
 const UpsertStudentModal = () => {
   const { modals, closeModal } = useModal();
@@ -48,7 +48,7 @@ const UpsertStudentModal = () => {
     },
   });
 
-  const queryClient = useQueryClient();
+  const refetchQuery = useRefetchQuery();
   const { isValid, isSubmitting, errors } = form.formState;
 
   const handleSubmit = async (values: CreateStudentFormValues) => {
@@ -64,7 +64,7 @@ const UpsertStudentModal = () => {
         : await axiosInstance.post(apiUrl, values);
 
       if (response) {
-        queryClient.refetchQueries({ queryKey: ["all", "students"] });
+        refetchQuery(["all", "students"]);
         closeModal();
       }
     } finally {
@@ -132,7 +132,7 @@ const UpsertStudentModal = () => {
         );
 
         if (response) {
-          queryClient.refetchQueries({ queryKey: ["all", "students"] });
+          refetchQuery(["all", "students"]);
           closeModal();
         }
       }

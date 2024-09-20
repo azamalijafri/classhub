@@ -79,10 +79,10 @@ export const assignTeacherToClassroom = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Classroom not found" });
     }
 
-    if (classroom.teacher)
-      return res.status(500).json({
-        message: "This classroom has already been assigned to a teacher",
-      });
+    // if (classroom.teacher)
+    //   return res.status(500).json({
+    //     message: "This classroom has already been assigned to a teacher",
+    //   });
 
     classroom.teacher = new Types.ObjectId(teacherId);
     await classroom.save();

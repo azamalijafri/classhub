@@ -24,7 +24,7 @@ interface IClassroom {
   _id: string;
   name: string;
   days: ITimeSlot[];
-  teacher: IProfile;
+  teacher: ITeacher;
 }
 
 interface IStudent {

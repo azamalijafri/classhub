@@ -1,10 +1,10 @@
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button, buttonVariants } from "./ui/button";
-import { useCallback, useEffect, useState } from "react";
-import axiosInstance from "../lib/axios-instance";
 import { apiUrls } from "../constants/api-urls";
 import { useModal } from "../stores/modal-store";
 import { cn } from "@/lib/utils";
+import ClassTeacherButton from "./class-teacher-button";
+import { useFetchData } from "@/hooks/useFetchData";
 
 const tabs = [
   { label: "Timetable", path: "timetable" },
@@ -17,20 +17,10 @@ const ClassDetailsLayout = () => {
   const pathname = useLocation().pathname.split("/").reverse()[0];
   const { openModal } = useModal();
 
-  const [classroom, setClassroom] = useState<IClassroom | null>(null);
-
-  const fetchClassDetails = useCallback(async () => {
-    const response = await axiosInstance.get(
-      `${apiUrls.classroom.getClassroomDetails}/${classId}`
-    );
-    if (response) {
-      setClassroom(response.data.classroom);
-    }
-  }, [classId]);
-
-  useEffect(() => {
-    fetchClassDetails();
-  }, [fetchClassDetails]);
+  const { data } = useFetchData(
+    [classId ?? "", "class-details"],
+    `${apiUrls.classroom.getClassroomDetails}/${classId}`
+  );
 
   return (
     <div>
@@ -51,7 +41,7 @@ const ClassDetailsLayout = () => {
           ))}
         </div>
         <div className={cn(buttonVariants({ variant: "outline" }))}>
-          <h3>{classroom?.name}</h3>
+          <h3>{data?.classroom?.name}</h3>
         </div>
         <div className="flex items-center gap-x-5">
           <div>
@@ -60,17 +50,17 @@ const ClassDetailsLayout = () => {
             </Button>
           </div>
           <div>
-            {classroom?.teacher ? (
-              <div className="px-4 py-2 rounded-md border-[1px] border-primary">
-                <span>{classroom.teacher.name}</span>
-              </div>
+            {data?.classroom?.teacher ? (
+              <ClassTeacherButton classroom={data?.classroom} />
             ) : (
-              <Button
-                size={"sm"}
-                onClick={() => openModal("assign-teacher", { classId })}
-              >
-                Assign Teacher
-              </Button>
+              <div>
+                <Button
+                  size={"sm"}
+                  onClick={() => openModal("assign-teacher", { classId })}
+                >
+                  Assign Teacher
+                </Button>
+              </div>
             )}
           </div>
         </div>

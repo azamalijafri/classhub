@@ -20,6 +20,7 @@ import { MoveDown, MoveUp, SearchIcon } from "lucide-react";
 interface TableColumn {
   label: string;
   render: (item: any) => JSX.Element | string;
+  value: string;
 }
 
 interface DataTableProps {
@@ -52,8 +53,8 @@ const DataTable = ({
     class: queryParams.get("class") || "",
     subject: queryParams.get("subject") || "",
     page: Number(queryParams.get("page")) || 1,
-    sortField: queryParams.get("sortField") || "", // Sorting field
-    sortOrder: queryParams.get("sortOrder") || "asc", // Sorting order
+    sortField: queryParams.get("sortField") || "",
+    sortOrder: queryParams.get("sortOrder") || "asc",
   });
 
   const debouncedSearch = useDebounce(params.search, 500);
@@ -193,20 +194,27 @@ const DataTable = ({
                   <TableHead
                     key={column.label}
                     className="py-2 px-4 border border-gray-300 cursor-pointer hover:bg-zinc-200"
-                    onClick={() => handleSortChange(column.label.toLowerCase())}
+                    onClick={() => handleSortChange(column.value)}
                   >
                     <div className="flex items-center gap-x-1">
                       <span className="mb-0">{column.label}</span>
 
-                      {params.sortField === column.label.toLowerCase() && (
-                        <>
-                          {params.sortOrder === "asc" ? (
-                            <MoveUp className="size-3" />
-                          ) : (
-                            <MoveDown className="size-3" />
-                          )}
-                        </>
-                      )}
+                      <div className="flex items-center">
+                        <MoveUp
+                          className={`size-3 ${
+                            params.sortField == column.value &&
+                            params.sortOrder == "asc" &&
+                            "text-black"
+                          }`}
+                        />
+                        <MoveDown
+                          className={`size-3 ${
+                            params.sortField == column.value &&
+                            params.sortOrder == "desc" &&
+                            "text-black"
+                          }`}
+                        />
+                      </div>
                     </div>
                   </TableHead>
                 ))}

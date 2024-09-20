@@ -16,19 +16,35 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
     search,
     class: classFilter,
     page = 1,
+    sortField,
+    sortOrder,
   } = Object.fromEntries(new URLSearchParams(location.search).entries());
 
   const apiUrl = queryString.stringifyUrl(
     {
       url: apiUrls.student.getAllStudents,
-      query: { search, class: classFilter, page },
+      query: {
+        search,
+        class: classFilter,
+        page,
+        sortField,
+        sortOrder,
+      },
     },
     { skipEmptyString: true, skipNull: true }
   );
 
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const { data = [], refetch } = useFetchData(
-    [queryKey, "students", search, classFilter, page.toString()],
+    [
+      queryKey,
+      "students",
+      search,
+      classFilter,
+      page.toString(),
+      sortField,
+      sortOrder,
+    ],
     apiUrl
   );
   const { openModal } = useModal();
@@ -54,14 +70,28 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
           onClick={() => toggleSelectStudent(student._id)}
         />
       ),
+      value: "select",
     },
-    { label: "Name", render: (student: IStudent) => student.name },
-    { label: "Email", render: (student: IStudent) => student.user.email },
+    {
+      label: "Name",
+      render: (student: IStudent) => student.name,
+      value: "name",
+    },
+    {
+      label: "Email",
+      render: (student: IStudent) => student.user.email,
+      value: "email",
+    },
     {
       label: "Class",
       render: (student: IStudent) => student.classroom?.name ?? "N/A",
+      value: "classroom",
     },
-    { label: "Roll No", render: (student: IStudent) => student.rollNo },
+    {
+      label: "Roll No",
+      render: (student: IStudent) => student.rollNo,
+      value: "rollNo",
+    },
   ];
 
   const actions = (student: IStudent) => (

@@ -20,6 +20,8 @@ export const getAllTeachers = async (req: Request, res: Response) => {
       page = 1,
       pageLimit = DEFAULT_PAGE_LIMIT,
       subject: subjectId,
+      sortField,
+      sortOrder,
     } = req.query;
 
     const queryOptions: any = {
@@ -37,6 +39,13 @@ export const getAllTeachers = async (req: Request, res: Response) => {
 
     const limit = parseInt(pageLimit as string, 10);
     const skip = (parseInt(page as string, 10) - 1) * limit;
+
+    const sortOptions: any = {};
+    if (sortField && (sortOrder === "asc" || sortOrder === "desc")) {
+      sortOptions[sortField as string] = sortOrder === "asc" ? 1 : -1;
+    } else {
+      sortOptions["createdAt"] = -1;
+    }
 
     const teachers = await Teacher.aggregate([
       {
@@ -89,7 +98,7 @@ export const getAllTeachers = async (req: Request, res: Response) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-      { $sort: { name: 1 } },
+      { $sort: sortOptions },
       { $skip: skip },
       { $limit: limit },
     ]);
@@ -268,4 +277,12 @@ export const removeTeacherFromSchool = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: "Error removing teacher", error });
   }
+};
+
+export const getMyClassroom = async (req: Request, res: Response) => {
+  const classroom = await Classroom.findOne({
+    teacher: req.user.profile._id,
+  }).populate("teacher");
+
+  return res.status(200).json({ classroom });
 };

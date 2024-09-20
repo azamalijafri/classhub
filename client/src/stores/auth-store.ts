@@ -67,6 +67,7 @@ const useAuthStore = create<AuthStore>((set, get) => ({
       set({ profile: data.profile, user: data.user });
     } catch (error: any) {
       console.error("Error fetching profile:", error);
+      localStorage.clear();
       set({ profile: null, isError: error.message as CustomError });
     }
   },

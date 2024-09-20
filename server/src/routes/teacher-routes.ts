@@ -5,6 +5,7 @@ import {
   createBulkTeachers,
   createTeacher,
   getAllTeachers,
+  getMyClassroom,
   removeTeacherFromSchool,
   updateTeacher,
 } from "../controllers/teacher-controller";
@@ -33,6 +34,12 @@ router.put(
   "/remove/teacher/:teacherId",
   requireRole(["principal"]),
   removeTeacherFromSchool
+);
+
+router.get(
+  "/teacher/get/my/classroom/",
+  requireRole(["teacher"]),
+  getMyClassroom
 );
 
 export default router;

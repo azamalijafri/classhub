@@ -22,7 +22,7 @@ interface ComboBoxProps {
   placeholder?: string;
   label?: string;
   onSelect: (selectedId: string) => void;
-  selectedValue: string;
+  selectedValue: string | undefined;
   disabled?: boolean;
 }
 

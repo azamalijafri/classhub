@@ -10,7 +10,7 @@ import { apiUrls } from "../../constants/api-urls";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
-import { useQueryClient } from "@tanstack/react-query";
+import { useRefetchQuery } from "@/hooks/useRefetchQuery";
 
 const daysOfWeek = [
   { label: "Monday", value: "Monday" },
@@ -37,7 +37,7 @@ const UpsertClassroomModal = () => {
   );
 
   const { showToast } = useShowToast();
-  const queryClient = useQueryClient();
+  const refetchQuery = useRefetchQuery();
 
   useEffect(() => {
     if (classId) {
@@ -131,7 +131,7 @@ const UpsertClassroomModal = () => {
     }
 
     if (response) {
-      queryClient.refetchQueries({ queryKey: ["classrooms"] });
+      refetchQuery(["classrooms"]);
       closeModal();
     }
   };

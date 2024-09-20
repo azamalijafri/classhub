@@ -10,21 +10,21 @@ import {
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "@/lib/axios-instance";
 import { apiUrls } from "@/constants/api-urls";
-import { useQueryClient } from "@tanstack/react-query";
 import { useModal } from "@/stores/modal-store";
+import { useRefetchQuery } from "@/hooks/useRefetchQuery";
 
 const ClassroomCard = ({ classroom }: { classroom: IClassroom }) => {
   const navigate = useNavigate();
   const { openModal } = useModal();
 
-  const queryClient = useQueryClient();
+  const refetchQuery = useRefetchQuery();
 
   const handleRemove = async () => {
     const response = await axiosInstance.delete(
       `${apiUrls.classroom.removeClassroom}/${classroom._id}`
     );
     if (response) {
-      queryClient.refetchQueries({ queryKey: ["classrooms"] });
+      refetchQuery(["classrooms"]);
     }
   };
 

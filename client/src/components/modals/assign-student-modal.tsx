@@ -16,7 +16,7 @@ import {
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { useQueryClient } from "@tanstack/react-query";
+import { useRefetchQuery } from "@/hooks/useRefetchQuery";
 
 const AssignStudentModal = () => {
   const { modals, closeModal } = useModal();
@@ -39,7 +39,7 @@ const AssignStudentModal = () => {
     }
   }, [modal]);
 
-  const queryClient = useQueryClient();
+  const refetchQuery = useRefetchQuery();
 
   const handleAssign = async () => {
     const response = await axiosInstance.post(
@@ -47,7 +47,7 @@ const AssignStudentModal = () => {
       { studentsIds: selectedStudents, classroomId: selectedClass }
     );
     if (response) {
-      queryClient.refetchQueries({ queryKey: ["all", "students"] });
+      refetchQuery(["all", "students"]);
       closeModal();
     }
   };

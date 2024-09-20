@@ -20,7 +20,7 @@ export const PrincipalItems = [
 
 export const StudentItems = [
   {
-    label: "Classes",
+    label: "My Class",
     href: "/",
     icon: LayoutDashboardIcon,
   },
@@ -28,7 +28,7 @@ export const StudentItems = [
 
 export const TeacherItems = [
   {
-    label: "Classes",
+    label: "My Class",
     href: "/",
     icon: LayoutDashboardIcon,
   },

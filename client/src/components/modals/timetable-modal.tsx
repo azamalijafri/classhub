@@ -15,10 +15,10 @@ import {
 } from "@/components/ui/dialog";
 import { useModal } from "@/stores/modal-store";
 import { Label } from "../ui/label";
-import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import ComboBox from "../inputs/combo-box";
 import qs from "query-string";
+import { useRefetchQuery } from "@/hooks/useRefetchQuery";
 
 dayjs.extend(customParseFormat);
 
@@ -96,7 +96,7 @@ const EditTimetableModal: React.FC = () => {
     fetchSubjects();
   }, []);
 
-  const queryClient = useQueryClient();
+  const refetchQuery = useRefetchQuery();
 
   useEffect(() => {
     const fetchTimetable = async () => {
@@ -217,10 +217,7 @@ const EditTimetableModal: React.FC = () => {
       );
 
       if (response) {
-        queryClient.refetchQueries({
-          queryKey: ["timetable", classId],
-        });
-
+        refetchQuery(["timetable", classId]);
         closeModal();
       }
     } finally {

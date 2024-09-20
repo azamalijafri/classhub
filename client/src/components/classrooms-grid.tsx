@@ -1,25 +1,16 @@
-import { apiUrls } from "@/constants/api-urls";
-import axiosInstance from "@/lib/axios-instance";
 import { useSidebar } from "@/stores/sidebar-store";
 import ClassroomCard from "./classroom-card";
-import { useQuery } from "@tanstack/react-query";
-import { useLoading } from "@/stores/loader-store";
 
-export const ClassroomsGrid = () => {
+export const ClassroomsGrid = ({
+  isLoading,
+  isError,
+  data,
+}: {
+  isLoading: boolean;
+  isError: boolean;
+  data: IClassroom[];
+}) => {
   const { isCollapsed } = useSidebar();
-  const { startLoading, stopLoading } = useLoading();
-
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["classrooms"],
-    queryFn: async () => {
-      startLoading();
-      const response = await axiosInstance.get(
-        apiUrls.classroom.getAllClassrooms
-      );
-      stopLoading();
-      return response.data.classrooms;
-    },
-  });
 
   if (isLoading) {
     return null;
