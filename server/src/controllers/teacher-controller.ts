@@ -11,6 +11,7 @@ import Subject from "../models/subject";
 import Classroom, { IClassroom } from "../models/classroom";
 import { DEFAULT_PAGE_LIMIT } from "../constants/variables";
 import { Types } from "mongoose";
+import Timetable, { IPeriod } from "../models/timetable";
 
 export const getAllTeachers = async (req: Request, res: Response) => {
   try {
@@ -285,4 +286,46 @@ export const getMyClassroom = async (req: Request, res: Response) => {
   }).populate("teacher");
 
   return res.status(200).json({ classroom });
+};
+
+export const getMySchedule = async (req: Request, res: Response) => {
+  const teacherId = req.user.profile._id as string;
+
+  if (!Types.ObjectId.isValid(teacherId)) {
+    return res.status(400).json({ error: "Invalid teacher ID" });
+  }
+
+  try {
+    const timetables = await Timetable.find({ "periods.teacher": teacherId })
+      .populate("classroom", "name")
+      .populate("periods.teacher", "name")
+      .sort({ "periods.startTime": 1 });
+
+    const groupedByDay = timetables.reduce((acc, timetable) => {
+      const { day, periods, classroom } = timetable;
+
+      const sortedPeriods = periods.sort((a, b) => {
+        const timeA = Date.parse(`1970-01-01T${a.startTime}:00Z`);
+        const timeB = Date.parse(`1970-01-01T${b.startTime}:00Z`);
+        return timeA - timeB;
+      });
+
+      const periodsWithClassroom = sortedPeriods.map((period) => ({
+        ...period.toObject(),
+        classroom,
+      }));
+
+      if (!acc[day]) {
+        acc[day] = [];
+      }
+      acc[day] = acc[day].concat(periodsWithClassroom);
+
+      return acc;
+    }, {} as Record<string, IPeriod[]>);
+
+    res.json(groupedByDay);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };

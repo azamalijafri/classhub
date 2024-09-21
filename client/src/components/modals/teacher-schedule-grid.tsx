@@ -15,46 +15,29 @@ const formatTime = (time: string) => {
   return dayjs(time, "HH:mm").format("h:mm A");
 };
 
-const TimetableTabs: React.FC = () => {
-  const { classId } = useParams<{ classId: string }>();
+const TeacherScheduleGrid: React.FC = () => {
+  const { teacherId } = useParams<{ teacherId: string }>();
   const { startLoading, stopLoading } = useLoading();
 
-  const fetchDays = async () => {
+  const fetchTeacherSchedule = async () => {
     try {
       startLoading();
-      const response = await axiosInstance.get(
-        `${apiUrls.classroom.getClassroomDays}/${classId}`
-      );
-      stopLoading();
-      return response.data.days;
+      const response = await axiosInstance.get(apiUrls.teacher.getMySchedule);
+      return response.data;
     } finally {
       stopLoading();
     }
   };
 
-  const fetchTimetable = async () => {
-    const response = await axiosInstance.get(
-      `${apiUrls.timetable.getTimetable}/${classId}`
-    );
-    return response.data.timetable;
-  };
-
-  const { data: availableDays, isLoading: isLoadingDays } = useQuery({
-    queryKey: ["classroomDays", classId],
-    queryFn: fetchDays,
-  });
-
   const { data: timetable, isLoading: isLoadingTimetable } = useQuery({
-    queryKey: ["timetable", classId],
-    queryFn: fetchTimetable,
+    queryKey: ["teacherSchedule", teacherId],
+    queryFn: fetchTeacherSchedule,
   });
 
   const renderPeriods = (day: string) => {
-    const daySchedule = timetable?.find(
-      (schedule: ITimetable) => schedule.day === day
-    );
+    const daySchedule = timetable?.[day];
 
-    if (!daySchedule || daySchedule.periods.length === 0) {
+    if (!daySchedule || daySchedule.length === 0) {
       return (
         <div className="text-primary flex items-center gap-x-2 justify-center mt-10">
           <span className="text-xl font-medium">No class on this day</span>
@@ -63,23 +46,26 @@ const TimetableTabs: React.FC = () => {
       );
     }
 
-    return daySchedule.periods.map((period: IPeriod, index: number) => (
-      <div
-        key={index}
-        className="p-2 border-[1px] border-primary rounded mb-2 space-y-1"
-      >
-        <div className="">{period.subject.name}</div>
-        <div className=" text-sm">Taking by {period.teacher.name}</div>
-        <div className="text-xs ">
-          {formatTime(period.startTime)} - {formatTime(period.endTime)}
+    return daySchedule.map(
+      (period: IPeriod & { classroom: IClassroom }, index: number) => (
+        <div
+          key={index}
+          className="p-2 border-[1px] border-primary rounded mb-2 space-y-1 overflow-hidden text-ellipsis"
+        >
+          <div className="font-medium">{period?.classroom?.name}</div>
+          <div className="text-xs">
+            {formatTime(period.startTime)} - {formatTime(period.endTime)}
+          </div>
         </div>
-      </div>
-    ));
+      )
+    );
   };
 
-  if (isLoadingDays || isLoadingTimetable) return <div>Loading...</div>;
+  if (isLoadingTimetable) return null;
 
-  if (!availableDays || availableDays.length === 0) return null;
+  const availableDays = Object.keys(timetable || {});
+
+  if (availableDays.length === 0) return null;
 
   return (
     <Tabs defaultValue={availableDays[0]} className="w-full">
@@ -99,4 +85,4 @@ const TimetableTabs: React.FC = () => {
   );
 };
 
-export default TimetableTabs;
+export default TeacherScheduleGrid;

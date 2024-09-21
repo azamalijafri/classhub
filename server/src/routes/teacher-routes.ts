@@ -6,6 +6,7 @@ import {
   createTeacher,
   getAllTeachers,
   getMyClassroom,
+  getMySchedule,
   removeTeacherFromSchool,
   updateTeacher,
 } from "../controllers/teacher-controller";
@@ -41,5 +42,7 @@ router.get(
   requireRole(["teacher"]),
   getMyClassroom
 );
+
+router.get("/get/my/schedule/", requireRole(["teacher"]), getMySchedule);
 
 export default router;

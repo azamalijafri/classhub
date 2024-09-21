@@ -25,6 +25,7 @@ export const apiUrls = {
     removeTeacher: "/remove/teacher",
     updateTeacher: "/update/teacher",
     getMyClassroom: "/teacher/get/my/classroom",
+    getMySchedule: "/get/my/schedule",
   },
   student: {
     createStudent: "/create/student",

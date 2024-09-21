@@ -1,4 +1,9 @@
-import { BookType, LayoutDashboardIcon, UsersIcon } from "lucide-react";
+import {
+  BookType,
+  CalendarCheckIcon,
+  LayoutDashboardIcon,
+  UsersIcon,
+} from "lucide-react";
 
 export const PrincipalItems = [
   {
@@ -28,8 +33,13 @@ export const StudentItems = [
 
 export const TeacherItems = [
   {
-    label: "My Class",
+    label: "Class",
     href: "/",
     icon: LayoutDashboardIcon,
+  },
+  {
+    label: "Schedule",
+    href: "/schedule",
+    icon: CalendarCheckIcon,
   },
 ];

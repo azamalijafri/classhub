@@ -113,7 +113,7 @@ const EditTimetableModal: React.FC = () => {
               (schedule: { day: string }) => schedule.day === day.day
             )
           ) {
-            fetchedTimetable.push({ day, periods: [] });
+            fetchedTimetable.push({ day: day.day, periods: [] });
           }
         });
 
@@ -170,6 +170,7 @@ const EditTimetableModal: React.FC = () => {
 
   const handleSavePeriod = () => {
     if (!activePeriod) return;
+    console.log(timetable);
 
     setTimetable((prevTimetable) =>
       prevTimetable.map((schedule) =>
@@ -186,6 +187,7 @@ const EditTimetableModal: React.FC = () => {
           : schedule
       )
     );
+
     setActivePeriod(null);
     setEditingPeriod(null);
   };

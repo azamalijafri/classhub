@@ -5,6 +5,7 @@ import { useModal } from "../stores/modal-store";
 import { cn } from "@/lib/utils";
 import ClassTeacherButton from "./class-teacher-button";
 import { useFetchData } from "@/hooks/useFetchData";
+import useAuthStore from "@/stores/auth-store";
 
 const tabs = [
   { label: "Timetable", path: "timetable" },
@@ -16,6 +17,7 @@ const ClassDetailsLayout = () => {
   const { classId } = useParams();
   const pathname = useLocation().pathname.split("/").reverse()[0];
   const { openModal } = useModal();
+  const { user } = useAuthStore();
 
   const { data } = useFetchData(
     [classId ?? "", "class-details"],
@@ -44,25 +46,35 @@ const ClassDetailsLayout = () => {
           <h3>{data?.classroom?.name}</h3>
         </div>
         <div className="flex items-center gap-x-5">
-          <div>
-            <Button onClick={() => openModal("edit-timetable", { classId })}>
-              Edit Timetable
-            </Button>
-          </div>
-          <div>
-            {data?.classroom?.teacher ? (
-              <ClassTeacherButton classroom={data?.classroom} />
-            ) : (
-              <div>
-                <Button
-                  size={"sm"}
-                  onClick={() => openModal("assign-teacher", { classId })}
-                >
-                  Assign Teacher
-                </Button>
-              </div>
-            )}
-          </div>
+          {user?.role === "principal" && (
+            <div>
+              <Button onClick={() => openModal("edit-timetable", { classId })}>
+                Edit Timetable
+              </Button>
+            </div>
+          )}
+          {user?.role == "principal" ? (
+            <div>
+              {data?.classroom?.teacher ? (
+                <ClassTeacherButton classroom={data?.classroom} />
+              ) : (
+                <div>
+                  <Button
+                    size={"sm"}
+                    onClick={() => openModal("assign-teacher", { classId })}
+                  >
+                    Assign Teacher
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div
+              className={`flex items-center justify-center font-medium px-4 py-2 rounded-md border-[1px] border-primary w-full overflow-hidden text-ellipsis`}
+            >
+              {data?.classroom?.teacher.name}
+            </div>
+          )}
         </div>
       </div>
       <div>

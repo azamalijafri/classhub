@@ -3,10 +3,12 @@ import { UserAvatar } from "./user-avatar";
 import CreateButton from "./create-button";
 import { useSidebar } from "../stores/sidebar-store";
 import { useNavigate } from "react-router-dom";
+import useAuthStore from "@/stores/auth-store";
 
 export const Navbar = () => {
   const { toggleSidebar } = useSidebar();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
 
   return (
     <div className="flex h-20 justify-between py-8 px-8 w-full mx-auto items-center">
@@ -26,7 +28,7 @@ export const Navbar = () => {
         </div>
       </div>
       <div className="flex gap-x-4">
-        <CreateButton />
+        {user?.role === "principal" && <CreateButton />}
         <UserAvatar />
       </div>
     </div>
