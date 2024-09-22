@@ -119,7 +119,7 @@ const UpsertClassroomModal = () => {
     if (classId) {
       // Update existing classroom
       response = await axiosInstance.put(
-        `${apiUrls.classroom.updateClassroom}/${classId}`,
+        `${apiUrls.school.updateClassroom}/${classId}`,
         requestData
       );
     } else {

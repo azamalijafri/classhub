@@ -8,6 +8,8 @@ import teachersRoutes from "./routes/teacher-routes";
 import schoolRoutes from "./routes/school-routes";
 import studentsRoutes from "./routes/student-routes";
 import subjectRoutes from "./routes/subject-routes";
+import attendanceRoutes from "./routes/attendance-routes";
+
 import dotenv from "dotenv";
 import cors from "cors";
 
@@ -33,6 +35,7 @@ app.use("/api", timetableRoutes);
 app.use("/api", teachersRoutes);
 app.use("/api", studentsRoutes);
 app.use("/api", subjectRoutes);
+app.use("/api", attendanceRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -22,7 +22,7 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
 
   const apiUrl = queryString.stringifyUrl(
     {
-      url: apiUrls.student.getAllStudents,
+      url: apiUrls.school.getAllStudents,
       query: {
         search,
         class: classFilter,
@@ -110,7 +110,7 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
           openModal("confirm", {
             performingAction: async () => {
               const response = await axiosInstance.put(
-                `${apiUrls.student.removeStudent}/${student._id}`
+                `${apiUrls.school.removeStudentFromSchool}/${student._id}`
               );
 
               if (response) refetch();

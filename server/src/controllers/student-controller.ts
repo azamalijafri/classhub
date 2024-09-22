@@ -8,6 +8,12 @@ import {
 } from "../validation/student-schema";
 import { createUserAndProfile } from "./profile-controller";
 import { DEFAULT_PAGE_LIMIT } from "../constants/variables";
+import Attendance from "../models/attendance";
+import StudentAttendance from "../models/student-attendence";
+import { z } from "zod";
+import { attendancePercentageSchema } from "../validation/attendance-schema";
+import Classroom from "../models/classroom";
+import Subject from "../models/subject";
 
 export const createStudent = async (req: Request, res: Response) => {
   const validatedData = validate(createStudentSchema, req.body, res);
@@ -161,14 +167,15 @@ export const getAllStudentByClass = async (req: Request, res: Response) => {
       queryOptions.name = { $regex: search, $options: "i" };
     }
 
-    const limit = parseInt(pageLimit as string, 10);
+    const limit =
+      pageLimit == "all" ? Infinity : parseInt(pageLimit as string, 10);
     const skip = (parseInt(page as string, 10) - 1) * limit;
 
     const sortOptions: any = {};
     if (sortField && (sortOrder === "asc" || sortOrder === "desc")) {
       sortOptions[sortField as string] = sortOrder === "asc" ? 1 : -1;
     } else {
-      sortOptions["createdAt"] = -1;
+      sortOptions["name"] = 1;
     }
 
     const students = await Student.find(queryOptions)
@@ -255,5 +262,59 @@ export const removeStudentFromSchool = async (req: Request, res: Response) => {
       .json({ message: "Student removed successfully", showMessage: true });
   } catch (error) {
     res.status(500).json({ message: "Error removing student", error });
+  }
+};
+
+export const getAttendancePercentage = async (req: Request, res: Response) => {
+  try {
+    const validatedData = validate(attendancePercentageSchema, req.body, res);
+
+    if (!validatedData) return;
+
+    const { studentId, subjectId, classId } = validatedData;
+
+    const classroom = await Classroom.findById(classId);
+    if (!classroom)
+      return res.status(404).json({ error: "Classroom not found" });
+
+    const subject = await Subject.findById(subjectId);
+    if (!subject) return res.status(404).json({ error: "Subject not found" });
+
+    const student = await Student.findById(studentId);
+    if (!student) return res.status(404).json({ error: "Student not found" });
+
+    const totalSessions = await Attendance.countDocuments({
+      subject: subjectId,
+    });
+
+    if (totalSessions === 0) {
+      return res
+        .status(404)
+        .json({ error: "No sessions found for this subject" });
+    }
+
+    const attendedSessions = await StudentAttendance.countDocuments({
+      student: studentId,
+      attendance: {
+        $in: await Attendance.find({ subject: subjectId }).distinct("_id"),
+      },
+      status: 1,
+    });
+
+    const attendancePercentage = (attendedSessions / totalSessions) * 100;
+
+    res.status(200).json({
+      studentId,
+      subjectId,
+      totalSessions,
+      attendedSessions,
+      attendancePercentage: attendancePercentage.toFixed(2),
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors });
+    }
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };

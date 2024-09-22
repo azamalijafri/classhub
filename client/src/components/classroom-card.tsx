@@ -21,7 +21,7 @@ const ClassroomCard = ({ classroom }: { classroom: IClassroom }) => {
 
   const handleRemove = async () => {
     const response = await axiosInstance.delete(
-      `${apiUrls.classroom.removeClassroom}/${classroom._id}`
+      `${apiUrls.school.removeClassroom}/${classroom._id}`
     );
     if (response) {
       refetchQuery(["classrooms"]);

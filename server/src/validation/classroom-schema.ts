@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Day } from "../enums/days";
+import { Types } from "mongoose";
 
 const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
@@ -35,18 +36,21 @@ export const createClassroomSchema = z.object({
 });
 
 export const assignTeacherSchema = z.object({
-  teacherId: z.string().min(1, "Teacher ID is required"),
+  teacherId: z.string().refine((id) => Types.ObjectId.isValid(id), {
+    message: "Invalid teacher ID",
+  }),
   classroomId: z.string().min(1, "Classroom ID is required"),
 });
 
-// export const assignStudentSchema = z.object({
-//   studentId: z.string().min(1, "Student ID is required"),
-//   classroomId: z.string().min(1, "Classroom ID is required"),
-// });
-
 export const assignStudentsSchema = z.object({
   studentsIds: z
-    .array(z.string().min(1, "Student ID cannot be empty"))
+    .array(
+      z.string().refine((id) => Types.ObjectId.isValid(id), {
+        message: "Invalid student ID",
+      })
+    )
     .nonempty("At least one student must be selected"),
-  classroomId: z.string().min(1, "Classroom ID is required"),
+  classroomId: z.string().refine((id) => Types.ObjectId.isValid(id), {
+    message: "Invalid classroom ID",
+  }),
 });

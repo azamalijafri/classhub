@@ -9,6 +9,7 @@ export type ModalType =
   | "edit-timetable"
   | "assign-students"
   | "create-subject"
+  | "attendance"
   | null;
 
 type ModalData = {
@@ -17,6 +18,9 @@ type ModalData = {
   selectedStudents?: string[];
   teacher?: ITeacher;
   student?: IStudent;
+  periodId?: string;
+  subjectId?: string;
+  teacherId?: string;
 } | null;
 
 interface Modal {

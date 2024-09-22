@@ -20,7 +20,7 @@ const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
 
   const apiUrl = queryString.stringifyUrl(
     {
-      url: `${apiUrls.student.getClassStudents}/${classId}`,
+      url: `${apiUrls.classroom.getClassStudents}/${classId}`,
       query: { search, page, sortOrder, sortField },
     },
     { skipEmptyString: true, skipNull: true }
@@ -58,7 +58,7 @@ const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
           openModal("confirm", {
             performingAction: async () => {
               const response = await axiosInstance.put(
-                `${apiUrls.student.kickStudent}/${student._id}`
+                `${apiUrls.classroom.kickStudent}/${student._id}`
               );
               if (response) {
                 refetch();

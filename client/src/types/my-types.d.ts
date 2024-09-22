@@ -71,6 +71,7 @@ interface ISubject {
 }
 
 interface IPeriod {
+  _id: string;
   teacher: ITeacher;
   subject: ISubject;
   startTime: string;

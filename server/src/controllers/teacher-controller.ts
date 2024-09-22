@@ -12,6 +12,8 @@ import Classroom, { IClassroom } from "../models/classroom";
 import { DEFAULT_PAGE_LIMIT } from "../constants/variables";
 import { Types } from "mongoose";
 import Timetable, { IPeriod } from "../models/timetable";
+import dayjs from "dayjs";
+import Attendance from "../models/attendance";
 
 export const getAllTeachers = async (req: Request, res: Response) => {
   try {
@@ -299,31 +301,50 @@ export const getMySchedule = async (req: Request, res: Response) => {
     const timetables = await Timetable.find({ "periods.teacher": teacherId })
       .populate("classroom", "name")
       .populate("periods.teacher", "name")
+      .populate("periods.subject", "name")
       .sort({ "periods.startTime": 1 });
 
-    const groupedByDay = timetables.reduce((acc, timetable) => {
-      const { day, periods, classroom } = timetable;
+    const startOfWeek = dayjs().startOf("week").toDate();
+    const endOfWeek = dayjs().endOf("week").toDate();
 
-      const sortedPeriods = periods.sort((a, b) => {
-        const timeA = Date.parse(`1970-01-01T${a.startTime}:00Z`);
-        const timeB = Date.parse(`1970-01-01T${b.startTime}:00Z`);
-        return timeA - timeB;
-      });
+    const groupedByDay = await Promise.all(
+      timetables.map(async (timetable) => {
+        const { day, periods, classroom } = timetable;
 
-      const periodsWithClassroom = sortedPeriods.map((period) => ({
-        ...period.toObject(),
-        classroom,
-      }));
+        const sortedPeriods = periods.sort((a, b) => {
+          const timeA = Date.parse(`1970-01-01T${a.startTime}:00Z`);
+          const timeB = Date.parse(`1970-01-01T${b.startTime}:00Z`);
+          return timeA - timeB;
+        });
 
+        const periodsWithAttendanceFlag = await Promise.all(
+          sortedPeriods.map(async (period) => {
+            const attendanceExists = await Attendance.exists({
+              period: period._id,
+              date: { $gte: startOfWeek, $lte: endOfWeek },
+            });
+
+            return {
+              ...period.toObject(),
+              classroom,
+              attendanceTaken: !!attendanceExists,
+            };
+          })
+        );
+
+        return { day, periods: periodsWithAttendanceFlag };
+      })
+    );
+
+    const groupedSchedule = groupedByDay.reduce((acc, { day, periods }) => {
       if (!acc[day]) {
         acc[day] = [];
       }
-      acc[day] = acc[day].concat(periodsWithClassroom);
-
+      acc[day] = acc[day].concat(periods);
       return acc;
     }, {} as Record<string, IPeriod[]>);
 
-    res.json(groupedByDay);
+    res.json(groupedSchedule);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error" });

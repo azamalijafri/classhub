@@ -8,6 +8,8 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PartyPopperIcon } from "lucide-react";
 import { useLoading } from "@/stores/loader-store";
+import { Button } from "../ui/button";
+import { useModal } from "@/stores/modal-store";
 
 dayjs.extend(customParseFormat);
 
@@ -18,6 +20,7 @@ const formatTime = (time: string) => {
 const TeacherScheduleGrid: React.FC = () => {
   const { teacherId } = useParams<{ teacherId: string }>();
   const { startLoading, stopLoading } = useLoading();
+  const { openModal } = useModal();
 
   const fetchTeacherSchedule = async () => {
     try {
@@ -30,7 +33,7 @@ const TeacherScheduleGrid: React.FC = () => {
   };
 
   const { data: timetable, isLoading: isLoadingTimetable } = useQuery({
-    queryKey: ["teacherSchedule", teacherId],
+    queryKey: ["teacher-schedule", teacherId],
     queryFn: fetchTeacherSchedule,
   });
 
@@ -47,14 +50,40 @@ const TeacherScheduleGrid: React.FC = () => {
     }
 
     return daySchedule.map(
-      (period: IPeriod & { classroom: IClassroom }, index: number) => (
+      (
+        period: IPeriod & { classroom: IClassroom } & {
+          attendanceTaken: boolean;
+        },
+        index: number
+      ) => (
         <div
           key={index}
-          className="p-2 border-[1px] border-primary rounded mb-2 space-y-1 overflow-hidden text-ellipsis"
+          className="p-2 border-[1px] border-primary rounded mb-2 flex justify-between items-center"
         >
-          <div className="font-medium">{period?.classroom?.name}</div>
-          <div className="text-xs">
-            {formatTime(period.startTime)} - {formatTime(period.endTime)}
+          <div className="space-y-1 overflow-hidden text-ellipsis">
+            <div className="font-medium">{period?.classroom?.name}</div>
+            <div className="text-xs">
+              {formatTime(period.startTime)} - {formatTime(period.endTime)}
+            </div>
+          </div>
+          <div>
+            {
+              <Button
+                disabled={period.attendanceTaken}
+                onClick={() =>
+                  openModal("attendance", {
+                    classId: period.classroom._id,
+                    periodId: period._id,
+                    teacherId: period.teacher?._id,
+                    subjectId: period.subject?._id,
+                  })
+                }
+              >
+                {period.attendanceTaken
+                  ? "Attendance Taken"
+                  : "Take Attendance"}
+              </Button>
+            }
           </div>
         </div>
       )
