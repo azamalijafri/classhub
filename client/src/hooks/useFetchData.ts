@@ -12,10 +12,10 @@ export const useFetchData = (queryKey: string[], apiUrl: string) => {
     return response.data;
   };
 
-  const { data, refetch } = useQuery({
+  const { data, refetch, isError } = useQuery({
     queryKey,
     queryFn: fetchData,
   });
 
-  return { data, isLoading, refetch };
+  return { data, isLoading, refetch, isError };
 };

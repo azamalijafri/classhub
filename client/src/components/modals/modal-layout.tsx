@@ -9,12 +9,16 @@ export function ModalLayout({
 }: {
   isOpen: boolean;
   children: ReactNode;
-  maxWidth?: boolean;
+  maxWidth?: string;
 }) {
   const { closeModal } = useModal();
   return (
     <Dialog open={isOpen} onOpenChange={closeModal}>
-      <DialogContent className={`min-w-fit ${maxWidth && "max-w-3xl"} `}>
+      <DialogContent
+        className={`min-w-fit ${
+          maxWidth && maxWidth
+        } max-h-[90vh] overflow-auto`}
+      >
         {children}
       </DialogContent>
     </Dialog>

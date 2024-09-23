@@ -275,7 +275,7 @@ const EditTimetableModal: React.FC = () => {
   };
 
   return (
-    <ModalLayout isOpen={true} maxWidth={true}>
+    <ModalLayout isOpen={true} maxWidth="max-w-3xl">
       <DialogTitle className="text-lg font-medium text-primary mt-4">
         Edit Timetable
       </DialogTitle>

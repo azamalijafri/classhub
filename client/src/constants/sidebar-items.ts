@@ -2,6 +2,7 @@ import {
   BookType,
   CalendarCheckIcon,
   LayoutDashboardIcon,
+  ListCheckIcon,
   UsersIcon,
 } from "lucide-react";
 
@@ -41,5 +42,10 @@ export const TeacherItems = [
     label: "Schedule",
     href: "/schedule",
     icon: CalendarCheckIcon,
+  },
+  {
+    label: "Attendance",
+    href: "/attendance",
+    icon: ListCheckIcon,
   },
 ];

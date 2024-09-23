@@ -5,6 +5,7 @@ import {
   createBulkTeachers,
   createTeacher,
   getAllTeachers,
+  getMyAttendanceClasses,
   getMyClassroom,
   getMySchedule,
   removeTeacherFromSchool,
@@ -44,5 +45,11 @@ router.get(
 );
 
 router.get("/get/my/schedule/", requireRole(["teacher"]), getMySchedule);
+
+router.get(
+  "/teacher/get/my/attendance/classes",
+  requireRole(["teacher"]),
+  getMyAttendanceClasses
+);
 
 export default router;

@@ -29,6 +29,8 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "dayjs": "^1.11.12",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.3",
     "lucide-react": "^0.427.0",
     "papaparse": "^5.4.1",
     "query-string": "^9.1.0",

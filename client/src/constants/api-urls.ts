@@ -4,11 +4,6 @@ export const apiUrls = {
   },
   school: {
     registerPrincipal: "/register",
-    removeTeacherFromSchool: "/remove/teacher",
-    removeClassroom: "/remove/classroom",
-    updateClassroom: "/update/classroom",
-    getAllStudents: "/get/all/students",
-    removeStudentFromSchool: "/remove/student",
   },
   classroom: {
     createClassroom: "/create/classroom",
@@ -18,7 +13,8 @@ export const apiUrls = {
     getClassroomDays: "/get/classroom/days",
     assignStudents: "/assign/students",
     getClassStudents: "/get/students",
-    kickStudent: "/kick/student",
+    removeClassroom: "/remove/classroom",
+    updateClassroom: "/update/classroom",
   },
   user: {
     getMyProfile: "/get/my/profile",
@@ -30,11 +26,16 @@ export const apiUrls = {
     updateTeacher: "/update/teacher",
     getMyClassroom: "/teacher/get/my/classroom",
     getMySchedule: "/get/my/schedule",
+    removeTeacherFromSchool: "/remove/teacher",
+    getMyAttendanceClasses: "/teacher/get/my/attendance/classes",
   },
   student: {
     createStudent: "/create/student",
     updateStudent: "/update/student",
     createBulkStudents: "/create/bulk/students",
+    removeStudentFromSchool: "/remove/student",
+    getAllStudents: "/get/all/students",
+    kickStudentFromClass: "/kick/student",
   },
   timetable: {
     getTimetable: "/get/timetable",

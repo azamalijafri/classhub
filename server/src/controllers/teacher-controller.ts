@@ -14,6 +14,8 @@ import { Types } from "mongoose";
 import Timetable, { IPeriod } from "../models/timetable";
 import dayjs from "dayjs";
 import Attendance from "../models/attendance";
+import Student from "../models/student";
+import StudentAttendance from "../models/student-attendence";
 
 export const getAllTeachers = async (req: Request, res: Response) => {
   try {
@@ -345,6 +347,110 @@ export const getMySchedule = async (req: Request, res: Response) => {
     }, {} as Record<string, IPeriod[]>);
 
     res.json(groupedSchedule);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getMyAttendanceClasses = async (req: Request, res: Response) => {
+  const teacherId = req.user.profile._id as string;
+
+  if (!Types.ObjectId.isValid(teacherId)) {
+    return res.status(400).json({ error: "Invalid teacher ID" });
+  }
+
+  try {
+    // Find distinct classrooms where the teacher has taken attendance
+    const classrooms = await Attendance.aggregate([
+      { $match: { teacher: new Types.ObjectId(teacherId) } }, // Filter by teacher ID
+      { $group: { _id: "$classroom" } }, // Group by classroom
+      {
+        $lookup: {
+          from: "classrooms", // The collection name for classrooms
+          localField: "_id",
+          foreignField: "_id",
+          as: "classroom", // Add classroom details (e.g., name)
+        },
+      },
+      { $unwind: "$classroom" }, // Unwind classroom details
+      {
+        $project: {
+          _id: 1,
+          name: "$classroom.name", // Return classroom name (you can add more fields if necessary)
+        },
+      },
+    ]);
+
+    res.json({ classrooms });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getMySubjectAttendance = async (req: Request, res: Response) => {
+  const teacherId = req.user.profile._id as string;
+
+  const { classId } = req.body;
+
+  if (!Types.ObjectId.isValid(classId) || !Types.ObjectId.isValid(teacherId)) {
+    return res.status(400).json({ error: "Invalid class or teacher ID" });
+  }
+
+  try {
+    const students = await Student.find({ classroom: classId }).select("name");
+
+    if (!students.length) {
+      return res.status(404).json({ error: "No students found in this class" });
+    }
+
+    // Fetch attendance records for the given class and teacher
+    const attendanceRecords = await Attendance.find({
+      classroom: classId,
+      teacher: teacherId,
+    });
+
+    const attendanceRecordsId = attendanceRecords.map((record) => record._id);
+
+    const attendanceData = [];
+
+    for (let student of students) {
+      const studentPresentCount = await StudentAttendance.countDocuments({
+        _id: student._id,
+        attendance: { $in: attendanceRecordsId },
+        status: 1,
+      });
+      const percentage = (
+        studentPresentCount / (attendanceRecords.length ?? 0)
+      ).toFixed();
+      attendanceData.push({ presentCount: studentPresentCount, percentage });
+    }
+
+    // const attendanceData = students.map((student) => {
+
+    //   const studentAttendances = attendanceRecords.filter((attendance) =>
+    //     attendance.students.some(
+    //       (studentRecord) =>
+    //         studentRecord.student.toString() === student._id.toString()
+    //     )
+    //   );
+
+    //   const totalClasses = attendanceRecords.length; // Total periods or classes available
+    //   const classesAttended = studentAttendances.filter((attendance) =>
+    //     attendance.students.some(
+    //       (studentRecord) =>
+    //         studentRecord.student.toString() === student._id.toString() &&
+    //         studentRecord.status === 1 // Status 1 = present
+    //     )
+    //   ).length;
+
+    //   const percentage =
+    //     totalClasses === 0
+    //       ? 0
+    //       : Math.round((classesAttended / totalClasses) * 100);
+
+    res.json({ attendanceData, totalClasses: attendanceRecords.length });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error" });

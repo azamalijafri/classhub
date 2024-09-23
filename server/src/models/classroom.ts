@@ -12,6 +12,7 @@ export interface IClassroom extends Document {
   days: ITimeSlot[];
   teacher?: Types.ObjectId;
   school: Types.ObjectId;
+  subjects: Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,6 +29,7 @@ const ClassroomSchema = new Schema<IClassroom>(
     days: { type: [Dayschema], required: true },
     teacher: { type: Schema.Types.ObjectId, ref: "Teacher" },
     school: { type: Schema.Types.ObjectId, ref: "School", required: true },
+    subjects: { type: [Schema.Types.ObjectId], required: true },
   },
   { timestamps: true }
 );

@@ -13,11 +13,13 @@ export type ModalType =
   | null;
 
 type ModalData = {
-  classId?: string;
   performingAction?: () => void;
   selectedStudents?: string[];
   teacher?: ITeacher;
+  subject?: ISubject;
+  classroom?: IClassroom;
   student?: IStudent;
+  classId?: string;
   periodId?: string;
   subjectId?: string;
   teacherId?: string;

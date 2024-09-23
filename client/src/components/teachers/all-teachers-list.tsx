@@ -90,7 +90,7 @@ const TeachersList = ({ queryKey }: { queryKey: string }) => {
           openModal("confirm", {
             performingAction: async () => {
               const response = await axiosInstance.put(
-                `${apiUrls.school.removeTeacherFromSchool}/${teacher._id}`
+                `${apiUrls.teacher.removeTeacherFromSchool}/${teacher._id}`
               );
 
               if (response) refetch();

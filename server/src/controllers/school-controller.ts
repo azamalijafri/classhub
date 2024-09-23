@@ -37,10 +37,11 @@ export const registerPrincipal = async (req: Request, res: Response) => {
     const school = await School.create({
       name: schoolName,
       principal: principal._id,
-      schoolCode,
+      schoolCode: schoolCode?.toLowerCase(),
     });
 
     principal.school = school._id as Types.ObjectId;
+    await principal.save();
 
     res.status(201).json({
       showMessage: true,

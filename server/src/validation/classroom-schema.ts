@@ -33,6 +33,11 @@ export const createClassroomSchema = z.object({
         path: ["days"],
       }
     ),
+  subjects: z.array(
+    z.string().refine((id) => Types.ObjectId.isValid(id), {
+      message: "Invalid subject ID",
+    })
+  ),
 });
 
 export const assignTeacherSchema = z.object({

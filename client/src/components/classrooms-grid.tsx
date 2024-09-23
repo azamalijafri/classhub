@@ -28,8 +28,8 @@ export const ClassroomsGrid = ({
         isCollapsed ? "grid-cols-5" : "grid-cols-4"
       } p-4`}
     >
-      {classrooms.map((classroom: IClassroom) => (
-        <ClassroomCard key={classroom._id} classroom={classroom} />
+      {classrooms.map((classroom: IClassroom, index: number) => (
+        <ClassroomCard key={index} classroom={classroom} />
       ))}
     </div>
   );

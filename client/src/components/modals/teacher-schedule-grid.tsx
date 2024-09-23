@@ -72,7 +72,7 @@ const TeacherScheduleGrid: React.FC = () => {
                 disabled={period.attendanceTaken}
                 onClick={() =>
                   openModal("attendance", {
-                    classId: period.classroom._id,
+                    classroom: period.classroom,
                     periodId: period._id,
                     teacherId: period.teacher?._id,
                     subjectId: period.subject?._id,

@@ -37,7 +37,6 @@ const DataTable = ({
   data,
   columns,
   actions,
-  emptyMessage = "No Data Found",
   totalItems,
   classFilter,
   subjectFilter,
@@ -181,102 +180,95 @@ const DataTable = ({
         )}
       </div>
 
-      {data?.length === 0 ? (
+      {/* {data?.length === 0 ? (
         <div className="flex size-full items-center justify-center mt-10">
           <span className="text-xl font-medium">{emptyMessage}</span>
         </div>
-      ) : (
-        <>
-          <Table className="border border-gray-300">
-            <TableHeader>
-              <TableRow className="bg-gray-100">
-                {columns.map((column) => (
-                  <TableHead
-                    key={column.label}
-                    className="py-2 px-4 border border-gray-300 cursor-pointer hover:bg-zinc-200"
-                    onClick={() => handleSortChange(column.value)}
-                  >
-                    <div className="flex items-center gap-x-1">
-                      <span className="mb-0">{column.label}</span>
+      ) : ( */}
+      <>
+        <Table className="border border-gray-300">
+          <TableHeader>
+            <TableRow className="bg-gray-100">
+              {columns.map((column) => (
+                <TableHead
+                  key={column.label}
+                  className="py-2 px-4 border border-gray-300 cursor-pointer hover:bg-zinc-200"
+                  onClick={() => handleSortChange(column.value)}
+                >
+                  <div className="flex items-center gap-x-1">
+                    <span className="mb-0">{column.label}</span>
 
-                      <div className="flex items-center">
-                        <MoveUp
-                          className={`size-3 ${
-                            params.sortField == column.value &&
-                            params.sortOrder == "asc" &&
-                            "text-black"
-                          }`}
-                        />
-                        <MoveDown
-                          className={`size-3 ${
-                            params.sortField == column.value &&
-                            params.sortOrder == "desc" &&
-                            "text-black"
-                          }`}
-                        />
-                      </div>
+                    <div className="flex items-center">
+                      <MoveUp
+                        className={`size-3 ${
+                          params.sortField == column.value &&
+                          params.sortOrder == "asc" &&
+                          "text-black"
+                        }`}
+                      />
+                      <MoveDown
+                        className={`size-3 ${
+                          params.sortField == column.value &&
+                          params.sortOrder == "desc" &&
+                          "text-black"
+                        }`}
+                      />
                     </div>
-                  </TableHead>
+                  </div>
+                </TableHead>
+              ))}
+              {actions && (
+                <TableHead className="py-2 px-4 border border-gray-300">
+                  Actions
+                </TableHead>
+              )}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data?.map((item) => (
+              <TableRow key={item._id} className="even:bg-gray-50 odd:bg-white">
+                {columns.map((column, index) => (
+                  <TableCell
+                    className="py-2 px-4 border border-gray-300"
+                    key={index}
+                  >
+                    {column.render(item)}
+                  </TableCell>
                 ))}
                 {actions && (
-                  <TableHead className="py-2 px-4 border border-gray-300">
-                    Actions
-                  </TableHead>
+                  <TableCell className="py-2 px-4 border border-gray-300">
+                    {actions(item)}
+                  </TableCell>
                 )}
               </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {data?.map((item) => (
-                <TableRow
-                  key={item._id}
-                  className="even:bg-gray-50 odd:bg-white"
-                >
-                  {columns.map((column, index) => (
-                    <TableCell
-                      className="py-2 px-4 border border-gray-300"
-                      key={index}
-                    >
-                      {column.render(item)}
-                    </TableCell>
-                  ))}
-                  {actions && (
-                    <TableCell className="py-2 px-4 border border-gray-300">
-                      {actions(item)}
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <div className="flex justify-between mt-4">
-            <p>
-              Page {params.page} of {totalPages}
-            </p>
-            <div className="space-x-4">
-              <Button
-                disabled={params.page === 1}
-                onClick={() =>
-                  handleParamChange("page", Math.max(params.page - 1, 1))
-                }
-              >
-                Previous
-              </Button>
-              <Button
-                disabled={params.page === totalPages}
-                onClick={() =>
-                  handleParamChange(
-                    "page",
-                    Math.min(params.page + 1, totalPages)
-                  )
-                }
-              >
-                Next
-              </Button>
-            </div>
+            ))}
+          </TableBody>
+        </Table>
+        <div className="flex justify-between mt-4">
+          <p className="text-sm font-medium">
+            Page {totalPages == 0 ? 0 : params.page} of {totalPages}
+          </p>
+          <div className="space-x-4">
+            <Button
+              disabled={params.page === 1}
+              onClick={() =>
+                handleParamChange("page", Math.max(params.page - 1, 1))
+              }
+            >
+              Previous
+            </Button>
+            <Button
+              disabled={params.page - 1 === totalPages}
+              onClick={() =>
+                handleParamChange("page", Math.min(params.page + 1, totalPages))
+              }
+            >
+              Next
+            </Button>
           </div>
-        </>
-      )}
+        </div>
+      </>
+      {/* )} */}
     </div>
   );
 };

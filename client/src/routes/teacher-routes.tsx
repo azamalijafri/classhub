@@ -4,6 +4,7 @@ import ClassDetailsLayout from "@/components/class-detail-layout";
 import Timetable from "@/pages/common/timetable";
 import ClassStudents from "@/pages/common/class-students";
 import Schedule from "@/pages/teacher/schedule";
+import Attendance from "@/pages/teacher/attendance";
 
 function TeacherRoutes() {
   return (
@@ -14,6 +15,7 @@ function TeacherRoutes() {
         <Route path="students" element={<ClassStudents />} />
       </Route>
       <Route path="/schedule" element={<Schedule />} />
+      <Route path="/attendance" element={<Attendance />} />
     </Routes>
   );
 }
