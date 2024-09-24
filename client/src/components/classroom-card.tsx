@@ -75,7 +75,7 @@ const ClassroomCard = ({ classroom }: { classroom: IClassroom }) => {
 
         <span
           onClick={() => navigate(navigateLink)}
-          className="hover:underline underline-offset-2 cursor-pointer transition w-fit"
+          className="hover:underline underline-offset-2 cursor-pointer transition w-full text-ellipsis overflow-hidden"
         >
           {classroom?.name}
         </span>

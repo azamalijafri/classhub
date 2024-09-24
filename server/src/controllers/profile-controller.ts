@@ -15,6 +15,7 @@ interface CreateUserAndProfileProps {
   school: ISchool;
   roll?: string;
   subject?: string;
+  classroom?: string;
 }
 
 export const createUserAndProfile = async ({
@@ -25,6 +26,7 @@ export const createUserAndProfile = async ({
   school,
   roll,
   subject,
+  classroom,
 }: CreateUserAndProfileProps) => {
   try {
     const password = passwordGenerator.generate({
@@ -61,6 +63,7 @@ export const createUserAndProfile = async ({
         name,
         school: school._id,
         rollNo: roll,
+        classroom,
       });
     } else if (role === "teacher") {
       profile = new Teacher({

@@ -8,15 +8,17 @@ import Teachers from "@/pages/principal/teachers";
 
 function PrincipalRoutes() {
   return (
-    <Routes>
-      <Route path="/" element={<PrincipalDashboard />} />
-      <Route path="/class/:classId" element={<ClassDetailsLayout />}>
-        <Route path="timetable" element={<Timetable />} />
-        <Route path="students" element={<ClassStudents />} />
-      </Route>
-      <Route path="/teachers" element={<Teachers />} />
-      <Route path="/students" element={<AllStudents />} />
-    </Routes>
+    <div className="w-full">
+      <Routes>
+        <Route path="/" element={<PrincipalDashboard />} />
+        <Route path="/class/:classId" element={<ClassDetailsLayout />}>
+          <Route path="timetable" element={<Timetable />} />
+          <Route path="students" element={<ClassStudents />} />
+        </Route>
+        <Route path="/teachers" element={<Teachers />} />
+        <Route path="/students" element={<AllStudents />} />
+      </Routes>
+    </div>
   );
 }
 

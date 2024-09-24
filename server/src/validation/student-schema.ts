@@ -4,12 +4,14 @@ export const createStudentSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email"),
   roll: z.string().min(1, "Roll No is required"),
+  classroom: z.string().optional(),
 });
 
 export const createBulkStudentSchema = z.object({
   students: z
     .array(createStudentSchema)
     .min(1, "At least one teacher is required"),
+  classroom: z.string().optional(),
 });
 
 export const updateStudentSchema = z.object({

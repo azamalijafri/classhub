@@ -30,34 +30,36 @@ function App() {
   }, [initializeAuth]);
 
   return (
-    <BrowserRouter>
-      <RootProvider>
-        {isLoading ? (
-          <SplashScreen />
-        ) : (
-          <Suspense fallback={<SplashScreen />}>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route
-                path="/*"
-                element={
-                  user ? (
-                    <Layout>
-                      {user.role === "principal" && <PrincipalRoutes />}
-                      {user.role === "teacher" && <TeacherRoutes />}
-                      {user.role === "student" && <StudentRoutes />}
-                    </Layout>
-                  ) : (
-                    <Navigate to="/login" replace />
-                  )
-                }
-              />
-            </Routes>
-          </Suspense>
-        )}
-      </RootProvider>
-    </BrowserRouter>
+    <div className="w-full">
+      <BrowserRouter>
+        <RootProvider>
+          {isLoading ? (
+            <SplashScreen />
+          ) : (
+            <Suspense fallback={<SplashScreen />}>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route
+                  path="/*"
+                  element={
+                    user ? (
+                      <Layout>
+                        {user.role === "principal" && <PrincipalRoutes />}
+                        {user.role === "teacher" && <TeacherRoutes />}
+                        {user.role === "student" && <StudentRoutes />}
+                      </Layout>
+                    ) : (
+                      <Navigate to="/login" replace />
+                    )
+                  }
+                />
+              </Routes>
+            </Suspense>
+          )}
+        </RootProvider>
+      </BrowserRouter>
+    </div>
   );
 }
 

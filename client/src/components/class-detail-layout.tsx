@@ -70,7 +70,7 @@ const ClassDetailsLayout = () => {
             </div>
           ) : (
             <div
-              className={`flex items-center justify-center font-medium px-4 py-2 rounded-md border-[1px] border-primary w-full overflow-hidden text-ellipsis`}
+              className={`flex items-center justify-center font-medium px-4 py-2 rounded-md border-[1px] border-primary w-full overflow-hidden text-ellipsis whitespace-nowrap`}
             >
               {data?.classroom?.teacher.name}
             </div>

@@ -11,7 +11,7 @@ import ComboBox from "../inputs/combo-box";
 const AssignTeacherModal = () => {
   const { modals, closeModal } = useModal();
   const modal = modals.find((modal) => modal.type === "assign-teacher");
-  const [teachers, setTeachers] = useState<IProfile[]>([]);
+  const [teachers, setTeachers] = useState<ITeacher[]>([]);
   const [selectedTeacher, setSelectedTeacher] = useState<string | undefined>(
     undefined
   );
@@ -20,6 +20,7 @@ const AssignTeacherModal = () => {
 
   const fetchTeachers = async () => {
     const response = await axiosInstance.get(apiUrls.teacher.getAllTeachers);
+
     setTeachers(response.data.teachers);
   };
 
@@ -47,11 +48,11 @@ const AssignTeacherModal = () => {
   return (
     <ModalLayout isOpen={!!modal}>
       <DialogTitle className="text-bold text-xl">Assign Teacher</DialogTitle>
-      <div className="flex flex-col gap-y-4">
+      <div className="flex flex-col gap-y-4 z-50 mb-80">
         <ComboBox
           items={teachers.map((teacher) => ({
             id: teacher._id,
-            label: teacher.name,
+            label: `${teacher.name} (${teacher.subject.name})`,
           }))}
           selectedValue={selectedTeacher}
           onSelect={(id) => setSelectedTeacher(id)}

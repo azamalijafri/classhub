@@ -13,7 +13,7 @@ import TextInput from "../inputs/text-input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axiosInstance from "../../lib/axios-instance";
 import { apiUrls } from "../../constants/api-urls";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import Papa from "papaparse";
 import { Input } from "../ui/input";
@@ -26,6 +26,7 @@ import {
   TableRow,
 } from "../ui/table";
 import { useRefetchQuery } from "@/hooks/useRefetchQuery";
+import ComboBox from "../inputs/combo-box";
 
 const UpsertStudentModal = () => {
   const { modals, closeModal } = useModal();
@@ -38,6 +39,10 @@ const UpsertStudentModal = () => {
   const [fileStudents, setFileStudents] = useState<
     CreateBulkStudentFormValues["students"]
   >([]);
+  const [classes, setClasses] = useState<{ id: string; label: string }[]>([]);
+  const [selectedClass, setSelectedClass] = useState<string | undefined>(
+    undefined
+  );
 
   const form = useForm<CreateStudentFormValues>({
     resolver: zodResolver(CreateSingleStudentSchema),
@@ -51,6 +56,22 @@ const UpsertStudentModal = () => {
   const refetchQuery = useRefetchQuery();
   const { isValid, isSubmitting, errors } = form.formState;
 
+  useEffect(() => {
+    const fetchClasses = async () => {
+      const response = await axiosInstance.get(
+        apiUrls.classroom.getAllClassrooms
+      );
+      const formattedclasses = response.data.classrooms.map(
+        (item: IClassroom) => {
+          return { id: item._id, label: item.name };
+        }
+      );
+      setClasses(formattedclasses);
+    };
+
+    fetchClasses();
+  }, []);
+
   const handleSubmit = async (values: CreateStudentFormValues) => {
     try {
       setIsLoading(true);
@@ -60,7 +81,10 @@ const UpsertStudentModal = () => {
         : apiUrls.student.createStudent;
 
       const response = isUpdateMode
-        ? await axiosInstance.put(apiUrl, values)
+        ? await axiosInstance.put(apiUrl, {
+            ...values,
+            classroom: selectedClass,
+          })
         : await axiosInstance.post(apiUrl, values);
 
       if (response) {
@@ -128,6 +152,7 @@ const UpsertStudentModal = () => {
           apiUrls.student.createBulkStudents,
           {
             students: fileStudents,
+            classroom: selectedClass,
           }
         );
 
@@ -165,7 +190,7 @@ const UpsertStudentModal = () => {
               onChange={handleFileUpload}
             />
             {fileStudents.length > 0 && (
-              <div className="mt-4 overflow-y-scroll max-h-80">
+              <div className="mt-4">
                 <Table>
                   <TableHeader>
                     <TableHead>Name</TableHead>
@@ -184,6 +209,15 @@ const UpsertStudentModal = () => {
                 </Table>
               </div>
             )}
+
+            <ComboBox
+              items={classes}
+              onSelect={(classId) => setSelectedClass(classId)}
+              selectedValue={selectedClass}
+              label="Want to assign to a class?"
+              placeholder="Select a class"
+            />
+
             <Button
               onClick={handleBulkSubmit}
               isLoading={isSubmitting || isLoading}
@@ -228,6 +262,15 @@ const UpsertStudentModal = () => {
                   error={errors.roll?.message}
                 />
               )}
+
+              <ComboBox
+                items={classes}
+                onSelect={(classId) => setSelectedClass(classId)}
+                selectedValue={selectedClass}
+                label="Want to assign to a class?"
+                placeholder="Select a class"
+              />
+
               <Button
                 isLoading={isSubmitting}
                 disabled={isSubmitting || !isValid || isLoading}

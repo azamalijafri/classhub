@@ -14,12 +14,16 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <Navbar />
           <Loader />
         </div>
-        <main className="flex mt-20">
+        <main className="flex mt-20 w-screen">
           <div className="fixed">
             <Sidebar />
           </div>
           <div
-            className={`${isCollapsed ? "ml-20" : "ml-64"} transition w-full`}
+            className={`${
+              isCollapsed
+                ? "ml-20 w-[calc(100%-5rem)]"
+                : "ml-64 w-[calc(100%-16rem)]"
+            } transition `}
           >
             {children}
           </div>

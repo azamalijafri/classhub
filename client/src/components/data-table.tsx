@@ -52,8 +52,8 @@ const DataTable = ({
     class: queryParams.get("class") || "",
     subject: queryParams.get("subject") || "",
     page: Number(queryParams.get("page")) || 1,
-    sortField: queryParams.get("sortField") || "",
-    sortOrder: queryParams.get("sortOrder") || "asc",
+    sortField: queryParams.get("sortField") || null,
+    sortOrder: queryParams.get("sortOrder") || null,
   });
 
   const debouncedSearch = useDebounce(params.search, 500);
@@ -258,7 +258,7 @@ const DataTable = ({
               Previous
             </Button>
             <Button
-              disabled={params.page - 1 === totalPages}
+              disabled={params.page === totalPages}
               onClick={() =>
                 handleParamChange("page", Math.min(params.page + 1, totalPages))
               }

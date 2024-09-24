@@ -20,10 +20,17 @@ export const createStudent = async (req: Request, res: Response) => {
 
   if (!validatedData) return;
 
-  const { name, email, roll } = validatedData;
+  const { name, email, roll, classroom: classId } = validatedData;
 
   try {
     const school = await getSchool(req);
+
+    if (classId) {
+      const classroom = await Classroom.findById(classId);
+      if (!classroom)
+        return res.status(400).json({ message: "class not found" });
+    }
+
     await createUserAndProfile({
       name,
       email,
@@ -31,6 +38,7 @@ export const createStudent = async (req: Request, res: Response) => {
       res,
       school,
       roll,
+      classroom: classId,
     });
 
     res
@@ -46,7 +54,12 @@ export const createBulkStudents = async (req: Request, res: Response) => {
 
   if (!validatedData) return;
 
-  const { students } = validatedData;
+  const { students, classroom: classId } = validatedData;
+
+  if (classId) {
+    const classroom = await Classroom.findById(classId);
+    if (!classroom) return res.status(400).json({ message: "class not found" });
+  }
 
   try {
     const school = await getSchool(req);
@@ -67,6 +80,7 @@ export const createBulkStudents = async (req: Request, res: Response) => {
               res,
               school,
               roll,
+              classroom: classId,
             });
             createdStudents.push({ name, email });
           } catch (error: any) {
@@ -84,6 +98,7 @@ export const createBulkStudents = async (req: Request, res: Response) => {
       message: `${createdStudents.length} student(s) created successfully`,
       createdStudents,
       failedStudents,
+      showMessage: true,
     });
   } catch (error: any) {
     console.log("create-bulk-students: ", error);

@@ -9,6 +9,7 @@ import {
   getAllClassrooms,
   getClassroomDays,
   getClassroomDetails,
+  getClassroomSubjects,
   updateClassroom,
 } from "../controllers/classroom-controller";
 
@@ -31,6 +32,8 @@ router.post(
 );
 
 router.get("/get/all/classrooms", requireRole(["principal"]), getAllClassrooms);
+
+router.get("/get/classroom/subjects/:classId", getClassroomSubjects);
 
 router.get("/get/classroom/details/:classId", getClassroomDetails);
 

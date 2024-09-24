@@ -8,6 +8,7 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PartyPopperIcon } from "lucide-react";
 import { useLoading } from "@/stores/loader-store";
+import { daysOfWeek } from "@/constants/variables";
 
 dayjs.extend(customParseFormat);
 
@@ -19,30 +20,17 @@ const TimetableTabs: React.FC = () => {
   const { classId } = useParams<{ classId: string }>();
   const { startLoading, stopLoading } = useLoading();
 
-  const fetchDays = async () => {
+  const fetchTimetable = async () => {
     try {
       startLoading();
       const response = await axiosInstance.get(
-        `${apiUrls.classroom.getClassroomDays}/${classId}`
+        `${apiUrls.timetable.getTimetable}/${classId}`
       );
-      stopLoading();
-      return response.data.days;
+      return response.data.timetable;
     } finally {
       stopLoading();
     }
   };
-
-  const fetchTimetable = async () => {
-    const response = await axiosInstance.get(
-      `${apiUrls.timetable.getTimetable}/${classId}`
-    );
-    return response.data.timetable;
-  };
-
-  const { data: availableDays, isLoading: isLoadingDays } = useQuery({
-    queryKey: ["classroomDays", classId],
-    queryFn: fetchDays,
-  });
 
   const { data: timetable, isLoading: isLoadingTimetable } = useQuery({
     queryKey: ["timetable", classId],
@@ -66,10 +54,14 @@ const TimetableTabs: React.FC = () => {
     return daySchedule.periods.map((period: IPeriod, index: number) => (
       <div
         key={index}
-        className="p-2 border-[1px] border-primary rounded mb-2 space-y-1"
+        className="p-2 border-[1px] border-primary rounded mb-2 space-y-1 overflow-hidden text-ellipsis w-full"
       >
-        <div className="">{period.subject.name}</div>
-        <div className=" text-sm">Taking by {period.teacher.name}</div>
+        <div className="text-ellipsis overflow-hidden w-full whitespace-nowrap">
+          {period.subject.name}
+        </div>
+        <div className=" text-sm text-ellipsis overflow-hidden whitespace-nowrap">
+          Taking by {period.teacher.name}
+        </div>
         <div className="text-xs ">
           {formatTime(period.startTime)} - {formatTime(period.endTime)}
         </div>
@@ -77,20 +69,18 @@ const TimetableTabs: React.FC = () => {
     ));
   };
 
-  if (isLoadingDays || isLoadingTimetable) return <div>Loading...</div>;
-
-  if (!availableDays || availableDays.length === 0) return null;
+  if (isLoadingTimetable) return null;
 
   return (
-    <Tabs defaultValue={availableDays[0]} className="w-full">
+    <Tabs defaultValue={daysOfWeek[0]} className="w-full">
       <TabsList className="flex justify-around bg-primary">
-        {availableDays.map((day: string) => (
+        {daysOfWeek.map((day: string) => (
           <TabsTrigger key={day} value={day} className="text-white">
             {day}
           </TabsTrigger>
         ))}
       </TabsList>
-      {availableDays.map((day: string) => (
+      {daysOfWeek.map((day: string) => (
         <TabsContent key={day} value={day} className="">
           {renderPeriods(day)}
         </TabsContent>

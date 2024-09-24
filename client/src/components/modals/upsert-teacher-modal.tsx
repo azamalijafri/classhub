@@ -187,7 +187,7 @@ const UpsertTeacherModal = () => {
               onChange={handleFileUpload}
             />
             {fileTeachers.length > 0 && (
-              <div className="mt-4 max-h-80">
+              <div className="mt-4">
                 <Table>
                   <TableHeader>
                     <TableHead>Name</TableHead>

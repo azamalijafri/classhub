@@ -9,6 +9,7 @@ export const apiUrls = {
     createClassroom: "/create/classroom",
     getAllClassrooms: "/get/all/classrooms",
     getClassroomDetails: "/get/classroom/details",
+    getClassroomSubjects: "/get/classroom/subjects",
     assignTeacher: "/assign/teacher",
     getClassroomDays: "/get/classroom/days",
     assignStudents: "/assign/students",

@@ -1,10 +1,5 @@
 import { useState } from "react";
 import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@radix-ui/react-popover";
-import {
   Command,
   CommandInput,
   CommandList,
@@ -24,6 +19,7 @@ interface ComboBoxProps {
   onSelect: (selectedId: string) => void;
   selectedValue: string | undefined;
   disabled?: boolean;
+  pickMode?: boolean;
 }
 
 const ComboBox: React.FC<ComboBoxProps> = ({
@@ -33,6 +29,7 @@ const ComboBox: React.FC<ComboBoxProps> = ({
   onSelect,
   selectedValue,
   disabled,
+  pickMode,
 }) => {
   const [open, setOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<string | undefined>(
@@ -40,11 +37,11 @@ const ComboBox: React.FC<ComboBoxProps> = ({
   );
 
   const handleSelect = (itemId: string) => {
-    if (selectedItem == itemId) {
+    if (selectedItem === itemId) {
       onSelect("");
-      setSelectedItem(undefined);
+      if (!pickMode) setSelectedItem(undefined);
     } else {
-      setSelectedItem(itemId);
+      if (!pickMode) setSelectedItem(itemId);
       onSelect(itemId);
     }
 
@@ -52,34 +49,31 @@ const ComboBox: React.FC<ComboBoxProps> = ({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 relative">
       {label && <Label>{label}</Label>}
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            disabled={disabled}
-            variant={"outline"}
-            className="w-full border border-gray-300 rounded p-2 text-left overflow-hidden text-ellipsis"
-            role="combobox"
-            aria-expanded={open}
-            aria-controls="item-list"
-          >
-            {selectedItem
-              ? items.find((item) => item.id === selectedItem)?.label ??
-                placeholder
-              : placeholder}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 float-right" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-full z-50">
-          <Command>
+      <Button
+        disabled={disabled}
+        variant={"outline"}
+        className="w-full border border-gray-300 rounded p-2 text-left overflow-hidden text-ellipsis"
+        role="combobox"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)} // Toggle dropdown on button click
+      >
+        {selectedItem
+          ? items.find((item) => item.id === selectedItem)?.label ?? placeholder
+          : placeholder}
+        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 float-right" />
+      </Button>
+      {open && (
+        <div className="absolute z-50 w-full border-[1px] rounded-md mb-4 bg-white">
+          <Command className="z-50">
             <CommandInput placeholder={`${placeholder}...`} />
             <CommandList id="item-list">
               <CommandEmpty>No items found.</CommandEmpty>
               <CommandGroup>
-                {items.map((item) => (
+                {items.map((item, index) => (
                   <CommandItem
-                    key={item.id}
+                    key={index}
                     value={item.label}
                     onSelect={() => handleSelect(item.id)}
                   >
@@ -95,8 +89,8 @@ const ComboBox: React.FC<ComboBoxProps> = ({
               </CommandGroup>
             </CommandList>
           </Command>
-        </PopoverContent>
-      </Popover>
+        </div>
+      )}
     </div>
   );
 };

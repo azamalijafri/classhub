@@ -9,6 +9,10 @@ import { Types } from "mongoose";
 import Teacher from "../models/teacher";
 import Student from "../models/student";
 import { getSchool, validate } from "../libs/utils";
+import ClassroomSubject from "../models/classroom-subject";
+import Subject from "../models/subject";
+import { daysOfWeek } from "../constants/variables";
+import Timetable from "../models/timetable";
 
 export const createClassroom = async (req: Request, res: Response) => {
   try {
@@ -16,13 +20,14 @@ export const createClassroom = async (req: Request, res: Response) => {
 
     if (!validatedData) return;
 
-    const { name, days } = validatedData;
+    const { name, subjects } = validatedData;
 
     const school = await getSchool(req);
 
     const existingClassroom = await Classroom.findOne({
       name,
       school: school._id,
+      status: 1,
     });
 
     if (existingClassroom)
@@ -30,13 +35,24 @@ export const createClassroom = async (req: Request, res: Response) => {
         message: "Classroom with this name already exist",
       });
 
-    const classroom = new Classroom({
+    const classroom = await Classroom.create({
       name,
-      days,
       school: school._id,
     });
 
-    await classroom.save();
+    const classroomSubjects = subjects.map((subject: Types.ObjectId) => ({
+      classroom: classroom._id,
+      subject,
+    }));
+
+    await ClassroomSubject.insertMany(classroomSubjects);
+
+    const timetabledays = daysOfWeek.map((day) => {
+      return { day, classroom: classroom._id, periods: [] };
+    });
+
+    await Timetable.insertMany(timetabledays);
+
     return res.status(201).json({
       message: "Classroom created successfully",
       classroom,
@@ -79,11 +95,6 @@ export const assignTeacherToClassroom = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Classroom not found" });
     }
 
-    // if (classroom.teacher)
-    //   return res.status(500).json({
-    //     message: "This classroom has already been assigned to a teacher",
-    //   });
-
     classroom.teacher = new Types.ObjectId(teacherId);
     await classroom.save();
 
@@ -125,14 +136,6 @@ export const assignStudentsToClassroom = async (
           .json({ message: `Student with ID ${studentId} not found` });
       }
 
-      // if (student.classroom) {
-      //   return res
-      //     .status(400)
-      //     .json({
-      //       message: `${student.name} is already assigned to a classroom`,
-      //     });
-      // }
-
       student.classroom = new Types.ObjectId(classroomId);
       await student.save();
 
@@ -156,6 +159,7 @@ export const getAllClassrooms = async (req: Request, res: Response) => {
   try {
     const classrooms = await Classroom.find({
       school: req.user.profile.school,
+      status: 1,
     }).populate("teacher");
 
     res.status(200).json({
@@ -164,8 +168,36 @@ export const getAllClassrooms = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
-
     res.status(500).json({ message: "Error fetching classrooms", error });
+  }
+};
+
+export const getClassroomSubjects = async (req: Request, res: Response) => {
+  try {
+    const { classId } = req.params;
+
+    const classroom = await Classroom.findById(classId);
+
+    if (!classroom) return res.status(404).json({ message: "Class not found" });
+
+    let classroomSubjects = await ClassroomSubject.find({
+      classroom: classroom._id,
+    });
+
+    const subjects = [];
+    for (let sub of classroomSubjects) {
+      const subject = await Subject.findById(sub.subject);
+      subjects.push(subject);
+    }
+
+    res.status(200).json({
+      message: "Classroom subjects fetched successfully",
+      subjects,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching classroom subjects", error });
   }
 };
 
@@ -174,6 +206,8 @@ export const getClassroomDetails = async (req: Request, res: Response) => {
     const { classId } = req.params;
 
     const classroom = await Classroom.findById(classId).populate("teacher");
+
+    if (!classroom) return res.status(404).json({ message: "Class not found" });
 
     res.status(200).json({
       message: "Classroom details fetched successfully",
@@ -221,7 +255,7 @@ export const deleteClassroom = async (req: Request, res: Response) => {
         .json({ message: "You cannot delete this classroom" });
     }
 
-    await Classroom.findByIdAndDelete(classroom?._id);
+    await Classroom.findByIdAndUpdate(classroom?._id, { status: 0 });
 
     res.status(200).json({
       message: "Classroom deleted successfully",
@@ -237,32 +271,38 @@ export const updateClassroom = async (req: Request, res: Response) => {
     const { classId } = req.params;
 
     const validatedData = validate(createClassroomSchema, req.body, res);
-
     if (!validatedData) return;
 
-    const { name, days } = validatedData;
+    const { name, subjects } = validatedData;
 
     const existingClassroomWithSameName = await Classroom.findOne({
       name,
       school: req.user.profile.school,
+      _id: { $ne: classId },
+      status: 1,
     });
 
-    if (
-      existingClassroomWithSameName &&
-      existingClassroomWithSameName._id != classId
-    )
+    if (existingClassroomWithSameName) {
       return res.status(401).json({
         message: "Classroom with this name already present",
       });
+    }
 
     const existingClassroom = await Classroom.findById(classId);
-
-    if (!existingClassroom)
+    if (!existingClassroom) {
       return res.status(404).json({
         message: "Classroom not found",
       });
+    }
 
-    await existingClassroom.updateOne({ name, days });
+    await ClassroomSubject.deleteMany({ classroom: classId });
+    const classroomSubjects = subjects.map((subject: Types.ObjectId) => ({
+      classroom: classId,
+      subject,
+    }));
+    await ClassroomSubject.insertMany(classroomSubjects);
+
+    existingClassroom.name = name;
     await existingClassroom.save();
 
     return res.status(201).json({
@@ -270,6 +310,6 @@ export const updateClassroom = async (req: Request, res: Response) => {
       showMessage: true,
     });
   } catch (error) {
-    return res.status(500).json({ message: "Error creating classroom", error });
+    return res.status(500).json({ message: "Error updating classroom", error });
   }
 };

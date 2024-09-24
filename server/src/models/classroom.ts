@@ -12,7 +12,7 @@ export interface IClassroom extends Document {
   days: ITimeSlot[];
   teacher?: Types.ObjectId;
   school: Types.ObjectId;
-  subjects: Types.ObjectId[];
+  status: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,10 +26,10 @@ const Dayschema = new Schema<ITimeSlot>({
 const ClassroomSchema = new Schema<IClassroom>(
   {
     name: { type: String, required: true },
-    days: { type: [Dayschema], required: true },
+    // days: { type: [Dayschema], required: true },
+    status: { type: Number, default: 1 },
     teacher: { type: Schema.Types.ObjectId, ref: "Teacher" },
     school: { type: Schema.Types.ObjectId, ref: "School", required: true },
-    subjects: { type: [Schema.Types.ObjectId], required: true },
   },
   { timestamps: true }
 );

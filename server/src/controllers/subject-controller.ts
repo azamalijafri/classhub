@@ -54,7 +54,10 @@ export const createSubjects = async (req: Request, res: Response) => {
 
 export const getAllSubjects = async (req: Request, res: Response) => {
   try {
-    const subjects = await Subject.find({ school: req.user.profile.school });
+    const subjects = await Subject.find({
+      school: req.user.profile.school,
+      status: 1,
+    });
 
     return res
       .status(200)

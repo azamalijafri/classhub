@@ -218,6 +218,7 @@ export const createBulkTeachers = async (req: Request, res: Response) => {
       message: `${createdTeachers.length} teacher(s) created successfully`,
       createdTeachers,
       failedTeachers,
+      showMessage: true,
     });
   } catch (error: any) {
     console.log("create-bulk-teachers: ", error);

@@ -52,25 +52,8 @@ export const updateTimetable = async (req: Request, res: Response) => {
     }
 
     for (const { day, periods } of timetableData) {
-      const timeSlot = classroom.days.find((slot) => slot.day === day);
-
-      if (!timeSlot) {
-        return res
-          .status(400)
-          .json({ message: `No time slot defined for ${day}` });
-      }
-
       // Validate periods
       for (const period of periods) {
-        if (
-          timeToMinutes(period.startTime) < timeToMinutes(timeSlot.startTime) ||
-          timeToMinutes(period.endTime) > timeToMinutes(timeSlot.endTime)
-        ) {
-          return res.status(400).json({
-            message: `Period ${period.subject} on ${day} is outside the classroom's designated time slot.`,
-          });
-        }
-
         const teacher = await Teacher.findById(period.teacher);
 
         if (!teacher) {
@@ -111,6 +94,8 @@ export const updateTimetable = async (req: Request, res: Response) => {
       showMessage: true,
     });
   } catch (error) {
+    console.log("timetable-update: ", error);
+
     return res.status(500).json({ message: "Server error", error });
   }
 };

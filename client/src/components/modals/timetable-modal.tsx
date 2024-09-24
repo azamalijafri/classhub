@@ -6,7 +6,6 @@ import { apiUrls } from "@/constants/api-urls";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ModalLayout } from "./modal-layout";
 import {
   DialogDescription,
@@ -19,6 +18,8 @@ import { Loader2 } from "lucide-react";
 import ComboBox from "../inputs/combo-box";
 import qs from "query-string";
 import { useRefetchQuery } from "@/hooks/useRefetchQuery";
+import { daysOfWeek } from "@/constants/variables";
+import { Input } from "../ui/input";
 
 dayjs.extend(customParseFormat);
 
@@ -47,10 +48,7 @@ const EditTimetableModal: React.FC = () => {
   const [timetable, setTimetable] = useState<ITimetable[]>([]);
   const [activePeriod, setActivePeriod] = useState<IPeriod | null>(null);
   const [editingPeriod, setEditingPeriod] = useState<number | null>(null);
-  const [activeDay, setActiveDay] = useState<string>("");
-  const [classroomDays, setClassroomDays] = useState<
-    { day: string; startTime: string; endTime: string }[]
-  >([]);
+  const [activeDay, setActiveDay] = useState<string>(daysOfWeek[0]);
   const [isLoading, setIsLoading] = useState(false);
   const [teachers, setTeachers] = useState<{ id: string; label: string }[]>([]);
   const [subjects, setSubjects] = useState<{ id: string; label: string }[]>([]);
@@ -76,12 +74,10 @@ const EditTimetableModal: React.FC = () => {
   }, [activePeriod?.subject]);
 
   useEffect(() => {
-    // Fetch teachers data from backend
-
     const fetchSubjects = async () => {
       try {
         const response = await axiosInstance.get(
-          apiUrls.subject.getAllSubjects
+          `${apiUrls.classroom.getClassroomSubjects}/${classId}`
         );
         const fetchedSubjects = response.data.subjects.map((subject: any) => ({
           id: subject._id,
@@ -94,7 +90,7 @@ const EditTimetableModal: React.FC = () => {
     };
 
     fetchSubjects();
-  }, []);
+  }, [classId]);
 
   const refetchQuery = useRefetchQuery();
 
@@ -105,17 +101,6 @@ const EditTimetableModal: React.FC = () => {
           `${apiUrls.timetable.getTimetable}/${classId}`
         );
         const fetchedTimetable = response.data.timetable;
-
-        // Check if there are missing days in the fetched timetable
-        classroomDays.forEach((day) => {
-          if (
-            !fetchedTimetable.some(
-              (schedule: { day: string }) => schedule.day === day.day
-            )
-          ) {
-            fetchedTimetable.push({ day: day.day, periods: [] });
-          }
-        });
 
         for (const schedule of fetchedTimetable) {
           for (const period of schedule.periods) {
@@ -132,26 +117,8 @@ const EditTimetableModal: React.FC = () => {
       }
     };
 
-    const fetchDays = async () => {
-      try {
-        const response = await axiosInstance.get(
-          `${apiUrls.classroom.getClassroomDetails}/${classId}`
-        );
-        const classroom = response.data.classroom;
-        // const days = classroom?.days.map((day: { day: Day, startTime:string, endTime:string }) => day.day);
-        setClassroomDays(classroom.days);
-        setActiveDay(classroom.days[0].day || "");
-      } catch (error) {
-        console.error("Failed to fetch classroom details:", error);
-      }
-    };
-
-    if (classroomDays.length > 0) {
-      fetchTimetable();
-    } else {
-      fetchDays().then(fetchTimetable);
-    }
-  }, [classId, classroomDays]);
+    fetchTimetable();
+  }, [classId]);
 
   const handleAddPeriod = (day: string) => {
     setActiveDay(day);
@@ -170,7 +137,6 @@ const EditTimetableModal: React.FC = () => {
 
   const handleSavePeriod = () => {
     if (!activePeriod) return;
-    console.log(timetable);
 
     setTimetable((prevTimetable) =>
       prevTimetable.map((schedule) =>
@@ -208,6 +174,7 @@ const EditTimetableModal: React.FC = () => {
   const handleSaveTimetable = async () => {
     try {
       setIsLoading(true);
+      console.log(timetable);
 
       const timetableData = timetable.map((schedule: any) => {
         return { ...schedule, day: schedule.day };
@@ -280,134 +247,143 @@ const EditTimetableModal: React.FC = () => {
         Edit Timetable
       </DialogTitle>
       <DialogDescription />
-      {classroomDays.length > 0 ? (
-        <Tabs
-          defaultValue={classroomDays[0].day}
-          className="w-full"
-          onValueChange={setActiveDay}
-        >
-          <TabsList className="flex justify-around bg-primary">
-            {classroomDays.map((day) => (
-              <TabsTrigger key={day.day} value={day.day} className="text-white">
-                {day.day}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          {classroomDays.map((day) => (
-            <TabsContent key={day.day} value={day.day} className="p-4">
-              <div className="flex flex-col gap-y-4">
-                <span className="mx-auto font-medium">
-                  Day timing: {formatTime(day.startTime)}-
-                  {formatTime(day.endTime)}
-                </span>
-                {loadingTimetable ? (
-                  <Loader2 className="animate-spin size-6 mx-auto mt-4" />
-                ) : (
-                  <div>{renderPeriods(day.day)}</div>
-                )}
-              </div>
-
-              <div
-                className={`w-full gap-x-3 my-6 transition-all duration-500 ease-out ${
-                  activePeriod && activeDay === day.day
-                    ? "opacity-100 visible max-h-[200px]"
-                    : "opacity-0 invisible max-h-0"
-                }`}
-              >
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    {activePeriod && activeDay === day.day && (
-                      <ComboBox
-                        selectedValue={activePeriod.subject}
-                        items={subjects}
-                        placeholder="Select a subject"
-                        label="Subject"
-                        onSelect={(subject) =>
-                          setActivePeriod((prev) =>
-                            prev ? { ...prev, subject } : null
-                          )
-                        }
-                      />
-                    )}
-                  </div>
-
-                  <div>
-                    {activePeriod && activeDay === day.day && (
-                      <ComboBox
-                        disabled={activePeriod.subject ? false : true}
-                        selectedValue={activePeriod.teacher}
-                        items={teachers}
-                        placeholder="Select a teacher"
-                        label="Teacher"
-                        onSelect={(teacher) =>
-                          setActivePeriod((prev) =>
-                            prev ? { ...prev, teacher } : null
-                          )
-                        }
-                      />
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Start</Label>
-                    <Input
-                      type="time"
-                      value={activePeriod?.startTime || ""}
-                      onChange={(e) =>
-                        setActivePeriod({
-                          ...activePeriod!,
-                          startTime: e.target.value,
-                        })
-                      }
-                      className="mb-2"
-                    />
-                    {/* <TimePicker date={date} setDate={setDate} /> */}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>End</Label>{" "}
-                    <Input
-                      type="time"
-                      value={activePeriod?.endTime || ""}
-                      onChange={(e) =>
-                        setActivePeriod({
-                          ...activePeriod!,
-                          endTime: e.target.value,
-                        })
-                      }
-                      className="mb-2"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-x-4 col-span-5 mt-4">
-                  <Button onClick={handleSavePeriod}>Save Period</Button>
-                  <Button
-                    onClick={() => {
-                      setActivePeriod(null);
-                      setEditingPeriod(null);
-                    }}
-                    variant={"destructive"}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => handleAddPeriod(day.day)}
-              >
-                Add Period
-              </Button>
-            </TabsContent>
+      <Tabs
+        defaultValue={daysOfWeek[0]}
+        className="w-full"
+        onValueChange={setActiveDay}
+      >
+        <TabsList className="flex justify-around bg-primary">
+          {daysOfWeek.map((day) => (
+            <TabsTrigger key={day} value={day} className="text-white">
+              {day}
+            </TabsTrigger>
           ))}
-        </Tabs>
-      ) : (
-        <div className="text-center text-primary mt-4">
-          No active days available for this classroom.
-        </div>
-      )}
+        </TabsList>
+        {daysOfWeek.map((day) => (
+          <TabsContent key={day} value={day} className="p-4">
+            <div className="flex flex-col gap-y-4">
+              {loadingTimetable ? (
+                <Loader2 className="animate-spin size-6 mx-auto mt-4" />
+              ) : (
+                <div>{renderPeriods(day)}</div>
+              )}
+            </div>
+
+            <div
+              className={`w-full gap-x-3 my-6 transition-all duration-500 ease-out ${
+                activePeriod && activeDay === day
+                  ? "opacity-100 visible max-h-[200px]"
+                  : "opacity-0 invisible max-h-0"
+              }`}
+            >
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  {activePeriod && activeDay === day && (
+                    <ComboBox
+                      selectedValue={activePeriod.subject}
+                      items={subjects}
+                      placeholder="Select a subject"
+                      label="Subject"
+                      onSelect={(subject) =>
+                        setActivePeriod((prev) =>
+                          prev ? { ...prev, subject } : null
+                        )
+                      }
+                    />
+                  )}
+                </div>
+
+                <div>
+                  {activePeriod && activeDay === day && (
+                    <ComboBox
+                      disabled={activePeriod.subject ? false : true}
+                      selectedValue={activePeriod.teacher}
+                      items={teachers}
+                      placeholder="Select a teacher"
+                      label="Teacher"
+                      onSelect={(teacher) =>
+                        setActivePeriod((prev) =>
+                          prev ? { ...prev, teacher } : null
+                        )
+                      }
+                    />
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Start</Label>
+                  <Input
+                    type="time"
+                    value={activePeriod?.startTime || ""}
+                    onChange={(e) =>
+                      setActivePeriod({
+                        ...activePeriod!,
+                        startTime: e.target.value,
+                      })
+                    }
+                    className="mb-2"
+                  />
+                  {/* <TimePicker
+                    defaultValue={activePeriod?.startTime || ""}
+                    onTimeChange={(e) =>
+                      setActivePeriod({
+                        ...activePeriod!,
+                        startTime: e,
+                      })
+                    }
+                  /> */}
+                  {/* <TimePicker date={date} setDate={setDate} /> */}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>End</Label>{" "}
+                  <Input
+                    type="time"
+                    value={activePeriod?.endTime || ""}
+                    onChange={(e) =>
+                      setActivePeriod({
+                        ...activePeriod!,
+                        endTime: e.target.value,
+                      })
+                    }
+                    className="mb-2"
+                  />
+                  {/* <TimePicker
+                    defaultValue={activePeriod?.endTime || ""}
+                    onTimeChange={(e) =>
+                      setActivePeriod({
+                        ...activePeriod!,
+                        endTime: e,
+                      })
+                    }
+                  /> */}
+                </div>
+              </div>
+
+              <div className="flex gap-x-4 col-span-5 mt-4">
+                <Button onClick={handleSavePeriod}>Save Period</Button>
+                <Button
+                  onClick={() => {
+                    setActivePeriod(null);
+                    setEditingPeriod(null);
+                  }}
+                  variant={"destructive"}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => handleAddPeriod(day)}
+            >
+              Add Period
+            </Button>
+          </TabsContent>
+        ))}
+      </Tabs>
+
       <DialogFooter className="mx-auto flex gap-x-4 mt-4">
         <Button
           onClick={handleSaveTimetable}
