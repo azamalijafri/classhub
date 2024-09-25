@@ -66,7 +66,9 @@ export const markAttendance = async (req: Request, res: Response) => {
 
     await StudentAttendance.insertMany(attendanceRecords);
 
-    res.status(200).json({ message: "Attendance marked successfully" });
+    res
+      .status(200)
+      .json({ message: "Attendance marked successfully", showMessage: true });
   } catch (error) {
     console.log(error);
 

@@ -47,16 +47,16 @@ const DataTable = ({
   const [subjects, setSubjects] = useState<{ id: string; label: string }[]>([]);
   const [classes, setClasses] = useState<{ id: string; label: string }[]>([]);
 
+  const [search, setSearch] = useState(queryParams.get("search") || "");
+  const debouncedSearch = useDebounce(search, 500);
+
   const [params, setParams] = useState({
-    search: queryParams.get("search") || "",
     class: queryParams.get("class") || "",
     subject: queryParams.get("subject") || "",
     page: Number(queryParams.get("page")) || 1,
     sortField: queryParams.get("sortField") || null,
     sortOrder: queryParams.get("sortOrder") || null,
   });
-
-  const debouncedSearch = useDebounce(params.search, 500);
 
   const [itemsPerPage] = useState(10);
 
@@ -78,7 +78,7 @@ const DataTable = ({
     setParams((prev) => ({
       ...prev,
       [key]: value,
-      page: key != "page" ? 1 : (value as number),
+      page: key !== "page" ? 1 : (value as number),
     }));
   };
 
@@ -133,7 +133,7 @@ const DataTable = ({
 
     navigate({ search: paramsString });
   }, [
-    debouncedSearch,
+    debouncedSearch, // Use the debounced search here
     params.class,
     params.subject,
     params.page,
@@ -151,8 +151,8 @@ const DataTable = ({
           </span>
           <Input
             type="text"
-            value={params.search}
-            onChange={(e) => handleParamChange("search", e.target.value)}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)} // Update the immediate search state
             placeholder="Search by name"
             className="pl-10"
           />
@@ -180,11 +180,6 @@ const DataTable = ({
         )}
       </div>
 
-      {/* {data?.length === 0 ? (
-        <div className="flex size-full items-center justify-center mt-10">
-          <span className="text-xl font-medium">{emptyMessage}</span>
-        </div>
-      ) : ( */}
       <>
         <Table className="border border-gray-300">
           <TableHeader>
@@ -268,7 +263,6 @@ const DataTable = ({
           </div>
         </div>
       </>
-      {/* )} */}
     </div>
   );
 };

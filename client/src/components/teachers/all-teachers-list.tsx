@@ -105,7 +105,9 @@ const TeachersList = ({ queryKey }: { queryKey: string }) => {
 
   return (
     <div className="p-4 flex flex-col space-y-4">
-      <h3 className="font-normal text-2xl">All Teachers</h3>
+      <h3 className="font-medium text-xl underline underline-offset-4">
+        All Teachers
+      </h3>
       <DataTable
         data={data.teachers}
         columns={columns}

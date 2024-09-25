@@ -1,5 +1,4 @@
 import React from "react";
-import { useParams } from "react-router-dom";
 import dayjs from "dayjs";
 import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "@/lib/axios-instance";
@@ -18,7 +17,6 @@ const formatTime = (time: string) => {
 };
 
 const TeacherScheduleGrid: React.FC = () => {
-  const { teacherId } = useParams<{ teacherId: string }>();
   const { startLoading, stopLoading } = useLoading();
   const { openModal } = useModal();
 
@@ -33,7 +31,7 @@ const TeacherScheduleGrid: React.FC = () => {
   };
 
   const { data: timetable, isLoading: isLoadingTimetable } = useQuery({
-    queryKey: ["teacher-schedule", teacherId],
+    queryKey: ["teacher-schedule"],
     queryFn: fetchTeacherSchedule,
   });
 
@@ -61,7 +59,9 @@ const TeacherScheduleGrid: React.FC = () => {
           className="p-2 border-[1px] border-primary rounded mb-2 flex justify-between items-center"
         >
           <div className="space-y-1 overflow-hidden text-ellipsis">
-            <div className="font-medium">{period?.classroom?.name}</div>
+            <div className="overflow-hidden text-ellipsis">
+              {period?.classroom?.name}
+            </div>
             <div className="text-xs">
               {formatTime(period.startTime)} - {formatTime(period.endTime)}
             </div>

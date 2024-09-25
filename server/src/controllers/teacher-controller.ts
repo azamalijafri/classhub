@@ -392,66 +392,77 @@ export const getMyAttendanceClasses = async (req: Request, res: Response) => {
 
 export const getMySubjectAttendance = async (req: Request, res: Response) => {
   const teacherId = req.user.profile._id as string;
-
-  const { classId } = req.body;
+  const { classId } = req.params;
+  const { page = 1, limit = DEFAULT_PAGE_LIMIT } = req.query;
 
   if (!Types.ObjectId.isValid(classId) || !Types.ObjectId.isValid(teacherId)) {
     return res.status(400).json({ error: "Invalid class or teacher ID" });
   }
 
-  try {
-    const students = await Student.find({ classroom: classId }).select("name");
+  const classroom = await Classroom.findById(classId);
 
-    if (!students.length) {
+  if (!classroom) return res.status(404).json({ message: "class not found" });
+
+  try {
+    const pageNumber = parseInt(page as string, 10);
+    const limitNumber = parseInt(limit as string, 10);
+
+    if (
+      isNaN(pageNumber) ||
+      isNaN(limitNumber) ||
+      pageNumber <= 0 ||
+      limitNumber <= 0
+    ) {
+      return res.status(400).json({ error: "Invalid pagination parameters" });
+    }
+
+    const totalItems = await Student.countDocuments({ classroom: classId });
+    if (totalItems === 0) {
       return res.status(404).json({ error: "No students found in this class" });
     }
 
-    // Fetch attendance records for the given class and teacher
+    const students = await Student.find({ classroom: classId })
+      .skip((pageNumber - 1) * limitNumber)
+      .limit(limitNumber)
+      .sort({ name: 1 });
+
     const attendanceRecords = await Attendance.find({
       classroom: classId,
       teacher: teacherId,
     });
 
     const attendanceRecordsId = attendanceRecords.map((record) => record._id);
+    const totalClasses = attendanceRecords.length;
 
-    const attendanceData = [];
+    const attendanceData = await Promise.all(
+      students.map(async (student) => {
+        const studentPresentCount = await StudentAttendance.countDocuments({
+          student: student._id,
+          attendance: { $in: attendanceRecordsId },
+          status: 1,
+        });
 
-    for (let student of students) {
-      const studentPresentCount = await StudentAttendance.countDocuments({
-        _id: student._id,
-        attendance: { $in: attendanceRecordsId },
-        status: 1,
-      });
-      const percentage = (
-        studentPresentCount / (attendanceRecords.length ?? 0)
-      ).toFixed();
-      attendanceData.push({ presentCount: studentPresentCount, percentage });
-    }
+        const percentage = totalClasses
+          ? ((studentPresentCount / totalClasses) * 100).toFixed(2)
+          : "0.00";
 
-    // const attendanceData = students.map((student) => {
+        return {
+          name: student.name,
+          roll: student.rollNo,
+          presentCount: studentPresentCount,
+          percentage,
+        };
+      })
+    );
 
-    //   const studentAttendances = attendanceRecords.filter((attendance) =>
-    //     attendance.students.some(
-    //       (studentRecord) =>
-    //         studentRecord.student.toString() === student._id.toString()
-    //     )
-    //   );
-
-    //   const totalClasses = attendanceRecords.length; // Total periods or classes available
-    //   const classesAttended = studentAttendances.filter((attendance) =>
-    //     attendance.students.some(
-    //       (studentRecord) =>
-    //         studentRecord.student.toString() === student._id.toString() &&
-    //         studentRecord.status === 1 // Status 1 = present
-    //     )
-    //   ).length;
-
-    //   const percentage =
-    //     totalClasses === 0
-    //       ? 0
-    //       : Math.round((classesAttended / totalClasses) * 100);
-
-    res.json({ attendanceData, totalClasses: attendanceRecords.length });
+    res.status(200).json({
+      attendanceData,
+      totalClasses,
+      totalItems,
+      currentPage: pageNumber,
+      totalPages: Math.ceil(totalItems / limitNumber),
+      classroom,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error" });

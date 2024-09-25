@@ -126,7 +126,9 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
   return (
     <div className="p-4 flex flex-col space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="font-normal text-2xl">All Students</h3>
+        <h3 className="font-medium text-xl underline underline-offset-4">
+          All Students
+        </h3>
         <Button
           variant="default"
           onClick={handleAssign}

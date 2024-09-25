@@ -9,7 +9,7 @@ import { useFetchData } from "@/hooks/useFetchData";
 import { Loader2Icon } from "lucide-react";
 import axiosInstance from "@/lib/axios-instance";
 import { useRefetchQuery } from "@/hooks/useRefetchQuery";
-import jsPDF from "jspdf"; // Import jsPDF for generating PDF
+import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 const AttendanceModal = () => {
@@ -18,6 +18,7 @@ const AttendanceModal = () => {
 
   const [attendance, setAttendance] = useState<Record<string, number>>({});
   const [toggleAll, setToggleAll] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data, isLoading } = useFetchData(
     [],
@@ -78,6 +79,7 @@ const AttendanceModal = () => {
 
   const handleSubmitAttendance = async () => {
     try {
+      setIsSubmitting(true);
       const response = await axiosInstance.post(
         apiUrls.attendance.markAttendance,
         {
@@ -94,12 +96,14 @@ const AttendanceModal = () => {
       );
 
       if (response) {
-        refetchQuery(["teacher-schedule", modal?.data?.teacherId]);
+        refetchQuery(["teacher-schedule"]);
         // generatePdf();
         closeModal();
       }
     } catch (error) {
       console.error("Failed to mark attendance", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -125,7 +129,15 @@ const AttendanceModal = () => {
                   checked={attendance[student._id] === 1}
                   onClick={() => handleCheckboxChange(student._id)}
                 />
-                <span>{student.name}</span>
+                <div className="space-x-4 overflow-hidden grid grid-cols-8 items-center w-full">
+                  <span className="overflow-hidden text-ellipsis whitespace-nowrap col-span-6">
+                    {student.name}
+                  </span>
+
+                  <span className="col-span-2 overflow-hidden text-ellipsis whitespace-nowrap">
+                    ({student.rollNo})
+                  </span>
+                </div>
               </div>
             ))}
           </div>
@@ -137,7 +149,8 @@ const AttendanceModal = () => {
           onClick={() =>
             openModal("confirm", { performingAction: handleSubmitAttendance })
           }
-          disabled={!Object.keys(attendance).length}
+          disabled={!Object.keys(attendance).length || isSubmitting}
+          isLoading={isSubmitting}
         >
           Submit Attendance
         </Button>

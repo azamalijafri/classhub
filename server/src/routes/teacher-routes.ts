@@ -8,6 +8,7 @@ import {
   getMyAttendanceClasses,
   getMyClassroom,
   getMySchedule,
+  getMySubjectAttendance,
   removeTeacherFromSchool,
   updateTeacher,
 } from "../controllers/teacher-controller";
@@ -50,6 +51,12 @@ router.get(
   "/teacher/get/my/attendance/classes",
   requireRole(["teacher"]),
   getMyAttendanceClasses
+);
+
+router.get(
+  "/teacher/get/my/subject/attendance/:classId",
+  requireRole(["teacher"]),
+  getMySubjectAttendance
 );
 
 export default router;
