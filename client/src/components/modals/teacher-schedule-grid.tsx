@@ -56,7 +56,7 @@ const TeacherScheduleGrid: React.FC = () => {
       ) => (
         <div
           key={index}
-          className="p-2 border-[1px] border-primary rounded mb-2 flex justify-between items-center"
+          className="p-2 border-[1px] border-zinc-500 rounded mb-2 flex justify-between items-center"
         >
           <div className="space-y-1 overflow-hidden text-ellipsis">
             <div className="overflow-hidden text-ellipsis">

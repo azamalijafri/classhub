@@ -212,7 +212,7 @@ const UpsertStudentModal = () => {
 
             <ComboBox
               items={classes}
-              onSelect={(classId) => setSelectedClass(classId)}
+              onSelect={(classroomId) => setSelectedClass(classroomId)}
               selectedValue={selectedClass}
               label="Want to assign to a class?"
               placeholder="Select a class"
@@ -265,7 +265,7 @@ const UpsertStudentModal = () => {
 
               <ComboBox
                 items={classes}
-                onSelect={(classId) => setSelectedClass(classId)}
+                onSelect={(classroomId) => setSelectedClass(classroomId)}
                 selectedValue={selectedClass}
                 label="Want to assign to a class?"
                 placeholder="Select a class"

@@ -56,21 +56,25 @@ const TeachersList = ({ queryKey }: { queryKey: string }) => {
       label: "Name",
       render: (teacher: Teacher) => teacher.name,
       value: "name",
+      colspan: 2,
     },
     {
       label: "Email",
       render: (teacher: Teacher) => teacher.user.email,
       value: "email",
+      colspan: 2,
     },
     {
       label: "Subject",
       render: (teacher: Teacher) => teacher.subject.name,
       value: "subject",
+      colspan: 2,
     },
     {
       label: "Class",
       render: (teacher: Teacher) => teacher.classroom?.name ?? "N/A",
       value: "classroom",
+      colspan: 2,
     },
   ];
 
@@ -109,6 +113,7 @@ const TeachersList = ({ queryKey }: { queryKey: string }) => {
         All Teachers
       </h3>
       <DataTable
+        gridValue="10"
         data={data.teachers}
         columns={columns}
         actions={actions}

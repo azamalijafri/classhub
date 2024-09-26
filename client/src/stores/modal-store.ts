@@ -19,7 +19,7 @@ type ModalData = {
   subject?: ISubject;
   classroom?: IClassroom;
   student?: IStudent;
-  classId?: string;
+  classroomId?: string;
   periodId?: string;
   subjectId?: string;
   teacherId?: string;

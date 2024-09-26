@@ -17,14 +17,14 @@ const formatTime = (time: string) => {
 };
 
 const TimetableTabs: React.FC = () => {
-  const { classId } = useParams<{ classId: string }>();
+  const { classroomId } = useParams<{ classroomId: string }>();
   const { startLoading, stopLoading } = useLoading();
 
   const fetchTimetable = async () => {
     try {
       startLoading();
       const response = await axiosInstance.get(
-        `${apiUrls.timetable.getTimetable}/${classId}`
+        `${apiUrls.timetable.getTimetable}/${classroomId}`
       );
       return response.data.timetable;
     } finally {
@@ -33,7 +33,7 @@ const TimetableTabs: React.FC = () => {
   };
 
   const { data: timetable, isLoading: isLoadingTimetable } = useQuery({
-    queryKey: ["timetable", classId],
+    queryKey: ["timetable", classroomId],
     queryFn: fetchTimetable,
   });
 

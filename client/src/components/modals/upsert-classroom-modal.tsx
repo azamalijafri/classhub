@@ -15,7 +15,7 @@ import { XIcon } from "lucide-react";
 const UpsertClassroomModal = () => {
   const { modals, closeModal } = useModal();
   const modal = modals.find((modal) => modal.type === "upsert-classroom");
-  const classId = modal?.data?.classId;
+  const classroomId = modal?.data?.classroomId;
 
   const [name, setName] = useState("");
   const [subjects, setSubjects] = useState<{ id: string; label: string }[]>([]);
@@ -46,15 +46,15 @@ const UpsertClassroomModal = () => {
 
   useEffect(() => {
     const fetchClassData = async () => {
-      if (!classId) return;
+      if (!classroomId) return;
 
       try {
         const [detailsResponse, subjectsResponse] = await Promise.all([
           axiosInstance.get(
-            `${apiUrls.classroom.getClassroomDetails}/${classId}`
+            `${apiUrls.classroom.getClassroomDetails}/${classroomId}`
           ),
           axiosInstance.get(
-            `${apiUrls.classroom.getClassroomSubjects}/${classId}`
+            `${apiUrls.classroom.getClassroomSubjects}/${classroomId}`
           ),
         ]);
 
@@ -69,7 +69,7 @@ const UpsertClassroomModal = () => {
     };
 
     fetchClassData();
-  }, [classId]);
+  }, [classroomId]);
 
   const handleSubjectSelect = (subjectId: string) => {
     if (!selectedSubjects.includes(subjectId)) {
@@ -105,9 +105,9 @@ const UpsertClassroomModal = () => {
 
     setIsSubmitting(true);
     try {
-      if (classId) {
+      if (classroomId) {
         await axiosInstance.put(
-          `${apiUrls.classroom.updateClassroom}/${classId}`,
+          `${apiUrls.classroom.updateClassroom}/${classroomId}`,
           requestData
         );
       } else {
@@ -128,7 +128,7 @@ const UpsertClassroomModal = () => {
     <ModalLayout isOpen={!!modal} maxWidth="max-w-xl">
       <div className="flex flex-col gap-y-4">
         <DialogTitle className="font-semibold mb-4 text-2xl">
-          {classId ? "Edit Classroom" : "Create Classroom"}
+          {classroomId ? "Edit Classroom" : "Create Classroom"}
         </DialogTitle>
         <div className="flex flex-col space-y-2">
           <Label>Class Name</Label>
@@ -183,7 +183,7 @@ const UpsertClassroomModal = () => {
           isLoading={isSubmitting}
           disabled={isSubmitting}
         >
-          {classId ? "Save Changes" : "Create"}
+          {classroomId ? "Save Changes" : "Create"}
         </Button>
       </div>
     </ModalLayout>

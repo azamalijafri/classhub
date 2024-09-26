@@ -3,9 +3,8 @@ import { Schema, model, Document, Types } from "mongoose";
 export interface IStudent extends Document {
   name: string;
   user: Types.ObjectId;
-  classroom: Types.ObjectId;
   school: Types.ObjectId;
-  rollNo: string;
+  roll: string;
   status: number;
   createdAt: Date;
   updatedAt: Date;
@@ -13,10 +12,9 @@ export interface IStudent extends Document {
 
 const StudentSchema = new Schema<IStudent>(
   {
-    name: { type: String },
+    name: { type: String, required: true },
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    classroom: { type: Schema.Types.ObjectId, ref: "Classroom" },
-    rollNo: { type: String, required: true },
+    roll: { type: String, required: true },
     school: { type: Schema.Types.ObjectId, ref: "School", required: true },
     status: { type: Number, default: 1 },
   },

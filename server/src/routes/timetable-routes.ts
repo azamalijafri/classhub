@@ -16,5 +16,5 @@ router.post(
   updateTimetable
 );
 
-router.get("/get/timetable/:classId", getTimetable);
+router.get("/get/timetable/:classroomId", getTimetable);
 export default router;

@@ -5,7 +5,7 @@ import StudentsAttendanceTable from "./students-attendance-table";
 import queryString from "query-string";
 
 const TeacherClassAttendance = () => {
-  const { classId } = useParams();
+  const { classroomId } = useParams();
   const location = useLocation();
 
   const { page = 1 } = Object.fromEntries(
@@ -14,7 +14,7 @@ const TeacherClassAttendance = () => {
 
   const apiUrl = queryString.stringifyUrl(
     {
-      url: `${apiUrls.teacher.getMySubjectAttendance}/${classId}`,
+      url: `${apiUrls.teacher.getMySubjectAttendance}/${classroomId}`,
       query: {
         page,
       },
@@ -23,7 +23,7 @@ const TeacherClassAttendance = () => {
   );
 
   const { data, isLoading } = useFetchData(
-    ["teacher-subject-attendance", String(classId), page.toString()],
+    ["teacher-subject-attendance", String(classroomId), page.toString()],
     apiUrl
   );
 

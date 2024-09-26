@@ -1,6 +1,6 @@
 import { Schema, model, Document, Types } from "mongoose";
 
-export interface IAttendance extends Document {
+export interface IAttendanceRecord extends Document {
   classroom: Types.ObjectId;
   subject: Types.ObjectId;
   teacher: Types.ObjectId;
@@ -10,7 +10,7 @@ export interface IAttendance extends Document {
   updatedAt: Date;
 }
 
-const AttendanceSchema = new Schema<IAttendance>(
+const AttendanceRecordSchema = new Schema<IAttendanceRecord>(
   {
     classroom: {
       type: Schema.Types.ObjectId,
@@ -27,5 +27,9 @@ const AttendanceSchema = new Schema<IAttendance>(
   }
 );
 
-const Attendance = model<IAttendance>("Attendance", AttendanceSchema);
-export default Attendance;
+const AttendanceRecord = model<IAttendanceRecord>(
+  "AttendanceRecord",
+  AttendanceRecordSchema
+);
+
+export default AttendanceRecord;

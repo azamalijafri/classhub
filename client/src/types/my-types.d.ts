@@ -49,7 +49,7 @@ interface ISchool {
   _id: string;
   name: string;
   principal: IPrincipal;
-  schoolCode: string;
+  code: string;
   address?: string;
   contactInfo?: string;
   createdAt: Date;

@@ -6,6 +6,8 @@ import Principal from "../models/principal";
 import passwordGenerator from "generate-password";
 import { ISchool } from "../models/school";
 import { generateUniqueEmail, hashPassword, sendEmail } from "../libs/utils";
+import { ClientSession, startSession } from "mongoose";
+import ClassroomStudentAssociation from "../models/classroom-student";
 
 interface CreateUserAndProfileProps {
   name: string;
@@ -16,6 +18,7 @@ interface CreateUserAndProfileProps {
   roll?: string;
   subject?: string;
   classroom?: string;
+  session: ClientSession;
 }
 
 export const createUserAndProfile = async ({
@@ -27,23 +30,15 @@ export const createUserAndProfile = async ({
   roll,
   subject,
   classroom,
+  session,
 }: CreateUserAndProfileProps) => {
   try {
-    const password = passwordGenerator.generate({
-      length: 6,
-      numbers: true,
-    });
-
+    const password = passwordGenerator.generate({ length: 6, numbers: true });
     const emailName = name.replace(/\s+/g, "").toLowerCase();
-    let userSchoolEmail;
-
-    if (roll) {
-      userSchoolEmail = `${emailName}.${roll.toLowerCase()}@${
-        school.schoolCode
-      }.edu.com`;
-    } else {
-      userSchoolEmail = `${emailName}@${school.schoolCode}.edu.com`;
-    }
+    const sanitizedRoll = roll?.toLowerCase().replace(/[^a-z0-9]/g, "") || "";
+    const userSchoolEmail = roll
+      ? `${emailName}.${sanitizedRoll}@${school.code}.edu.com`
+      : `${emailName}@${school.code}.edu.com`;
 
     const uniqueEmail = await generateUniqueEmail(userSchoolEmail);
     const hashedPassword = await hashPassword(password);
@@ -53,18 +48,16 @@ export const createUserAndProfile = async ({
       password: hashedPassword,
       role,
     });
-
-    await user.save();
+    await user.save({ session });
 
     let profile;
+
     if (role === "student") {
-      profile = new Student({
-        user: user._id,
-        name,
-        school: school._id,
-        rollNo: roll,
-        classroom,
-      });
+      profile = new Student({ user: user._id, name, school: school._id, roll });
+      await ClassroomStudentAssociation.create(
+        [{ classroom, student: profile._id }],
+        { session }
+      );
     } else if (role === "teacher") {
       profile = new Teacher({
         user: user._id,
@@ -75,13 +68,23 @@ export const createUserAndProfile = async ({
     }
 
     if (profile) {
-      await profile.save();
+      await profile.save({ session });
     }
 
     await sendEmail(email, uniqueEmail, password);
+    await session.commitTransaction();
+    res.status(201).json({
+      message: `${
+        role.charAt(0).toUpperCase() + role.slice(1)
+      } created successfully`,
+      email: uniqueEmail,
+    });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: `Error creating ${role}`, error });
+    await session.abortTransaction();
+    console.error(`Error creating ${role}:`, error);
+    return res.status(500).json({ message: `Error creating ${role}` });
+  } finally {
+    await session.endSession();
   }
 };
 
@@ -90,26 +93,26 @@ export const getMyProfile = async (req: Request, res: Response) => {
     const { role } = req.query;
     let profile;
 
-    switch (role) {
-      case "student":
-        profile = await Student.findOne({ user: req.user?._id, status: 1 });
-        break;
-      case "teacher":
-        profile = await Teacher.findOne({ user: req.user?._id, status: 1 });
-        break;
-      case "principal":
-        profile = await Principal.findOne({ user: req.user?._id });
-        break;
-      default:
-        return res.status(400).json({ message: "Invalid role type" });
+    const roleModels: { [key: string]: any } = {
+      student: Student,
+      teacher: Teacher,
+      principal: Principal,
+    };
+
+    const ProfileModel = roleModels[role as string];
+    if (!ProfileModel) {
+      return res.status(400).json({ message: "Invalid role type" });
     }
+
+    profile = await ProfileModel.findOne({ user: req.user?._id, status: 1 });
 
     if (!profile) {
       return res.status(404).json({ message: "Profile not found or removed" });
     }
 
     res.json({ profile, user: req.user });
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err });
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };

@@ -10,57 +10,52 @@ import {
 import Subject from "../models/subject";
 import Classroom, { IClassroom } from "../models/classroom";
 import { DEFAULT_PAGE_LIMIT } from "../constants/variables";
-import { Types } from "mongoose";
+import { startSession, Types } from "mongoose";
 import Timetable, { IPeriod } from "../models/timetable";
 import dayjs from "dayjs";
-import Attendance from "../models/attendance";
+import AttendanceRecord from "../models/attendance-record";
 import Student from "../models/student";
 import StudentAttendance from "../models/student-attendence";
 
 export const getAllTeachers = async (req: Request, res: Response) => {
+  const {
+    search,
+    class: classroomId,
+    page = 1,
+    pageLimit = DEFAULT_PAGE_LIMIT,
+    subject: subjectId,
+    sortField = "createdAt",
+    sortOrder = "desc",
+  } = req.query;
+
+  const queryOptions: any = {
+    school: req.user.profile.school,
+    status: 1,
+  };
+
+  if (search) {
+    queryOptions.name = { $regex: search, $options: "i" };
+  }
+
+  if (subjectId) {
+    queryOptions.subject = new Types.ObjectId(subjectId as string);
+  }
+
+  const limit = Math.max(1, parseInt(pageLimit as string, 10));
+  const skip = Math.max(0, (parseInt(page as string, 10) - 1) * limit);
+
+  const sortOptions: any = {
+    [sortField.toString()]: sortOrder === "asc" ? 1 : -1,
+  };
+
   try {
-    const {
-      search,
-      class: classId,
-      page = 1,
-      pageLimit = DEFAULT_PAGE_LIMIT,
-      subject: subjectId,
-      sortField,
-      sortOrder,
-    } = req.query;
-
-    const queryOptions: any = {
-      school: req.user.profile.school,
-      status: 1,
-    };
-
-    if (search) {
-      queryOptions.name = { $regex: search, $options: "i" };
-    }
-
-    if (subjectId) {
-      queryOptions.subject = new Types.ObjectId(subjectId as string);
-    }
-
-    const limit = parseInt(pageLimit as string, 10);
-    const skip = (parseInt(page as string, 10) - 1) * limit;
-
-    const sortOptions: any = {};
-    if (sortField && (sortOrder === "asc" || sortOrder === "desc")) {
-      sortOptions[sortField as string] = sortOrder === "asc" ? 1 : -1;
-    } else {
-      sortOptions["createdAt"] = -1;
-    }
-
     const teachers = await Teacher.aggregate([
-      {
-        $match: queryOptions,
-      },
+      { $match: queryOptions },
       {
         $lookup: {
           from: "classrooms",
           localField: "_id",
-          foreignField: "teacher",
+          foreignField: "mentor",
           as: "classroom",
         },
       },
@@ -71,8 +66,8 @@ export const getAllTeachers = async (req: Request, res: Response) => {
         },
       },
       {
-        $match: classId
-          ? { "classroom._id": new Types.ObjectId(classId as string) }
+        $match: classroomId
+          ? { "classroom._id": new Types.ObjectId(classroomId as string) }
           : {},
       },
       {
@@ -110,34 +105,39 @@ export const getAllTeachers = async (req: Request, res: Response) => {
 
     const totalTeachers = await Teacher.countDocuments(queryOptions);
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Teachers fetched successfully",
       teachers,
       totalTeachers,
     });
   } catch (error) {
-    console.log(error);
-
-    res.status(500).json({ message: "Error fetching teachers", error });
+    console.error("Error fetching teachers:", error);
+    return res.status(500).json({
+      message: "Error fetching teachers",
+    });
   }
 };
 
 export const createTeacher = async (req: Request, res: Response) => {
   const validatedData = validate(createTeacherSchema, req.body, res);
-
   if (!validatedData) return;
 
   const { name, email, subject } = validatedData;
 
-  const doesSubjectExist = await Subject.findOne({
-    _id: subject,
-    school: req.user.profile.school,
-  });
-
-  if (!doesSubjectExist)
-    return res.status(404).json({ message: "subject doesnt exist" });
+  const session = await startSession();
+  session.startTransaction();
 
   try {
+    const doesSubjectExist = await Subject.findOne({
+      _id: subject,
+      school: req.user.profile.school,
+    }).session(session);
+
+    if (!doesSubjectExist) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: "Subject doesn't exist" });
+    }
+
     const school = await getSchool(req);
 
     await createUserAndProfile({
@@ -147,29 +147,37 @@ export const createTeacher = async (req: Request, res: Response) => {
       res,
       school,
       subject,
+      session,
     });
 
-    res
-      .status(200)
-      .json({ message: "Teacher created successfully", showMessage: true });
+    await session.commitTransaction();
+
+    return res.status(201).json({
+      message: "Teacher created successfully",
+      showMessage: true,
+    });
   } catch (error: any) {
-    console.log("create-teacher: ", error);
-    res.status(500).json({ message: error.message });
+    await session.abortTransaction();
+    console.error("Error creating teacher:", error);
+    return res.status(500).json({
+      message: "Error creating teacher",
+    });
+  } finally {
+    await session.endSession();
   }
 };
 
 export const createBulkTeachers = async (req: Request, res: Response) => {
   const validatedData = validate(createBulkTeacherSchema, req.body, res);
-
   if (!validatedData) return;
 
   const { teachers } = validatedData;
 
+  const session = await startSession();
+  session.startTransaction();
+
   try {
     const school = await getSchool(req);
-
-    const failedTeachers: { name: string; email: string; reason: string }[] =
-      [];
     const createdTeachers: { name: string; email: string }[] = [];
 
     await Promise.all(
@@ -181,48 +189,54 @@ export const createBulkTeachers = async (req: Request, res: Response) => {
             const doesSubjectExist = await Subject.findOne({
               name: subject,
               school: req.user.profile.school,
-            });
+            }).session(session);
 
             if (!doesSubjectExist) {
-              failedTeachers.push({
-                name,
-                email,
-                reason: "Subject doesn't exist",
+              await session.abortTransaction();
+              return res.status(400).json({
+                message: `${subject} doesn't exist`,
               });
-              return; // Skip to the next teacher if the subject doesn't exist
             }
 
-            // Create the user and teacher profile
             await createUserAndProfile({
               name,
               email,
               role: "teacher",
               res,
               school,
-              subject: doesSubjectExist?._id?.toString(),
+              subject,
+              session,
             });
 
             createdTeachers.push({ name, email });
           } catch (error: any) {
-            failedTeachers.push({
-              name,
-              email,
-              reason: error.message || "Error creating teacher",
+            await session.abortTransaction();
+            return res.status(400).json({
+              message: `Error creating teacher ${name}`,
             });
           }
         }
       )
     );
 
-    return res.status(200).json({
-      message: `${createdTeachers.length} teacher(s) created successfully`,
-      createdTeachers,
-      failedTeachers,
-      showMessage: true,
-    });
+    if (createdTeachers.length == teachers) {
+      await session.commitTransaction();
+      return res.status(200).json({
+        message: `Teachers created successfully`,
+        createdTeachers,
+      });
+    } else {
+      session.abortTransaction();
+      return res.status(500).json({
+        message: "No teacher created. Transaction aborted due to errors.",
+      });
+    }
   } catch (error: any) {
-    console.log("create-bulk-teachers: ", error);
-    res.status(500).json({ message: error.message });
+    await session.abortTransaction();
+    console.error("Error creating bulk teachers:", error);
+    return res.status(500).json({
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 
@@ -322,7 +336,7 @@ export const getMySchedule = async (req: Request, res: Response) => {
 
         const periodsWithAttendanceFlag = await Promise.all(
           sortedPeriods.map(async (period) => {
-            const attendanceExists = await Attendance.exists({
+            const attendanceExists = await AttendanceRecord.exists({
               period: period._id,
               date: { $gte: startOfWeek, $lte: endOfWeek },
             });
@@ -363,7 +377,7 @@ export const getMyAttendanceClasses = async (req: Request, res: Response) => {
 
   try {
     // Find distinct classrooms where the teacher has taken attendance
-    const classrooms = await Attendance.aggregate([
+    const classrooms = await AttendanceRecord.aggregate([
       { $match: { teacher: new Types.ObjectId(teacherId) } }, // Filter by teacher ID
       { $group: { _id: "$classroom" } }, // Group by classroom
       {
@@ -392,14 +406,17 @@ export const getMyAttendanceClasses = async (req: Request, res: Response) => {
 
 export const getMySubjectAttendance = async (req: Request, res: Response) => {
   const teacherId = req.user.profile._id as string;
-  const { classId } = req.params;
+  const { classroomId } = req.params;
   const { page = 1, limit = DEFAULT_PAGE_LIMIT } = req.query;
 
-  if (!Types.ObjectId.isValid(classId) || !Types.ObjectId.isValid(teacherId)) {
+  if (
+    !Types.ObjectId.isValid(classroomId) ||
+    !Types.ObjectId.isValid(teacherId)
+  ) {
     return res.status(400).json({ error: "Invalid class or teacher ID" });
   }
 
-  const classroom = await Classroom.findById(classId);
+  const classroom = await Classroom.findById(classroomId);
 
   if (!classroom) return res.status(404).json({ message: "class not found" });
 
@@ -416,18 +433,18 @@ export const getMySubjectAttendance = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid pagination parameters" });
     }
 
-    const totalItems = await Student.countDocuments({ classroom: classId });
+    const totalItems = await Student.countDocuments({ classroom: classroomId });
     if (totalItems === 0) {
       return res.status(404).json({ error: "No students found in this class" });
     }
 
-    const students = await Student.find({ classroom: classId })
+    const students = await Student.find({ classroom: classroomId })
       .skip((pageNumber - 1) * limitNumber)
       .limit(limitNumber)
       .sort({ name: 1 });
 
-    const attendanceRecords = await Attendance.find({
-      classroom: classId,
+    const attendanceRecords = await AttendanceRecord.find({
+      classroom: classroomId,
       teacher: teacherId,
     });
 
@@ -448,7 +465,7 @@ export const getMySubjectAttendance = async (req: Request, res: Response) => {
 
         return {
           name: student.name,
-          roll: student.rollNo,
+          roll: student.roll,
           presentCount: studentPresentCount,
           percentage,
         };

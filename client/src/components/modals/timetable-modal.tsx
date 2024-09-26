@@ -42,7 +42,7 @@ const formatTime = (time: string) => {
 const EditTimetableModal: React.FC = () => {
   const { modals, closeModal } = useModal();
   const modal = modals.find((modal) => modal?.type === "edit-timetable");
-  const classId = modal?.data?.classId;
+  const classroomId = modal?.data?.classroomId;
 
   const [loadingTimetable, setLoadingTimetable] = useState(true);
   const [timetable, setTimetable] = useState<ITimetable[]>([]);
@@ -77,7 +77,7 @@ const EditTimetableModal: React.FC = () => {
     const fetchSubjects = async () => {
       try {
         const response = await axiosInstance.get(
-          `${apiUrls.classroom.getClassroomSubjects}/${classId}`
+          `${apiUrls.classroom.getClassroomSubjects}/${classroomId}`
         );
         const fetchedSubjects = response.data.subjects.map((subject: any) => ({
           id: subject._id,
@@ -90,7 +90,7 @@ const EditTimetableModal: React.FC = () => {
     };
 
     fetchSubjects();
-  }, [classId]);
+  }, [classroomId]);
 
   const refetchQuery = useRefetchQuery();
 
@@ -98,7 +98,7 @@ const EditTimetableModal: React.FC = () => {
     const fetchTimetable = async () => {
       try {
         const response = await axiosInstance.get(
-          `${apiUrls.timetable.getTimetable}/${classId}`
+          `${apiUrls.timetable.getTimetable}/${classroomId}`
         );
         const fetchedTimetable = response.data.timetable;
 
@@ -118,7 +118,7 @@ const EditTimetableModal: React.FC = () => {
     };
 
     fetchTimetable();
-  }, [classId]);
+  }, [classroomId]);
 
   const handleAddPeriod = (day: string) => {
     setActiveDay(day);
@@ -182,11 +182,11 @@ const EditTimetableModal: React.FC = () => {
 
       const response = await axiosInstance.post(
         apiUrls.timetable.updateTimetable,
-        { timetableData: timetableData, classroomId: classId }
+        { timetableData: timetableData, classroomId: classroomId }
       );
 
       if (response) {
-        refetchQuery(["timetable", classId]);
+        refetchQuery(["timetable", classroomId]);
         closeModal();
       }
     } finally {

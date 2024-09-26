@@ -36,9 +36,9 @@ const AssignTeacherModal = () => {
     try {
       await axiosInstance.post(apiUrls.classroom.assignTeacher, {
         teacherId: selectedTeacher,
-        classroomId: modal?.data?.classId,
+        classroomId: modal?.data?.classroomId,
       });
-      refetchQuery([modal?.data?.classId, "class-details"]);
+      refetchQuery([modal?.data?.classroomId, "class-details"]);
       closeModal();
     } catch (error) {
       console.error("Failed to assign teacher", error);

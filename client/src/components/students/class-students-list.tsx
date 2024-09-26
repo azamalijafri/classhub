@@ -9,7 +9,7 @@ import queryString from "query-string";
 
 const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
   const location = useLocation();
-  const { classId } = useParams();
+  const { classroomId } = useParams();
 
   const {
     search,
@@ -20,7 +20,7 @@ const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
 
   const apiUrl = queryString.stringifyUrl(
     {
-      url: `${apiUrls.classroom.getClassStudents}/${classId}`,
+      url: `${apiUrls.classroom.getClassStudents}/${classroomId}`,
       query: { search, page, sortOrder, sortField },
     },
     { skipEmptyString: true, skipNull: true }
@@ -37,16 +37,19 @@ const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
       label: "Name",
       render: (student: IStudent) => student.name,
       value: "name",
+      colspan: 3,
     },
     {
       label: "Email",
       render: (student: IStudent) => student.user.email,
       value: "email",
+      colspan: 3,
     },
     {
       label: "Roll No",
       render: (student: IStudent) => student.rollNo,
       value: "rollNo",
+      colspan: 3,
     },
   ];
 
@@ -75,6 +78,7 @@ const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
   return (
     <div className="p-4 ">
       <DataTable
+        gridValue="10"
         data={data.students}
         columns={columns}
         actions={actions}

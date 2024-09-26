@@ -8,27 +8,35 @@ import {
 } from "../validation/student-schema";
 import { createUserAndProfile } from "./profile-controller";
 import { DEFAULT_PAGE_LIMIT } from "../constants/variables";
-import Attendance from "../models/attendance";
+import AttendanceRecord from "../models/attendance-record";
 import StudentAttendance from "../models/student-attendence";
 import { z } from "zod";
 import { attendancePercentageSchema } from "../validation/attendance-schema";
 import Classroom from "../models/classroom";
 import Subject from "../models/subject";
+import { startSession, Types } from "mongoose";
 
 export const createStudent = async (req: Request, res: Response) => {
+  const session = await startSession();
+  session.startTransaction();
+
   const validatedData = validate(createStudentSchema, req.body, res);
+  if (!validatedData) {
+    await session.endSession();
+    return;
+  }
 
-  if (!validatedData) return;
-
-  const { name, email, roll, classroom: classId } = validatedData;
+  const { name, email, roll, classroom: classroomId } = validatedData;
 
   try {
     const school = await getSchool(req);
 
-    if (classId) {
-      const classroom = await Classroom.findById(classId);
-      if (!classroom)
-        return res.status(400).json({ message: "class not found" });
+    if (classroomId) {
+      const classroom = await Classroom.findById(classroomId).session(session);
+      if (!classroom) {
+        await session.abortTransaction();
+        return res.status(404).json({ message: "Classroom not found" });
+      }
     }
 
     await createUserAndProfile({
@@ -38,14 +46,20 @@ export const createStudent = async (req: Request, res: Response) => {
       res,
       school,
       roll,
-      classroom: classId,
+      classroom: classroomId,
+      session,
     });
 
+    await session.commitTransaction();
     res
-      .status(200)
+      .status(201)
       .json({ message: "Student created successfully", showMessage: true });
   } catch (error: any) {
+    await session.abortTransaction();
+    console.error(`Error creating student: ${error.message}`);
     res.status(500).json({ message: "Server error", error: error.message });
+  } finally {
+    await session.endSession();
   }
 };
 
@@ -54,55 +68,65 @@ export const createBulkStudents = async (req: Request, res: Response) => {
 
   if (!validatedData) return;
 
-  const { students, classroom: classId } = validatedData;
+  const { students, classroom: classroomId } = validatedData;
 
-  if (classId) {
-    const classroom = await Classroom.findById(classId);
-    if (!classroom) return res.status(400).json({ message: "class not found" });
-  }
+  const session = await startSession();
+  session.startTransaction();
 
   try {
     const school = await getSchool(req);
 
-    const failedStudents: { name: string; email: string; reason: string }[] =
-      [];
+    if (classroomId) {
+      const classroom = await Classroom.findById(classroomId).session(session);
+      if (!classroom) {
+        await session.abortTransaction();
+        return res.status(404).json({ message: "Classroom not found" });
+      }
+    }
+
     const createdStudents: { name: string; email: string }[] = [];
 
-    await Promise.all(
-      students.map(
-        async (student: { name: string; email: string; roll: string }) => {
-          const { name, email, roll } = student;
-          try {
-            await createUserAndProfile({
-              name,
-              email,
-              role: "student",
-              res,
-              school,
-              roll,
-              classroom: classId,
-            });
-            createdStudents.push({ name, email });
-          } catch (error: any) {
-            failedStudents.push({
-              name,
-              email,
-              reason: error.message || "Error creating student",
-            });
-          }
-        }
-      )
-    );
+    for (const student of students) {
+      const { name, email, roll } = student;
+      try {
+        await createUserAndProfile({
+          name,
+          email,
+          role: "student",
+          res,
+          school,
+          roll,
+          classroom: classroomId,
+          session,
+        });
+        createdStudents.push({ name, email });
+      } catch (error: any) {
+        await session.abortTransaction();
+        return res.status(400).json({
+          message: `Error creating student ${name}: ${error.message}`,
+        });
+      }
+    }
 
-    return res.status(200).json({
-      message: `${createdStudents.length} student(s) created successfully`,
-      createdStudents,
-      failedStudents,
-      showMessage: true,
-    });
+    if (createdStudents.length == students.length) {
+      await session.commitTransaction();
+
+      return res.status(200).json({
+        message: `Students created successfully`,
+        showMessage: true,
+      });
+    } else {
+      session.abortTransaction();
+      return res.status(500).json({
+        message: "No students created. Transaction aborted due to errors.",
+      });
+    }
   } catch (error: any) {
-    console.log("create-bulk-students: ", error);
-    res.status(500).json({ message: error.message });
+    await session.abortTransaction();
+    console.error("Error creating bulk students:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  } finally {
+    await session.endSession();
   }
 };
 
@@ -110,11 +134,11 @@ export const getAllStudent = async (req: Request, res: Response) => {
   try {
     const {
       search,
-      class: classId,
+      class: classroomId,
       page = 1,
       pageLimit = DEFAULT_PAGE_LIMIT,
       sortField = "name",
-      sortOrder = 1,
+      sortOrder = "asc",
     } = req.query;
 
     const queryOptions: any = {
@@ -126,12 +150,16 @@ export const getAllStudent = async (req: Request, res: Response) => {
       queryOptions.name = { $regex: search, $options: "i" };
     }
 
-    if (classId) {
-      queryOptions.classroom = classId;
+    if (classroomId && !Types.ObjectId.isValid(classroomId.toString())) {
+      return res.status(400).json({ message: "Invalid classroom ID format." });
     }
 
-    const limit = parseInt(pageLimit as string, 10);
-    const skip = (parseInt(page as string, 10) - 1) * limit;
+    if (classroomId) {
+      queryOptions.classroom = classroomId;
+    }
+
+    const limit = Math.max(0, parseInt(pageLimit as string, 10));
+    const skip = Math.max(0, (parseInt(page as string, 10) - 1) * limit);
 
     const sortOptions: any = {};
     if (sortField && (sortOrder === "asc" || sortOrder === "desc")) {
@@ -157,19 +185,25 @@ export const getAllStudent = async (req: Request, res: Response) => {
       totalStudents,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching students", error });
+    console.error("Error fetching all students:", error);
+    res.status(500).json({ message: "Error fetching students" });
   }
 };
 
 export const getAllStudentByClass = async (req: Request, res: Response) => {
   try {
     const { classroomId } = req.params;
+
+    if (!Types.ObjectId.isValid(classroomId)) {
+      return res.status(400).json({ message: "Invalid classroom ID format." });
+    }
+
     const {
       search,
       page = 1,
       pageLimit = DEFAULT_PAGE_LIMIT,
-      sortOrder,
-      sortField,
+      sortOrder = "asc",
+      sortField = "name",
     } = req.query;
 
     const queryOptions: any = {
@@ -183,8 +217,10 @@ export const getAllStudentByClass = async (req: Request, res: Response) => {
     }
 
     const limit =
-      pageLimit == "all" ? Infinity : parseInt(pageLimit as string, 10);
-    const skip = (parseInt(page as string, 10) - 1) * limit;
+      pageLimit === "all"
+        ? Infinity
+        : Math.max(0, parseInt(pageLimit as string, 10));
+    const skip = Math.max(0, (parseInt(page as string, 10) - 1) * limit);
 
     const sortOptions: any = {};
     if (sortField && (sortOrder === "asc" || sortOrder === "desc")) {
@@ -202,39 +238,44 @@ export const getAllStudentByClass = async (req: Request, res: Response) => {
     const totalStudents = await Student.countDocuments(queryOptions);
 
     res.status(200).json({
-      message: "students fetched successfully",
+      message: "Students fetched successfully",
       students,
       totalStudents,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching students", error });
+    console.error("Error fetching class students:", error);
+    res.status(500).json({ message: "Error fetching students" });
   }
 };
 
 export const updateStudent = async (req: Request, res: Response) => {
+  const { studentId } = req.params;
+
+  if (!Types.ObjectId.isValid(studentId)) {
+    return res.status(400).json({ message: "Invalid student ID format" });
+  }
+
+  const student = await Student.findById(studentId);
+
+  if (!student) {
+    return res
+      .status(404)
+      .json({ message: `Student not found with ID: ${studentId}` });
+  }
+
+  const validatedData = validate(updateStudentSchema, req.body, res);
+  if (!validatedData) return;
+
+  const { name } = validatedData;
+
   try {
-    const { studentId } = req.params;
-
-    const student = await Student.findById(studentId);
-
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-
-    const validatedData = validate(updateStudentSchema, req.body, res);
-
-    if (!validatedData) return;
-
-    const { name } = validatedData;
-
     await student.updateOne({ name });
-    await student.save();
-
     res
       .status(200)
       .json({ message: "Student updated successfully", showMessage: true });
   } catch (error) {
-    res.status(500).json({ message: "Error updating student", error });
+    console.error("Error updating student: ", error);
+    res.status(500).json({ message: "Error updating student" });
   }
 };
 
@@ -242,20 +283,26 @@ export const kickStudentFromClass = async (req: Request, res: Response) => {
   try {
     const { studentId } = req.params;
 
-    const student = await Student.findById(studentId);
+    if (!Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({ message: "Invalid student ID format." });
+    }
+
+    const student = await Student.findByIdAndUpdate(
+      studentId,
+      { classroom: null },
+      { new: true }
+    );
 
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    await student.updateOne({ classroom: null });
-    await student.save();
-
     res
       .status(200)
       .json({ message: "Student kicked successfully", showMessage: true });
   } catch (error) {
-    res.status(500).json({ message: "Error kicking student", error });
+    console.error("Error kicking student: ", error);
+    res.status(500).json({ message: "Error kicking student" });
   }
 };
 
@@ -263,20 +310,26 @@ export const removeStudentFromSchool = async (req: Request, res: Response) => {
   try {
     const { studentId } = req.params;
 
-    const student = await Student.findById(studentId);
+    if (!Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({ message: "Invalid student ID format." });
+    }
+
+    const student = await Student.findByIdAndUpdate(
+      studentId,
+      { status: 0, classroom: null },
+      { new: true }
+    );
 
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    await student.updateOne({ status: 0, classroom: null });
-    await student.save();
-
     res
       .status(200)
       .json({ message: "Student removed successfully", showMessage: true });
   } catch (error) {
-    res.status(500).json({ message: "Error removing student", error });
+    console.error("Error removing student: ", error);
+    res.status(500).json({ message: "Error removing student" });
   }
 };
 
@@ -286,32 +339,38 @@ export const getAttendancePercentage = async (req: Request, res: Response) => {
 
     if (!validatedData) return;
 
-    const { studentId, subjectId, classId } = validatedData;
+    const { studentId, subjectId, classroomId } = validatedData;
 
-    const classroom = await Classroom.findById(classId);
+    if (
+      !Types.ObjectId.isValid(studentId) ||
+      !Types.ObjectId.isValid(subjectId) ||
+      !Types.ObjectId.isValid(classroomId)
+    ) {
+      return res.status(400).json({ message: "Invalid ID format." });
+    }
+
+    const [classroom, subject, student, totalSessions] = await Promise.all([
+      Classroom.findById(classroomId),
+      Subject.findById(subjectId),
+      Student.findById(studentId),
+      AttendanceRecord.countDocuments({ subject: subjectId }),
+    ]);
+
     if (!classroom)
       return res.status(404).json({ error: "Classroom not found" });
-
-    const subject = await Subject.findById(subjectId);
     if (!subject) return res.status(404).json({ error: "Subject not found" });
-
-    const student = await Student.findById(studentId);
     if (!student) return res.status(404).json({ error: "Student not found" });
-
-    const totalSessions = await Attendance.countDocuments({
-      subject: subjectId,
-    });
-
-    if (totalSessions === 0) {
+    if (totalSessions === 0)
       return res
         .status(404)
         .json({ error: "No sessions found for this subject" });
-    }
 
     const attendedSessions = await StudentAttendance.countDocuments({
       student: studentId,
       attendance: {
-        $in: await Attendance.find({ subject: subjectId }).distinct("_id"),
+        $in: await AttendanceRecord.find({ subject: subjectId }).distinct(
+          "_id"
+        ),
       },
       status: 1,
     });
@@ -319,17 +378,12 @@ export const getAttendancePercentage = async (req: Request, res: Response) => {
     const attendancePercentage = (attendedSessions / totalSessions) * 100;
 
     res.status(200).json({
-      studentId,
-      subjectId,
       totalSessions,
       attendedSessions,
       attendancePercentage: attendancePercentage.toFixed(2),
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
-    }
-    console.error(error);
+    console.error("Error fetching attendance percentage: ", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

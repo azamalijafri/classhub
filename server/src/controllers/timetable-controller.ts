@@ -44,7 +44,7 @@ export const updateTimetable = async (req: Request, res: Response) => {
 
     if (
       req.user.role !== "principal" &&
-      classroom.teacher?.toString() !== req.user._id?.toString()
+      classroom.mentor?.toString() !== req.user._id?.toString()
     ) {
       return res.status(403).json({
         message: "Access denied. You are not assigned to this classroom.",
@@ -102,8 +102,8 @@ export const updateTimetable = async (req: Request, res: Response) => {
 
 export const getTimetable = async (req: Request, res: Response) => {
   try {
-    const { classId } = req.params;
-    const timetable = await Timetable.find({ classroom: classId })
+    const { classroomId } = req.params;
+    const timetable = await Timetable.find({ classroom: classroomId })
       .populate({
         path: "periods.teacher",
         select: "name",

@@ -1,54 +1,55 @@
-import { Types } from "mongoose";
+import { ClientSession, Types } from "mongoose";
 import { Request, Response } from "express";
-import Attendance from "../models/attendance";
+import AttendanceRecord from "../models/attendance-record";
 import Classroom from "../models/classroom";
 import { markAttendanceSchema } from "../validation/attendance-schema";
-import { z } from "zod";
 import Subject from "../models/subject";
 import Teacher from "../models/teacher";
 import StudentAttendance from "../models/student-attendence";
 import { validate } from "../libs/utils";
 import Student from "../models/student";
+import { asyncTransactionWrapper } from "../libs/async-transaction-wrapper";
 
-export const markAttendance = async (req: Request, res: Response) => {
-  try {
+export const markAttendance = asyncTransactionWrapper(
+  async (req: Request, res: Response, session: ClientSession) => {
     const validatedData = validate(markAttendanceSchema, req.body, res);
-
     if (!validatedData) return;
 
     const { classroomId, subjectId, teacherId, date, students, periodId } =
       validatedData;
 
-    const classroom = await Classroom.findById(classroomId);
+    const [classroom, subject, teacher] = await Promise.all([
+      Classroom.findById(classroomId).session(session),
+      Subject.findById(subjectId).session(session),
+      Teacher.findById(teacherId).session(session),
+    ]);
+
     if (!classroom)
-      return res.status(404).json({ error: "Classroom not found" });
+      return res.status(404).json({ message: "Classroom not found" });
+    if (!subject) return res.status(404).json({ message: "Subject not found" });
+    if (!teacher) return res.status(404).json({ message: "Teacher not found" });
 
-    const subject = await Subject.findById(subjectId);
-    if (!subject) return res.status(404).json({ error: "Subject not found" });
-
-    const teacher = await Teacher.findById(teacherId);
-    if (!teacher) return res.status(404).json({ error: "Teacher not found" });
-
-    const studentIds = students.map(
-      (s: { studentId: string; status: string }) => s.studentId
-    );
+    const studentIds = students.map((s: { studentId: string }) => s.studentId);
     const validStudents = await Student.find({
       _id: { $in: studentIds },
       classroom: classroomId,
-    });
+    }).session(session);
 
     if (validStudents.length !== students.length) {
-      return res.status(400).json({ error: "Some students are invalid." });
+      return res
+        .status(400)
+        .json({ message: "Some students do not belong to this classroom" });
     }
 
-    const attendance = new Attendance({
+    const attendance = new AttendanceRecord({
       classroom: classroomId,
       subject: subjectId,
       teacher: teacherId,
       period: periodId,
       date,
     });
-    await attendance.save();
+
+    await attendance.save({ session });
 
     const attendanceRecords = students.map(
       ({
@@ -64,18 +65,11 @@ export const markAttendance = async (req: Request, res: Response) => {
       })
     );
 
-    await StudentAttendance.insertMany(attendanceRecords);
+    await StudentAttendance.insertMany(attendanceRecords, { session });
 
-    res
-      .status(200)
-      .json({ message: "Attendance marked successfully", showMessage: true });
-  } catch (error) {
-    console.log(error);
-
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
-    }
-    console.error(error);
-    return res.status(500).json({ error: "Internal server error" });
+    res.status(200).json({
+      message: "Attendance marked successfully",
+      showMessage: true,
+    });
   }
-};
+);

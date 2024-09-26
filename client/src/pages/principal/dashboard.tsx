@@ -3,6 +3,7 @@ import { apiUrls } from "@/constants/api-urls";
 import axiosInstance from "@/lib/axios-instance";
 import { useLoading } from "@/stores/loader-store";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 export const PrincipalDashboard = () => {
   const { startLoading, stopLoading } = useLoading();
@@ -18,6 +19,10 @@ export const PrincipalDashboard = () => {
       return response.data.classrooms;
     },
   });
+
+  useEffect(() => {
+    document.title = "Dashboard | CloudCampus";
+  }, []);
 
   if (!isLoading && data.length == 0)
     return (

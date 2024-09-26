@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import ClassTeacherButton from "./class-teacher-button";
 import { useFetchData } from "@/hooks/useFetchData";
 import useAuthStore from "@/stores/auth-store";
+import { useEffect } from "react";
 
 const tabs = [
   { label: "Timetable", path: "timetable" },
@@ -14,15 +15,19 @@ const tabs = [
 
 const ClassDetailsLayout = () => {
   const navigate = useNavigate();
-  const { classId } = useParams();
+  const { classroomId } = useParams();
   const pathname = useLocation().pathname.split("/").reverse()[0];
   const { openModal } = useModal();
   const { user } = useAuthStore();
 
   const { data } = useFetchData(
-    [classId ?? "", "class-details"],
-    `${apiUrls.classroom.getClassroomDetails}/${classId}`
+    [classroomId ?? "", "class-details"],
+    `${apiUrls.classroom.getClassroomDetails}/${classroomId}`
   );
+
+  useEffect(() => {
+    document.title = `${data?.classroom?.name} | CloudCampus`;
+  }, [data?.classroom?.name]);
 
   return (
     <div>
@@ -48,7 +53,9 @@ const ClassDetailsLayout = () => {
         <div className="flex items-center gap-x-5">
           {user?.role === "principal" && (
             <div>
-              <Button onClick={() => openModal("edit-timetable", { classId })}>
+              <Button
+                onClick={() => openModal("edit-timetable", { classroomId })}
+              >
                 Edit Timetable
               </Button>
             </div>
@@ -61,7 +68,7 @@ const ClassDetailsLayout = () => {
                 <div>
                   <Button
                     size={"sm"}
-                    onClick={() => openModal("assign-teacher", { classId })}
+                    onClick={() => openModal("assign-teacher", { classroomId })}
                   >
                     Assign Teacher
                   </Button>

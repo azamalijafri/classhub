@@ -11,7 +11,7 @@ function PrincipalRoutes() {
     <div className="w-full">
       <Routes>
         <Route path="/" element={<PrincipalDashboard />} />
-        <Route path="/class/:classId" element={<ClassDetailsLayout />}>
+        <Route path="/class/:classroomId" element={<ClassDetailsLayout />}>
           <Route path="timetable" element={<Timetable />} />
           <Route path="students" element={<ClassStudents />} />
         </Route>

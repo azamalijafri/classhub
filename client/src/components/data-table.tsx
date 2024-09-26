@@ -3,7 +3,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
@@ -21,6 +20,7 @@ interface TableColumn {
   label: string;
   render: (item: any) => JSX.Element | string;
   value: string;
+  colspan?: number;
 }
 
 interface DataTableProps {
@@ -31,6 +31,7 @@ interface DataTableProps {
   totalItems: number;
   classFilter?: boolean;
   subjectFilter?: boolean;
+  gridValue: string;
 }
 
 const DataTable = ({
@@ -40,6 +41,7 @@ const DataTable = ({
   totalItems,
   classFilter,
   subjectFilter,
+  gridValue,
 }: DataTableProps) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -133,7 +135,7 @@ const DataTable = ({
 
     navigate({ search: paramsString });
   }, [
-    debouncedSearch, // Use the debounced search here
+    debouncedSearch,
     params.class,
     params.subject,
     params.page,
@@ -144,7 +146,9 @@ const DataTable = ({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-10 justify-between items-center mb-4 space-x-4 w-full">
+      <div
+        className={`grid grid-cols-${gridValue} justify-between items-center mb-4 space-x-4 w-full`}
+      >
         <div className="relative col-span-4">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <SearchIcon className="w-5 h-5 text-gray-400" />
@@ -152,7 +156,7 @@ const DataTable = ({
           <Input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)} // Update the immediate search state
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name"
             className="pl-10"
           />
@@ -180,89 +184,94 @@ const DataTable = ({
         )}
       </div>
 
-      <>
-        <Table className="border border-gray-300">
-          <TableHeader>
-            <TableRow className="bg-gray-100">
-              {columns.map((column) => (
-                <TableHead
-                  key={column.label}
-                  className="py-2 px-4 border border-gray-300 cursor-pointer hover:bg-zinc-200"
-                  onClick={() => handleSortChange(column.value)}
-                >
-                  <div className="flex items-center gap-x-1">
-                    <span className="mb-0">{column.label}</span>
-
-                    <div className="flex items-center">
-                      <MoveUp
-                        className={`size-3 ${
-                          params.sortField == column.value &&
-                          params.sortOrder == "asc" &&
-                          "text-black"
-                        }`}
-                      />
-                      <MoveDown
-                        className={`size-3 ${
-                          params.sortField == column.value &&
-                          params.sortOrder == "desc" &&
-                          "text-black"
-                        }`}
-                      />
-                    </div>
+      <Table className="border border-gray-300 border-l-0">
+        <TableHeader>
+          <TableRow className={`grid grid-cols-${gridValue} bg-gray-100`}>
+            {columns.map((col) => (
+              <TableCell
+                key={col.value}
+                className={`font-medium col-span-${
+                  col.colspan || 1
+                } border-l-[1px]`}
+                onClick={() => handleSortChange(col.value)}
+              >
+                <div className="flex items-center gap-x-1">
+                  <span>{col.label}</span>
+                  <div className="flex items-center">
+                    <MoveUp
+                      className={`size-3 ${
+                        params.sortField == col.value &&
+                        params.sortOrder == "asc" &&
+                        "text-black"
+                      }`}
+                    />
+                    <MoveDown
+                      className={`size-3 ${
+                        params.sortField == col.value &&
+                        params.sortOrder == "desc" &&
+                        "text-black"
+                      }`}
+                    />
                   </div>
-                </TableHead>
+                </div>
+              </TableCell>
+            ))}
+            {actions && (
+              <TableCell className="font-medium border-l-[1px]">
+                Actions
+              </TableCell>
+            )}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data?.map((item) => (
+            <TableRow
+              key={item._id}
+              className={`grid grid-cols-${gridValue} even:bg-gray-50 odd:bg-white`}
+            >
+              {columns.map((col, index) => (
+                <TableCell
+                  key={index}
+                  className={`overflow-hidden text-ellipsis whitespace-nowrap flex items-center justify-start col-span-${
+                    col.colspan || 1
+                  } py-2 border-l-[1px]`}
+                >
+                  {col.render(item)}
+                </TableCell>
               ))}
               {actions && (
-                <TableHead className="py-2 px-4 border border-gray-300">
-                  Actions
-                </TableHead>
+                <TableCell className="py-2 border-l-[1px]">
+                  {actions(item)}
+                </TableCell>
               )}
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data?.map((item) => (
-              <TableRow key={item._id} className="even:bg-gray-50 odd:bg-white">
-                {columns.map((column, index) => (
-                  <TableCell
-                    className="py-2 px-4 border border-gray-300"
-                    key={index}
-                  >
-                    {column.render(item)}
-                  </TableCell>
-                ))}
-                {actions && (
-                  <TableCell className="py-2 px-4 border border-gray-300">
-                    {actions(item)}
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <div className="flex justify-between mt-4">
-          <p className="text-sm font-medium">
-            Page {totalPages == 0 ? 0 : params.page} of {totalPages}
-          </p>
-          <div className="space-x-4">
-            <Button
-              disabled={params.page === 1}
-              onClick={() =>
-                handleParamChange("page", Math.max(params.page - 1, 1))
-              }
-            >
-              Previous
-            </Button>
-            <Button
-              disabled={params.page === totalPages}
-              onClick={() =>
-                handleParamChange("page", Math.min(params.page + 1, totalPages))
-              }
-            >
-              Next
-            </Button>
-          </div>
+          ))}
+        </TableBody>
+      </Table>
+
+      <div className="flex justify-between mt-4">
+        <p className="text-sm font-medium">
+          Page {totalPages === 0 ? 0 : params.page} of {totalPages}
+        </p>
+        <div className="space-x-4">
+          <Button
+            disabled={params.page === 1}
+            onClick={() =>
+              handleParamChange("page", Math.max(params.page - 1, 1))
+            }
+          >
+            Previous
+          </Button>
+          <Button
+            disabled={params.page === totalPages}
+            onClick={() =>
+              handleParamChange("page", Math.min(params.page + 1, totalPages))
+            }
+          >
+            Next
+          </Button>
         </div>
-      </>
+      </div>
     </div>
   );
 };

@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
 import School from "../models/school";
 import User from "../models/user";
+import mongoose, { ClientSession } from "mongoose";
 
 export const getSchool = async (req: Request) => {
   const school = await School.findOne({ _id: req.user.profile.school });
@@ -78,4 +79,9 @@ export const sendEmail = async (
   } catch (error) {
     console.error("Error sending email: ", error);
   }
+};
+
+export const terminateSession = async (session: ClientSession) => {
+  await session.abortTransaction();
+  session.endSession();
 };

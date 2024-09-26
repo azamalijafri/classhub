@@ -44,7 +44,7 @@ export const createSubjects = async (req: Request, res: Response) => {
       showMessage: true,
     });
   } catch (error) {
-    console.log(error);
+    console.error("Error creating subjects: ", error);
     return res.status(500).json({
       message: "Error creating subjects",
       error: error instanceof Error ? error.message : "Unknown error",
@@ -63,7 +63,7 @@ export const getAllSubjects = async (req: Request, res: Response) => {
       .status(200)
       .json({ subjects, message: "Subjects fetched successfully" });
   } catch (error) {
-    console.log(error);
+    console.error("Error fetching all subjects: ", error);
     return res.status(500).json({
       message: "Error fetching subjects",
       error: error instanceof Error ? error.message : "Unknown error",

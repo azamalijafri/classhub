@@ -26,7 +26,7 @@ export const PrincipalItems = [
 
 export const StudentItems = [
   {
-    label: "My Class",
+    label: "Class",
     href: "/",
     icon: LayoutDashboardIcon,
   },

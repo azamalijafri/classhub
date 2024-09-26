@@ -11,10 +11,10 @@ import { Button } from "@/components/ui/button";
 import { useSearchParams } from "react-router-dom";
 
 const columns = [
-  { label: "Name", value: "name" },
-  { label: "Roll No", value: "roll" },
-  { label: "Present Count", value: "present" },
-  { label: "Attendance Percentage", value: "percentage" },
+  { label: "Name", value: "name", colspan: 4 },
+  { label: "Roll No", value: "roll", colspan: 2 },
+  { label: "Presents", value: "present", colspan: 2 },
+  { label: "Percentage", value: "percentage", colspan: 2 },
 ];
 
 interface StudentsAttendanceTableProps {
@@ -41,37 +41,49 @@ const StudentsAttendanceTable = ({
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm">Total Classes: {totalClasses}</p>
-      <Table className="border border-gray-300">
+      <Table className="border border-gray-300 border-l-0">
         <TableHeader>
-          <TableRow className="bg-gray-100">
-            {columns.map((item) => (
-              <TableHead
-                key={item.value}
-                className="py-2 px-4 border border-gray-300 cursor-pointer hover:bg-zinc-200"
-              >
-                <div className="flex items-center gap-x-1">
-                  <span>{item.label}</span>
-                </div>
-              </TableHead>
-            ))}
-          </TableRow>
+          <TableHead className="bg-gray-100 p-0">
+            <TableRow className="grid grid-cols-10 gap-2">
+              {columns.map((col) => (
+                <TableCell
+                  key={col.value}
+                  className={`font-medium col-span-${col.colspan} border-l-[1px]`}
+                >
+                  {col.label}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
         </TableHeader>
         <TableBody>
           {data?.length > 0 ? (
             data?.map((item) => (
-              <TableRow key={item._id} className="even:bg-gray-50 odd:bg-white">
-                <TableCell className="py-2 px-4 border border-gray-300">
-                  {item.name}
-                </TableCell>
-                <TableCell className="py-2 px-4 border border-gray-300">
-                  {item.roll}
-                </TableCell>
-                <TableCell className="py-2 px-4 border border-gray-300">
-                  {item.presentCount}
-                </TableCell>
-                <TableCell className="py-2 px-4 border border-gray-300">
-                  {item.percentage}%
-                </TableCell>
+              <TableRow
+                key={item._id}
+                className="grid grid-cols-10 even:bg-gray-50 odd:bg-white gap-2"
+              >
+                {columns.map((col) => (
+                  <TableCell
+                    key={col.value}
+                    className={`overflow-hidden text-ellipsis col-span-${col.colspan} border-l-[1px]`}
+                  >
+                    {(() => {
+                      switch (col.value) {
+                        case "name":
+                          return item.name;
+                        case "roll":
+                          return item.roll;
+                        case "present":
+                          return item.presentCount;
+                        case "percentage":
+                          return `${item.percentage}%`;
+                        default:
+                          return null;
+                      }
+                    })()}
+                  </TableCell>
+                ))}
               </TableRow>
             ))
           ) : (

@@ -11,13 +11,16 @@ function TeacherRoutes() {
   return (
     <Routes>
       <Route path="/" element={<TeacherDashboard />} />
-      <Route path="/class/:classId" element={<ClassDetailsLayout />}>
+      <Route path="/class/:classroomId" element={<ClassDetailsLayout />}>
         <Route path="timetable" element={<Timetable />} />
         <Route path="students" element={<ClassStudents />} />
       </Route>
       <Route path="/schedule" element={<Schedule />} />
       <Route path="/attendance" element={<Attendance />} />
-      <Route path="/attendance/:classId" element={<TeacherClassAttendance />} />
+      <Route
+        path="/attendance/:classroomId"
+        element={<TeacherClassAttendance />}
+      />
     </Routes>
   );
 }

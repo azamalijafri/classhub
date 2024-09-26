@@ -25,7 +25,9 @@ const ClassTeacherButton = ({ classroom }: { classroom: IClassroom }) => {
       </div>
 
       <Button
-        onClick={() => openModal("assign-teacher", { classId: classroom._id })}
+        onClick={() =>
+          openModal("assign-teacher", { classroomId: classroom._id })
+        }
         className={`absolute transition-opacity duration-300 ease-in-out ${
           isHovered ? "opacity-100" : "opacity-0"
         }`}

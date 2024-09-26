@@ -34,7 +34,7 @@ const LoginPage: React.FC = () => {
   };
 
   useEffect(() => {
-    document.title = "Login";
+    document.title = "Login | CloudCampus";
   }, []);
 
   return (
@@ -62,7 +62,7 @@ const LoginPage: React.FC = () => {
                 type="email"
                 required
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm "
-                placeholder="please enter your email"
+                placeholder="Please enter your email"
               />
             </div>
             <div>

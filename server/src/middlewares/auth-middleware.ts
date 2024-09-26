@@ -4,7 +4,6 @@ import User, { IUser } from "../models/user";
 import Principal, { IPrincipal } from "../models/principal";
 import Teacher, { ITeacher } from "../models/teacher";
 import Student, { IStudent } from "../models/student";
-import { log } from "console";
 
 export const authenticateUser = async (
   req: Request,

@@ -32,7 +32,7 @@ export const attendancePercentageSchema = z.object({
   subjectId: z.string().refine((id) => Types.ObjectId.isValid(id), {
     message: "Invalid subject ID",
   }),
-  classId: z.string().refine((id) => Types.ObjectId.isValid(id), {
+  classroomId: z.string().refine((id) => Types.ObjectId.isValid(id), {
     message: "Invalid classroom ID",
   }),
 });

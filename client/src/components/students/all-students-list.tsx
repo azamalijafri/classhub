@@ -71,26 +71,31 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
         />
       ),
       value: "select",
+      colspan: 0,
     },
     {
       label: "Name",
       render: (student: IStudent) => student.name,
       value: "name",
+      colspan: 2,
     },
     {
       label: "Email",
       render: (student: IStudent) => student.user.email,
       value: "email",
+      colspan: 2,
     },
     {
       label: "Class",
       render: (student: IStudent) => student.classroom?.name ?? "N/A",
       value: "classroom",
+      colspan: 2,
     },
     {
       label: "Roll No",
       render: (student: IStudent) => student.rollNo,
       value: "rollNo",
+      colspan: 1,
     },
   ];
 
@@ -139,6 +144,7 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
       </div>
 
       <DataTable
+        gridValue="10"
         data={data?.students}
         columns={columns}
         actions={actions}

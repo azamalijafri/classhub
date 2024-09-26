@@ -7,7 +7,6 @@ import {
   createClassroom,
   deleteClassroom,
   getAllClassrooms,
-  getClassroomDays,
   getClassroomDetails,
   getClassroomSubjects,
   updateClassroom,
@@ -33,14 +32,12 @@ router.post(
 
 router.get("/get/all/classrooms", requireRole(["principal"]), getAllClassrooms);
 
-router.get("/get/classroom/subjects/:classId", getClassroomSubjects);
+router.get("/get/classroom/subjects/:classroomId", getClassroomSubjects);
 
-router.get("/get/classroom/details/:classId", getClassroomDetails);
+router.get("/get/classroom/details/:classroomId", getClassroomDetails);
 
-router.get("/get/classroom/days/:classId", getClassroomDays);
+router.delete("/remove/classroom/:classroomId", deleteClassroom);
 
-router.delete("/remove/classroom/:classId", deleteClassroom);
-
-router.put("/update/classroom/:classId", updateClassroom);
+router.put("/update/classroom/:classroomId", updateClassroom);
 
 export default router;

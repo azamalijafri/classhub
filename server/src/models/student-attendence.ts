@@ -1,6 +1,6 @@
 import { Schema, model, Document, Types } from "mongoose";
 
-export interface IStudentAttendance extends Document {
+export interface IStudentAttendanceRecord extends Document {
   attendance: Types.ObjectId;
   student: Types.ObjectId;
   status: number;
@@ -9,7 +9,7 @@ export interface IStudentAttendance extends Document {
   updatedAt: Date;
 }
 
-const StudentAttendanceSchema = new Schema<IStudentAttendance>(
+const StudentAttendanceSchema = new Schema<IStudentAttendanceRecord>(
   {
     attendance: {
       type: Schema.Types.ObjectId,
@@ -17,7 +17,10 @@ const StudentAttendanceSchema = new Schema<IStudentAttendance>(
       required: true,
     },
     student: { type: Schema.Types.ObjectId, ref: "Student", required: true },
-    status: { type: Number, enum: [0, 1], required: true },
+    status: {
+      type: Number,
+      required: true,
+    },
     notes: { type: String },
   },
   {
@@ -25,7 +28,7 @@ const StudentAttendanceSchema = new Schema<IStudentAttendance>(
   }
 );
 
-const StudentAttendance = model<IStudentAttendance>(
+const StudentAttendance = model<IStudentAttendanceRecord>(
   "StudentAttendance",
   StudentAttendanceSchema
 );

@@ -4,11 +4,12 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { userSchema } from "../validation/user-schema";
 import { validate } from "../libs/utils";
+import { asyncTransactionWrapper } from "../libs/async-transaction-wrapper";
 
-export const login = async (req: Request, res: Response) => {
-  const { email, password } = validate(userSchema, req.body, res);
+export const login = asyncTransactionWrapper(
+  async (req: Request, res: Response) => {
+    const { email, password } = validate(userSchema, req.body, res);
 
-  try {
     const user = await User.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(400).json({ message: "Invalid credentials" });
@@ -21,7 +22,5 @@ export const login = async (req: Request, res: Response) => {
     );
 
     res.json({ token, user });
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
   }
-};
+);

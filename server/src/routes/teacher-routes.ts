@@ -54,7 +54,7 @@ router.get(
 );
 
 router.get(
-  "/teacher/get/my/subject/attendance/:classId",
+  "/teacher/get/my/subject/attendance/:classroomId",
   requireRole(["teacher"]),
   getMySubjectAttendance
 );

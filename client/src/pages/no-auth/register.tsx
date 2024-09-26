@@ -21,7 +21,7 @@ const RegisterPage: React.FC = () => {
       email: "",
       password: "",
       principalName: "",
-      schoolCode: "",
+      code: "",
     },
   });
 
@@ -40,7 +40,7 @@ const RegisterPage: React.FC = () => {
   };
 
   useEffect(() => {
-    document.title = "Register";
+    document.title = "Register | CloudCampus";
   }, []);
 
   return (
@@ -68,11 +68,11 @@ const RegisterPage: React.FC = () => {
               <TextInput
                 control={form.control}
                 label="School Code"
-                name="schoolCode"
+                name="code"
                 placeholder="Enter School Abbreviation"
                 type="text"
                 description="This will be used in your school emails"
-                error={errors.schoolCode?.message}
+                error={errors.code?.message}
               />
               <TextInput
                 control={form.control}

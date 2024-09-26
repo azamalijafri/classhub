@@ -54,7 +54,7 @@ const ClassroomCard = ({ classroom }: { classroom: IClassroom }) => {
                 <DropdownMenuItem
                   onClick={() =>
                     openModal("upsert-classroom", {
-                      classId: classroom?._id,
+                      classroomId: classroom?._id,
                     })
                   }
                 >
