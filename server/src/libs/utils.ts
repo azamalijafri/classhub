@@ -4,6 +4,7 @@ import { Request, Response } from "express";
 import School from "../models/school";
 import User from "../models/user";
 import mongoose, { ClientSession } from "mongoose";
+import { CustomError } from "./custom-error";
 
 export const getSchool = async (req: Request) => {
   const school = await School.findOne({ _id: req.user.profile.school });
@@ -22,11 +23,7 @@ export const validate = (
   const result = schema.safeParse(values);
 
   if (!result.success) {
-    res.status(400).json({
-      message: result.error.errors[0].message,
-      errors: result.error.errors.map((item: any) => item.message),
-    });
-    return;
+    throw new CustomError(result.error.errors[0].message, 400);
   }
 
   return result.data;
@@ -74,14 +71,41 @@ export const sendEmail = async (
     text: `Welcome! Your account has been successfully created.\n\nYour login details are as follows:\n\nEmail: ${generatedEmail}\nPassword: ${password}\n\nYou can change your password later after logging in.`,
   };
 
-  try {
-    await transporter.sendMail(mailOptions);
-  } catch (error) {
-    console.error("Error sending email: ", error);
-  }
+  await transporter.sendMail(mailOptions);
 };
 
 export const terminateSession = async (session: ClientSession) => {
   await session.abortTransaction();
   session.endSession();
+};
+
+export const delay = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+const MAX_RETRIES = 3;
+
+export const sendEmailWithRetry = async (
+  toEmail: string,
+  generatedEmail: string,
+  password: string
+) => {
+  let attempt = 0;
+
+  while (attempt < MAX_RETRIES) {
+    try {
+      await sendEmail(toEmail, generatedEmail, password);
+      return; // Successfully sent
+    } catch (error: any) {
+      if (error.message.includes("421-4.3.0")) {
+        // If we hit the temporary error, wait before retrying
+        const waitTime = Math.pow(2, attempt) * 1000; // Exponential backoff
+        await delay(waitTime);
+        attempt++;
+      } else {
+        throw error; // Rethrow other errors
+      }
+    }
+  }
+
+  throw new CustomError("Failed to send email after multiple attempts", 500);
 };

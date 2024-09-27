@@ -11,6 +11,7 @@ import { ChevronsUpDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
+import { motion, AnimatePresence } from "framer-motion"; // Import from framer-motion
 
 interface ComboBoxProps {
   items: { id: string; label: string }[];
@@ -57,40 +58,52 @@ const ComboBox: React.FC<ComboBoxProps> = ({
         className="w-full border border-gray-300 rounded p-2 text-left overflow-hidden text-ellipsis"
         role="combobox"
         aria-expanded={open}
-        onClick={() => setOpen(!open)} // Toggle dropdown on button click
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(!open);
+        }}
       >
         {selectedItem
           ? items.find((item) => item.id === selectedItem)?.label ?? placeholder
           : placeholder}
         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 float-right" />
       </Button>
-      {open && (
-        <div className="absolute z-50 w-full border-[1px] rounded-md mb-4 bg-white">
-          <Command className="z-50">
-            <CommandInput placeholder={`${placeholder}...`} />
-            <CommandList id="item-list">
-              <CommandEmpty>No items found.</CommandEmpty>
-              <CommandGroup>
-                {items.map((item, index) => (
-                  <CommandItem
-                    key={index}
-                    value={item.label}
-                    onSelect={() => handleSelect(item.id)}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        item.id === selectedItem ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {item.label}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </div>
-      )}
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="absolute z-50 w-full mt-1 border-[1px] rounded-md mb-4 bg-white shadow-md"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+          >
+            <Command className="">
+              <CommandInput placeholder={`${placeholder}...`} />
+              <CommandList id="item-list">
+                <CommandEmpty>No items found.</CommandEmpty>
+                <CommandGroup>
+                  {items.map((item, index) => (
+                    <CommandItem
+                      key={index}
+                      value={item.label}
+                      onSelect={() => handleSelect(item.id)}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          item.id === selectedItem ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {item.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

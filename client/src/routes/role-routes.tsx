@@ -38,7 +38,7 @@ const RoleBasedRoutes: React.FC = () => {
       break;
     default:
       logout();
-      navigate("/", { replace: true });
+      navigate("/login", { replace: true });
   }
 
   return (

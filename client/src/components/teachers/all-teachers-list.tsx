@@ -17,8 +17,8 @@ const TeachersList = ({ queryKey }: { queryKey: string }) => {
     class: classFilter,
     subject,
     page = 1,
-    sortField,
-    sortOrder,
+    sf,
+    so,
   } = Object.fromEntries(new URLSearchParams(location.search).entries());
 
   const apiUrl = queryString.stringifyUrl(
@@ -29,26 +29,17 @@ const TeachersList = ({ queryKey }: { queryKey: string }) => {
         class: classFilter,
         page,
         subject,
-        sortField,
-        sortOrder,
+        sf,
+        so,
       },
     },
     { skipEmptyString: true, skipNull: true }
   );
 
-  const { data = [], refetch } = useFetchData(
-    [
-      queryKey,
-      "teachers",
-      search,
-      classFilter,
-      subject,
-      page.toString(),
-      sortField,
-      sortOrder,
-    ],
-    apiUrl
-  );
+  const { data = [], refetch } = useFetchData({
+    queryKey: [queryKey, "teachers"],
+    apiUrl,
+  });
   const { openModal } = useModal();
 
   const columns = [
@@ -72,7 +63,7 @@ const TeachersList = ({ queryKey }: { queryKey: string }) => {
     },
     {
       label: "Class",
-      render: (teacher: Teacher) => teacher.classroom?.name ?? "N/A",
+      render: (teacher: Teacher) => teacher.classroom?.name ?? "Not Assigned",
       value: "classroom",
       colspan: 2,
     },

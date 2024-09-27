@@ -14,22 +14,22 @@ const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
   const {
     search,
     page = 1,
-    sortField,
-    sortOrder,
+    sf,
+    so,
   } = Object.fromEntries(new URLSearchParams(location.search).entries());
 
   const apiUrl = queryString.stringifyUrl(
     {
       url: `${apiUrls.classroom.getClassStudents}/${classroomId}`,
-      query: { search, page, sortOrder, sortField },
+      query: { search, page, so, sf },
     },
     { skipEmptyString: true, skipNull: true }
   );
 
-  const { data = [], refetch } = useFetchData(
-    [queryKey, "classStudents", search, page.toString(), sortField, sortOrder],
-    apiUrl
-  );
+  const { data = [], refetch } = useFetchData({
+    queryKey: [queryKey, "classStudents", search, page.toString(), sf, so],
+    apiUrl,
+  });
   const { openModal } = useModal();
 
   const columns = [
@@ -47,8 +47,8 @@ const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
     },
     {
       label: "Roll No",
-      render: (student: IStudent) => student.rollNo,
-      value: "rollNo",
+      render: (student: IStudent) => student.roll,
+      value: "roll",
       colspan: 3,
     },
   ];

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useFetchData } from "@/hooks/useFetchData";
 import DataTable from "@/components/data-table";
@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useModal } from "@/stores/modal-store";
 import axiosInstance from "@/lib/axios-instance";
 import queryString from "query-string";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
   const location = useLocation();
@@ -16,8 +17,8 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
     search,
     class: classFilter,
     page = 1,
-    sortField,
-    sortOrder,
+    sf,
+    so,
   } = Object.fromEntries(new URLSearchParams(location.search).entries());
 
   const apiUrl = queryString.stringifyUrl(
@@ -27,26 +28,27 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
         search,
         class: classFilter,
         page,
-        sortField,
-        sortOrder,
+        sf,
+        so,
       },
     },
     { skipEmptyString: true, skipNull: true }
   );
 
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-  const { data = [], refetch } = useFetchData(
-    [
-      queryKey,
-      "students",
-      search,
-      classFilter,
-      page.toString(),
-      sortField,
-      sortOrder,
-    ],
-    apiUrl
-  );
+  const { data = [], refetch } = useFetchData({
+    queryKey: [queryKey, "students"],
+    apiUrl,
+  });
+
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    (async () => {
+      const response = await axiosInstance.get(apiUrl);
+      queryClient.setQueryData([queryKey, "students"], response.data);
+    })();
+  }, [search, classFilter, page, sf, so, apiUrl, queryClient, queryKey]);
+
   const { openModal } = useModal();
 
   const toggleSelectStudent = (studentId: string) => {
@@ -75,26 +77,26 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
     },
     {
       label: "Name",
-      render: (student: IStudent) => student.name,
+      render: (student: IStudent) => student?.name,
       value: "name",
       colspan: 2,
     },
     {
       label: "Email",
-      render: (student: IStudent) => student.user.email,
+      render: (student: IStudent) => student?.user?.email,
       value: "email",
       colspan: 2,
     },
     {
       label: "Class",
-      render: (student: IStudent) => student.classroom?.name ?? "N/A",
+      render: (student: IStudent) => student?.classroom?.name ?? "Not Assigned",
       value: "classroom",
       colspan: 2,
     },
     {
       label: "Roll No",
-      render: (student: IStudent) => student.rollNo,
-      value: "rollNo",
+      render: (student: IStudent) => student?.roll,
+      value: "roll",
       colspan: 1,
     },
   ];

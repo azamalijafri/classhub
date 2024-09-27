@@ -1,40 +1,53 @@
-import CreateClassroomModal from "../modals/upsert-classroom-modal";
-import ConfirmModal from "../modals/confirm-modal";
+import { lazy, Suspense } from "react";
 import { useModal } from "../../stores/modal-store";
-import CreateTeacherModal from "../modals/upsert-teacher-modal";
-import AssignTeacherModal from "../modals/assign-teacher-modal";
-import TimetableModal from "../modals/timetable-modal";
-import CreateStudentModal from "../modals/upsert-student-modal";
-import AssignStudentModal from "../modals/assign-student-modal";
-import CreateSubjectsModal from "../modals/create-subject-modal";
-import AttendanceModal from "../modals/attendance-modal";
+import { Loader2Icon } from "lucide-react";
+
+// Lazy load modal components
+const CreateClassroomModal = lazy(
+  () => import("../modals/upsert-classroom-modal")
+);
+const ConfirmModal = lazy(() => import("../modals/confirm-modal"));
+const CreateTeacherModal = lazy(() => import("../modals/upsert-teacher-modal"));
+const AssignTeacherModal = lazy(() => import("../modals/assign-teacher-modal"));
+const TimetableModal = lazy(() => import("../modals/timetable-modal"));
+const CreateStudentModal = lazy(() => import("../modals/upsert-student-modal"));
+const AssignStudentModal = lazy(() => import("../modals/assign-student-modal"));
+const CreateSubjectsModal = lazy(
+  () => import("../modals/create-subject-modal")
+);
+const AttendanceModal = lazy(() => import("../modals/attendance-modal"));
+
+const modalComponents = {
+  "upsert-classroom": CreateClassroomModal,
+  "upsert-teacher": CreateTeacherModal,
+  "upsert-student": CreateStudentModal,
+  confirm: ConfirmModal,
+  "assign-teacher": AssignTeacherModal,
+  "edit-timetable": TimetableModal,
+  "assign-students": AssignStudentModal,
+  "create-subject": CreateSubjectsModal,
+  attendance: AttendanceModal,
+};
 
 const ModalProvider = () => {
   const { modals } = useModal();
 
   return (
     <>
-      {modals.map((modal, index) => {
-        switch (modal.type) {
-          case "upsert-classroom":
-            return <CreateClassroomModal key={index} />;
-          case "upsert-teacher":
-            return <CreateTeacherModal key={index} />;
-          case "upsert-student":
-            return <CreateStudentModal key={index} />;
-          case "confirm":
-            return <ConfirmModal key={index} />;
-          case "assign-teacher":
-            return <AssignTeacherModal key={index} />;
-          case "edit-timetable":
-            return <TimetableModal key={index} />;
-          case "assign-students":
-            return <AssignStudentModal key={index} />;
-          case "create-subject":
-            return <CreateSubjectsModal key={index} />;
-          case "attendance":
-            return <AttendanceModal key={index} />;
-        }
+      {modals.map((modal) => {
+        const ModalComponent = modalComponents[modal.type!];
+        return ModalComponent ? (
+          <Suspense
+            key={modal.type}
+            fallback={
+              <div>
+                <Loader2Icon className="animate-spin size-6" />
+              </div>
+            }
+          >
+            <ModalComponent />
+          </Suspense>
+        ) : null;
       })}
     </>
   );

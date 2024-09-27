@@ -1,8 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "@/lib/axios-instance";
 import { useLoading } from "@/stores/loader-store";
 
-export const useFetchData = (queryKey: string[], apiUrl: string) => {
+export const useFetchData = ({
+  apiUrl,
+  queryKey = [],
+}: {
+  apiUrl: string;
+  queryKey?: any[];
+}) => {
   const { isLoading, startLoading, stopLoading } = useLoading();
 
   const fetchData = async () => {

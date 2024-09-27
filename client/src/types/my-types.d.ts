@@ -31,7 +31,7 @@ interface IStudent {
   _id: string;
   name: string;
   user: IUser;
-  rollNo: string;
+  roll: string;
   classroom: IClassroom;
 }
 

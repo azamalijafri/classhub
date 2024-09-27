@@ -22,10 +22,14 @@ const TeacherClassAttendance = () => {
     { skipEmptyString: true, skipNull: true }
   );
 
-  const { data, isLoading } = useFetchData(
-    ["teacher-subject-attendance", String(classroomId), page.toString()],
-    apiUrl
-  );
+  const { data, isLoading } = useFetchData({
+    queryKey: [
+      "teacher-subject-attendance",
+      String(classroomId),
+      page.toString(),
+    ],
+    apiUrl,
+  });
 
   if (isLoading) return null;
   return (

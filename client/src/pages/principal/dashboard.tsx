@@ -5,7 +5,7 @@ import { useLoading } from "@/stores/loader-store";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 
-export const PrincipalDashboard = () => {
+const PrincipalDashboard = () => {
   const { startLoading, stopLoading } = useLoading();
 
   const { data, isLoading, isError } = useQuery({
@@ -32,3 +32,5 @@ export const PrincipalDashboard = () => {
     );
   return <ClassroomsGrid data={data} isLoading={isLoading} isError={isError} />;
 };
+
+export default PrincipalDashboard;

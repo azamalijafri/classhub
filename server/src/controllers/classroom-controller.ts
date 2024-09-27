@@ -5,7 +5,7 @@ import {
   assignTeacherSchema,
   createClassroomSchema,
 } from "../validation/classroom-schema";
-import { startSession, Types } from "mongoose";
+import { Types } from "mongoose";
 import Teacher from "../models/teacher";
 import Student from "../models/student";
 import { getSchool, validate } from "../libs/utils";
@@ -15,6 +15,7 @@ import Timetable from "../models/timetable";
 import ClassroomStudentAssociation from "../models/classroom-student";
 import ClassroomSubjectAssociation from "../models/classroom-subject";
 import { asyncTransactionWrapper } from "../libs/async-transaction-wrapper";
+import { CustomError } from "../libs/custom-error";
 
 export const createClassroom = asyncTransactionWrapper(
   async (req: Request, res: Response, session) => {
@@ -31,9 +32,7 @@ export const createClassroom = asyncTransactionWrapper(
     }).session(session);
 
     if (existingClassroom) {
-      return res
-        .status(409)
-        .json({ message: "Classroom with this name already exists" });
+      throw new CustomError("Classroom with this name already exist", 409);
     }
 
     const classroom = await Classroom.create([{ name, school: school._id }], {
@@ -74,7 +73,7 @@ export const assignTeacherToClassroom = asyncTransactionWrapper(
 
     const teacher = await Teacher.findById(teacherId).session(session);
     if (!teacher) {
-      return res.status(404).json({ message: "Teacher not found" });
+      throw new CustomError("Teacher not found", 404);
     }
 
     const existingClassroom = await Classroom.findOne({
@@ -82,14 +81,12 @@ export const assignTeacherToClassroom = asyncTransactionWrapper(
     }).session(session);
 
     if (existingClassroom) {
-      return res
-        .status(400)
-        .json({ message: "Teacher is already assigned to a classroom" });
+      throw new CustomError("Teacher is already assigned to a classroom", 400);
     }
 
     const classroom = await Classroom.findById(classroomId).session(session);
     if (!classroom) {
-      return res.status(404).json({ message: "Classroom not found" });
+      throw new CustomError("Classroom not found", 404);
     }
 
     classroom.mentor = teacherId;
@@ -112,7 +109,7 @@ export const assignStudentsToClassroom = asyncTransactionWrapper(
 
     const classroom = await Classroom.findById(classroomId).session(session);
     if (!classroom) {
-      return res.status(404).json({ message: "Classroom not found" });
+      throw new CustomError("Classroom not found", 404);
     }
 
     const students = await Student.find({ _id: { $in: studentsIds } }).session(
@@ -120,7 +117,7 @@ export const assignStudentsToClassroom = asyncTransactionWrapper(
     );
 
     if (students.length !== studentsIds.length) {
-      return res.status(404).json({ message: `Some students not found` });
+      throw new CustomError("Some students not found", 404);
     }
 
     const classroomStudentAssociations = students.map((student) => ({
@@ -132,10 +129,8 @@ export const assignStudentsToClassroom = asyncTransactionWrapper(
       session,
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Students successfully assigned to classroom",
-      assignedStudents: studentsIds,
-      classroom,
       showMessage: true,
     });
   }
@@ -146,7 +141,7 @@ export const getAllClassrooms = asyncTransactionWrapper(
     const classrooms = await Classroom.find({
       school: req.user.profile.school,
       status: 1,
-    }).populate("teacher");
+    }).populate("mentor");
 
     res.status(200).json({
       message: "Classrooms fetched successfully",
@@ -160,7 +155,7 @@ export const getClassroomSubjects = asyncTransactionWrapper(
     const { classroomId } = req.params;
 
     const classroom = await Classroom.findById(classroomId);
-    if (!classroom) return res.status(404).json({ message: "Class not found" });
+    if (!classroom) throw new CustomError("Classroom not found", 404);
 
     const classroomSubjects = await ClassroomSubjectAssociation.find({
       classroom: classroom._id,
@@ -183,10 +178,10 @@ export const getClassroomDetails = asyncTransactionWrapper(
   async (req: Request, res: Response) => {
     const { classroomId } = req.params;
 
-    const classroom = await Classroom.findById(classroomId).populate("teacher");
+    const classroom = await Classroom.findById(classroomId).populate("mentor");
 
     if (!classroom) {
-      return res.status(404).json({ message: "Class not found" });
+      throw new CustomError("Classroom not found", 404);
     }
 
     res.status(200).json({
@@ -203,10 +198,13 @@ export const deleteClassroom = asyncTransactionWrapper(
     const classroom = await Classroom.findById(classroomId);
 
     if (!classroom) {
-      return res.status(404).json({ message: "Classroom not found" });
+      throw new CustomError("Classroom not found", 404);
     }
 
-    await Classroom.findByIdAndUpdate(classroom._id, { status: 0 });
+    await Classroom.findByIdAndUpdate(classroom._id, {
+      status: 0,
+      mentor: null,
+    });
 
     res.status(200).json({
       message: "Classroom deleted successfully",
@@ -224,39 +222,44 @@ export const updateClassroom = asyncTransactionWrapper(
 
     const { name, subjects } = validatedData;
 
-    const existingClassroomWithSameName = await Classroom.findOne({
+    const existingClassroomWithSameNamePromise = Classroom.findOne({
       name,
       school: req.user.profile.school,
       _id: { $ne: classroomId },
       status: 1,
     }).session(session);
 
-    if (existingClassroomWithSameName) {
-      return res
-        .status(409)
-        .json({ message: "Classroom with this name already present" });
-    }
+    const existingClassroomPromise =
+      Classroom.findById(classroomId).session(session);
 
-    const existingClassroom = await Classroom.findById(classroomId).session(
-      session
-    );
+    const [existingClassroomWithSameName, existingClassroom] =
+      await Promise.all([
+        existingClassroomWithSameNamePromise,
+        existingClassroomPromise,
+      ]);
+
+    if (existingClassroomWithSameName) {
+      throw new CustomError("Classroom with this name already present", 409);
+    }
 
     if (!existingClassroom) {
-      return res.status(404).json({ message: "Classroom not found" });
+      throw new CustomError("Classroom not found", 404);
     }
 
-    await ClassroomSubjectAssociation.deleteMany({
-      classroom: classroomId,
-    }).session(session);
+    if (subjects && subjects.length > 0) {
+      await ClassroomSubjectAssociation.deleteMany({
+        classroom: classroomId,
+      }).session(session);
 
-    const classroomSubjects = subjects.map((subject: Types.ObjectId) => ({
-      classroom: classroomId,
-      subject,
-    }));
+      const classroomSubjects = subjects.map((subject: Types.ObjectId) => ({
+        classroom: classroomId,
+        subject,
+      }));
 
-    await ClassroomSubjectAssociation.insertMany(classroomSubjects, {
-      session,
-    });
+      await ClassroomSubjectAssociation.insertMany(classroomSubjects, {
+        session,
+      });
+    }
 
     existingClassroom.name = name;
     await existingClassroom.save({ session });

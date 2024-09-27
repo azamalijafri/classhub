@@ -20,10 +20,10 @@ const ClassDetailsLayout = () => {
   const { openModal } = useModal();
   const { user } = useAuthStore();
 
-  const { data } = useFetchData(
-    [classroomId ?? "", "class-details"],
-    `${apiUrls.classroom.getClassroomDetails}/${classroomId}`
-  );
+  const { data } = useFetchData({
+    queryKey: [classroomId ?? "", "class-details"],
+    apiUrl: `${apiUrls.classroom.getClassroomDetails}/${classroomId}`,
+  });
 
   useEffect(() => {
     document.title = `${data?.classroom?.name} | CloudCampus`;

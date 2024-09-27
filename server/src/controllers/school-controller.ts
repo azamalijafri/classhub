@@ -6,6 +6,7 @@ import Principal from "../models/principal";
 import School from "../models/school";
 import { validate } from "../libs/utils";
 import { asyncTransactionWrapper } from "../libs/async-transaction-wrapper";
+import { CustomError } from "../libs/custom-error";
 
 export const registerPrincipal = asyncTransactionWrapper(
   async (req: Request, res: Response, session) => {
@@ -14,9 +15,16 @@ export const registerPrincipal = asyncTransactionWrapper(
 
     const { schoolName, principalName, email, password, code } = validatedData;
 
+    const existingCode = await School.findOne({ code }).session(session);
+
+    if (existingCode) {
+      throw new CustomError("This school code has already been taken", 409);
+    }
+
     const existingUser = await User.findOne({ email }).session(session);
+
     if (existingUser) {
-      return res.status(400).json({ message: "Email is already in use." });
+      throw new CustomError("Email already in use", 409);
     }
 
     const sanitizedSchoolCode = code.replace(/[^a-z0-9]/g, "").toLowerCase();

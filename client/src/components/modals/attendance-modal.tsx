@@ -20,10 +20,9 @@ const AttendanceModal = () => {
   const [toggleAll, setToggleAll] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data, isLoading } = useFetchData(
-    [],
-    `${apiUrls.classroom.getClassStudents}/${modal?.data?.classroom?._id}?pageLimit=all`
-  );
+  const { data, isLoading } = useFetchData({
+    apiUrl: `${apiUrls.classroom.getClassStudents}/${modal?.data?.classroom?._id}?pageLimit=all`,
+  });
 
   const refetchQuery = useRefetchQuery();
 
@@ -135,7 +134,7 @@ const AttendanceModal = () => {
                   </span>
 
                   <span className="col-span-2 overflow-hidden text-ellipsis whitespace-nowrap">
-                    ({student.rollNo})
+                    ({student.roll})
                   </span>
                 </div>
               </div>

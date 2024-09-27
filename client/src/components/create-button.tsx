@@ -16,7 +16,7 @@ import { ModalType, useModal } from "../stores/modal-store";
 
 const navs = [
   {
-    label: "Class",
+    label: "Classroom",
     key: "upsert-classroom",
     icon: SchoolIcon,
   },

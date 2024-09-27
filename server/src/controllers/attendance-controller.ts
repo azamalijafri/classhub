@@ -9,6 +9,7 @@ import StudentAttendance from "../models/student-attendence";
 import { validate } from "../libs/utils";
 import Student from "../models/student";
 import { asyncTransactionWrapper } from "../libs/async-transaction-wrapper";
+import { CustomError } from "../libs/custom-error";
 
 export const markAttendance = asyncTransactionWrapper(
   async (req: Request, res: Response, session: ClientSession) => {
@@ -36,9 +37,7 @@ export const markAttendance = asyncTransactionWrapper(
     }).session(session);
 
     if (validStudents.length !== students.length) {
-      return res
-        .status(400)
-        .json({ message: "Some students do not belong to this classroom" });
+      throw new CustomError("Some Students are Invalid", 400);
     }
 
     const attendance = new AttendanceRecord({

@@ -21,7 +21,7 @@ const ClassTeacherButton = ({ classroom }: { classroom: IClassroom }) => {
           isHovered ? "opacity-0" : "opacity-100"
         }`}
       >
-        {classroom.teacher.name}
+        {classroom.mentor.name}
       </div>
 
       <Button

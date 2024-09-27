@@ -27,6 +27,7 @@ import {
 } from "../ui/table";
 import { useRefetchQuery } from "@/hooks/useRefetchQuery";
 import ComboBox from "../inputs/combo-box";
+import { Separator } from "../ui/separator";
 
 const UpsertStudentModal = () => {
   const { modals, closeModal } = useModal();
@@ -49,7 +50,7 @@ const UpsertStudentModal = () => {
     defaultValues: {
       name: student?.name || "",
       email: student?.user?.email || "",
-      roll: student?.rollNo || "",
+      roll: student?.roll || "",
     },
   });
 
@@ -82,10 +83,12 @@ const UpsertStudentModal = () => {
 
       const response = isUpdateMode
         ? await axiosInstance.put(apiUrl, {
+            values,
+          })
+        : await axiosInstance.post(apiUrl, {
             ...values,
             classroom: selectedClass,
-          })
-        : await axiosInstance.post(apiUrl, values);
+          });
 
       if (response) {
         refetchQuery(["all", "students"]);
@@ -210,6 +213,8 @@ const UpsertStudentModal = () => {
               </div>
             )}
 
+            <Separator className="mb-4" />
+
             <ComboBox
               items={classes}
               onSelect={(classroomId) => setSelectedClass(classroomId)}
@@ -263,15 +268,10 @@ const UpsertStudentModal = () => {
                 />
               )}
 
-              <ComboBox
-                items={classes}
-                onSelect={(classroomId) => setSelectedClass(classroomId)}
-                selectedValue={selectedClass}
-                label="Want to assign to a class?"
-                placeholder="Select a class"
-              />
+              <Separator />
 
               <Button
+                type="submit"
                 isLoading={isSubmitting}
                 disabled={isSubmitting || !isValid || isLoading}
               >
@@ -281,10 +281,21 @@ const UpsertStudentModal = () => {
           </Form>
         )}
 
+        {!isUpdateMode && !isBulkUpload && (
+          <ComboBox
+            items={classes}
+            onSelect={(classroomId) => setSelectedClass(classroomId)}
+            selectedValue={selectedClass}
+            label="Want to assign to a class?"
+            placeholder="Select a class"
+          />
+        )}
+
         {!isUpdateMode && (
           <Button
             variant="secondary"
             onClick={() => setIsBulkUpload(!isBulkUpload)}
+            disabled={isSubmitting || isLoading}
           >
             {isBulkUpload ? "Create Single Student" : "Bulk Upload"}
           </Button>

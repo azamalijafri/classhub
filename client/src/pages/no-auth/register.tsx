@@ -32,7 +32,7 @@ const RegisterPage: React.FC = () => {
   const handleRegister = async (values: RegisterFormValues) => {
     const response = await axiosInstance.post(
       apiUrls.school.registerPrincipal,
-      values
+      { ...values, code: values.code?.toLowerCase() }
     );
     if (response) {
       navigate("/login", { replace: true });

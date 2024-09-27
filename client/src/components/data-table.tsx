@@ -15,6 +15,7 @@ import { apiUrls } from "@/constants/api-urls";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { MoveDown, MoveUp, SearchIcon } from "lucide-react";
+import { useLoading } from "@/stores/loader-store";
 
 interface TableColumn {
   label: string;
@@ -49,6 +50,8 @@ const DataTable = ({
   const [subjects, setSubjects] = useState<{ id: string; label: string }[]>([]);
   const [classes, setClasses] = useState<{ id: string; label: string }[]>([]);
 
+  const { isLoading } = useLoading();
+
   const [search, setSearch] = useState(queryParams.get("search") || "");
   const debouncedSearch = useDebounce(search, 500);
 
@@ -56,21 +59,20 @@ const DataTable = ({
     class: queryParams.get("class") || "",
     subject: queryParams.get("subject") || "",
     page: Number(queryParams.get("page")) || 1,
-    sortField: queryParams.get("sortField") || null,
-    sortOrder: queryParams.get("sortOrder") || null,
+    sf: queryParams.get("sf") || null,
+    so: queryParams.get("so") || null,
   });
 
   const [itemsPerPage] = useState(10);
 
   const handleSortChange = (field: string) => {
     setParams((prevParams) => {
-      const isSameField = prevParams.sortField === field;
-      const newOrder =
-        isSameField && prevParams.sortOrder === "asc" ? "desc" : "asc";
+      const isSameField = prevParams.sf === field;
+      const newOrder = isSameField && prevParams.so === "asc" ? "desc" : "asc";
       return {
         ...prevParams,
-        sortField: field,
-        sortOrder: newOrder,
+        sf: field,
+        so: newOrder,
         page: 1,
       };
     });
@@ -129,8 +131,8 @@ const DataTable = ({
       ...(debouncedSearch && { search: debouncedSearch }),
       ...(params.class && { class: params.class }),
       ...(params.subject && { subject: params.subject }),
-      ...(params.sortField && { sortField: params.sortField }),
-      ...(params.sortOrder && { sortOrder: params.sortOrder }),
+      ...(params.sf && { sf: params.sf }),
+      ...(params.so && { so: params.so }),
     }).toString();
 
     navigate({ search: paramsString });
@@ -139,8 +141,8 @@ const DataTable = ({
     params.class,
     params.subject,
     params.page,
-    params.sortField,
-    params.sortOrder,
+    params.sf,
+    params.so,
     navigate,
   ]);
 
@@ -190,7 +192,7 @@ const DataTable = ({
             {columns.map((col) => (
               <TableCell
                 key={col.value}
-                className={`font-medium col-span-${
+                className={`font-medium cursor-pointer col-span-${
                   col.colspan || 1
                 } border-l-[1px]`}
                 onClick={() => handleSortChange(col.value)}
@@ -199,17 +201,17 @@ const DataTable = ({
                   <span>{col.label}</span>
                   <div className="flex items-center">
                     <MoveUp
-                      className={`size-3 ${
-                        params.sortField == col.value &&
-                        params.sortOrder == "asc" &&
-                        "text-black"
+                      className={`size-3  ${
+                        params.sf == col.value && params.so == "asc"
+                          ? "text-black"
+                          : "text-zinc-400"
                       }`}
                     />
                     <MoveDown
-                      className={`size-3 ${
-                        params.sortField == col.value &&
-                        params.sortOrder == "desc" &&
-                        "text-black"
+                      className={`size-3  ${
+                        params.sf == col.value && params.so == "desc"
+                          ? "text-black"
+                          : "text-zinc-400"
                       }`}
                     />
                   </div>
@@ -232,9 +234,9 @@ const DataTable = ({
               {columns.map((col, index) => (
                 <TableCell
                   key={index}
-                  className={`overflow-hidden text-ellipsis whitespace-nowrap flex items-center justify-start col-span-${
+                  className={`overflow-hidden text-ellipsis whitespace-nowrap h-full col-span-${
                     col.colspan || 1
-                  } py-2 border-l-[1px]`}
+                  } border-l-[1px]`}
                 >
                   {col.render(item)}
                 </TableCell>
@@ -251,11 +253,12 @@ const DataTable = ({
 
       <div className="flex justify-between mt-4">
         <p className="text-sm font-medium">
-          Page {totalPages === 0 ? 0 : params.page} of {totalPages}
+          Page {!totalPages ? 0 : totalPages === 0 ? 0 : params.page} of{" "}
+          {totalPages || 0}
         </p>
         <div className="space-x-4">
           <Button
-            disabled={params.page === 1}
+            disabled={params.page === 1 || isLoading}
             onClick={() =>
               handleParamChange("page", Math.max(params.page - 1, 1))
             }
@@ -263,10 +266,10 @@ const DataTable = ({
             Previous
           </Button>
           <Button
-            disabled={params.page === totalPages}
-            onClick={() =>
-              handleParamChange("page", Math.min(params.page + 1, totalPages))
-            }
+            disabled={params.page - 1 === totalPages || isLoading}
+            onClick={() => {
+              handleParamChange("page", Math.min(params.page + 1, totalPages));
+            }}
           >
             Next
           </Button>

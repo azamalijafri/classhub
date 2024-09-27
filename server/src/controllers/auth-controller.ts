@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { userSchema } from "../validation/user-schema";
 import { validate } from "../libs/utils";
 import { asyncTransactionWrapper } from "../libs/async-transaction-wrapper";
+import { CustomError } from "../libs/custom-error";
 
 export const login = asyncTransactionWrapper(
   async (req: Request, res: Response) => {
@@ -12,7 +13,7 @@ export const login = asyncTransactionWrapper(
 
     const user = await User.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      throw new CustomError("Invalid Credentials", 401);
     }
 
     const token = jwt.sign(
@@ -21,6 +22,6 @@ export const login = asyncTransactionWrapper(
       { expiresIn: "7d" }
     );
 
-    res.json({ token, user });
+    return res.json({ token, user });
   }
 );

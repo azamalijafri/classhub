@@ -5,6 +5,9 @@ import { updateTimetableSchema } from "../validation/timetable-schema";
 import { validate } from "../libs/utils";
 import Teacher from "../models/teacher";
 import Subject from "../models/subject";
+import { asyncTransactionWrapper } from "../libs/async-transaction-wrapper";
+import { ClientSession } from "mongoose";
+import { CustomError } from "../libs/custom-error";
 
 const timeToMinutes = (time: string): number => {
   const [hours, minutes] = time.split(":").map(Number);
@@ -28,53 +31,52 @@ const periodsOverlap = (periods: IPeriod[]): boolean => {
   return false;
 };
 
-export const updateTimetable = async (req: Request, res: Response) => {
-  try {
+export const updateTimetable = asyncTransactionWrapper(
+  async (req: Request, res: Response, session: ClientSession) => {
     const validatedData = validate(updateTimetableSchema, req.body, res);
-
     if (!validatedData) return;
 
     const { classroomId, timetableData } = validatedData;
 
     const classroom = await Classroom.findById(classroomId);
-
-    if (!classroom) {
-      return res.status(404).json({ message: "Classroom not found" });
-    }
+    if (!classroom) throw new CustomError("Classroom not found", 404);
 
     if (
       req.user.role !== "principal" &&
       classroom.mentor?.toString() !== req.user._id?.toString()
     ) {
-      return res.status(403).json({
-        message: "Access denied. You are not assigned to this classroom.",
-      });
+      throw new CustomError(
+        "Access denied. You are not assigned to this classroom.",
+        403
+      );
     }
 
     for (const { day, periods } of timetableData) {
-      // Validate periods
-      for (const period of periods) {
-        const teacher = await Teacher.findById(period.teacher);
+      const teachers = await Teacher.find({
+        _id: { $in: periods.map((p: any) => p.teacher) },
+      }).session(session);
+      const subjects = await Subject.find({
+        _id: { $in: periods.map((p: any) => p.subject) },
+      }).session(session);
 
-        if (!teacher) {
-          return res.status(404).json({ message: "Teacher not found" });
-        }
-
-        const subject = await Subject.findById(period.subject);
-
-        if (!subject) {
-          return res.status(404).json({ message: "subject not found" });
-        }
+      if (teachers.length !== periods.length) {
+        throw new CustomError("One or more teachers not found", 404);
+      }
+      if (subjects.length !== periods.length) {
+        throw new CustomError("One or more subjects not found", 404);
       }
 
       if (periodsOverlap(periods)) {
-        return res.status(400).json({
-          message: `Periods on ${day} overlap with each other.`,
-        });
+        throw new CustomError(
+          `Periods on ${day} overlap with each other.`,
+          400
+        );
       }
 
-      // Upsert timetable entry
-      let timetable = await Timetable.findOne({ classroom: classroomId, day });
+      let timetable = await Timetable.findOne({
+        classroom: classroomId,
+        day,
+      }).session(session);
 
       if (timetable) {
         timetable.periods = periods;
@@ -86,22 +88,19 @@ export const updateTimetable = async (req: Request, res: Response) => {
         });
       }
 
-      await timetable.save();
+      await timetable.save({ session });
     }
 
-    return res.status(200).json({
+    await session.commitTransaction();
+    res.status(200).json({
       message: "Timetable updated successfully",
       showMessage: true,
     });
-  } catch (error) {
-    console.log("timetable-update: ", error);
-
-    return res.status(500).json({ message: "Server error", error });
   }
-};
+);
 
-export const getTimetable = async (req: Request, res: Response) => {
-  try {
+export const getTimetable = asyncTransactionWrapper(
+  async (req: Request, res: Response) => {
     const { classroomId } = req.params;
     const timetable = await Timetable.find({ classroom: classroomId })
       .populate({
@@ -113,13 +112,8 @@ export const getTimetable = async (req: Request, res: Response) => {
         select: "name",
       });
 
-    if (!timetable)
-      return res.status(404).json({ message: "Timetable not found" });
+    if (!timetable) throw new CustomError("Timetable not found", 404);
 
     res.status(200).json({ timetable });
-  } catch (error) {
-    console.log(error);
-
-    return res.status(500).json({ message: "Server error", error });
   }
-};
+);

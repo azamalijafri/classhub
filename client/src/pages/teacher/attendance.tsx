@@ -3,10 +3,10 @@ import { apiUrls } from "@/constants/api-urls";
 import { useFetchData } from "@/hooks/useFetchData";
 
 const Attendance = () => {
-  const { data, isLoading, isError } = useFetchData(
-    ["attendance-classes"],
-    apiUrls.teacher.getMyAttendanceClasses
-  );
+  const { data, isLoading, isError } = useFetchData({
+    queryKey: ["attendance-classes"],
+    apiUrl: apiUrls.teacher.getMyAttendanceClasses,
+  });
 
   return (
     <ClassroomsGrid
