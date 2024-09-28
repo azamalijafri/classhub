@@ -117,8 +117,8 @@ export const getAllStudent = asyncTransactionWrapper(
       class: classroomId,
       page = 1,
       pageLimit = DEFAULT_PAGE_LIMIT,
-      sf = "name",
-      so = "asc",
+      sf = "createdAt",
+      so = "desc",
     } = req.query;
 
     const queryOptions: any = {
@@ -137,13 +137,13 @@ export const getAllStudent = asyncTransactionWrapper(
         from: "classroomstudentassociations",
         localField: "_id",
         foreignField: "student",
-        as: "classroomAssociation",
+        as: "classroomAssociations",
       },
     };
 
     const unwindClassroomAssociationStage: any = {
       $unwind: {
-        path: "$classroomAssociation",
+        path: "$classroomAssociations",
         preserveNullAndEmptyArrays: true,
       },
     };
@@ -151,15 +151,15 @@ export const getAllStudent = asyncTransactionWrapper(
     const lookupClassroomStage: any = {
       $lookup: {
         from: "classrooms",
-        localField: "classroomAssociation.classroom",
+        localField: "classroomAssociations.classroom",
         foreignField: "_id",
-        as: "classroom",
+        as: "classrooms",
       },
     };
 
     const unwindClassroomStage: any = {
       $unwind: {
-        path: "$classroom",
+        path: "$classrooms",
         preserveNullAndEmptyArrays: true,
       },
     };
@@ -180,8 +180,30 @@ export const getAllStudent = asyncTransactionWrapper(
       },
     };
 
+    const classroomMatchStage: any = {
+      $match: {
+        ...(classroomId
+          ? { "classrooms._id": new Types.ObjectId(String(classroomId)) }
+          : {}),
+      },
+    };
+
+    const groupStage: any = {
+      $group: {
+        _id: "$_id",
+        name: { $first: "$name" },
+        roll: { $first: "$roll" },
+        user: { $first: "$user" },
+        classrooms: { $addToSet: "$classrooms" },
+      },
+    };
+
     const sortOptions: any = {};
-    sortOptions[sf.toString()] = so === "asc" ? 1 : -1;
+    if (sf === "classroom") {
+      sortOptions["classrooms.name"] = so === "asc" ? 1 : -1;
+    } else {
+      sortOptions[sf.toString()] = so === "asc" ? 1 : -1;
+    }
 
     const limit =
       pageLimit === "all"
@@ -204,13 +226,8 @@ export const getAllStudent = asyncTransactionWrapper(
       unwindClassroomStage,
       lookupUserStage,
       unwindUserStage,
-      {
-        $match: {
-          ...(classroomId
-            ? { "classroom._id": new Types.ObjectId(String(classroomId)) }
-            : {}),
-        },
-      },
+      classroomMatchStage,
+      groupStage,
       { $sort: sortOptions },
       paginationStage,
     ];
@@ -219,6 +236,8 @@ export const getAllStudent = asyncTransactionWrapper(
 
     const students = result[0]?.paginatedResults || [];
     const totalCount = result[0]?.totalCount[0]?.count || 0;
+
+    console.log(students[0]);
 
     res.status(200).json({
       message: "Students fetched successfully",

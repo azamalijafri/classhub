@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
-import useAuthStore from "../stores/auth-store";
 import MainLoader from "./main-loader";
+import useAuthStore from "@/stores/auth-store";
 
 const noauthpaths = ["/login", "/register"];
 

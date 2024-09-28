@@ -12,10 +12,9 @@ import ComboBox from "@/components/inputs/combo-box";
 import { useDebounce } from "@/hooks/useDebounce";
 import axiosInstance from "@/lib/axios-instance";
 import { apiUrls } from "@/constants/api-urls";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+import { Input } from "../ui/input";
 import { MoveDown, MoveUp, SearchIcon } from "lucide-react";
-import { useLoading } from "@/stores/loader-store";
+import Pagination from "./pagination";
 
 interface TableColumn {
   label: string;
@@ -49,8 +48,6 @@ const DataTable = ({
   const queryParams = new URLSearchParams(location.search);
   const [subjects, setSubjects] = useState<{ id: string; label: string }[]>([]);
   const [classes, setClasses] = useState<{ id: string; label: string }[]>([]);
-
-  const { isLoading } = useLoading();
 
   const [search, setSearch] = useState(queryParams.get("search") || "");
   const debouncedSearch = useDebounce(search, 500);
@@ -201,14 +198,14 @@ const DataTable = ({
                   <span>{col.label}</span>
                   <div className="flex items-center">
                     <MoveUp
-                      className={`size-3  ${
+                      className={`size-3 ${
                         params.sf == col.value && params.so == "asc"
                           ? "text-black"
                           : "text-zinc-400"
                       }`}
                     />
                     <MoveDown
-                      className={`size-3  ${
+                      className={`size-3 ${
                         params.sf == col.value && params.so == "desc"
                           ? "text-black"
                           : "text-zinc-400"
@@ -251,29 +248,15 @@ const DataTable = ({
         </TableBody>
       </Table>
 
-      <div className="flex justify-between mt-4">
+      <div className="flex justify-between mt-4 items-center">
         <p className="text-sm font-medium">
-          Page {!totalPages ? 0 : totalPages === 0 ? 0 : params.page} of{" "}
-          {totalPages || 0}
+          Page {params.page} of {totalPages || 0}
         </p>
-        <div className="space-x-4">
-          <Button
-            disabled={params.page === 1 || isLoading}
-            onClick={() =>
-              handleParamChange("page", Math.max(params.page - 1, 1))
-            }
-          >
-            Previous
-          </Button>
-          <Button
-            disabled={params.page - 1 === totalPages || isLoading}
-            onClick={() => {
-              handleParamChange("page", Math.min(params.page + 1, totalPages));
-            }}
-          >
-            Next
-          </Button>
-        </div>
+        <Pagination
+          currentPage={params.page}
+          totalPages={totalPages}
+          onPageChange={(page) => handleParamChange("page", page)}
+        />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { apiUrls } from "@/constants/api-urls";
 import { useFetchData } from "@/hooks/useFetchData";
 import { useLocation, useParams } from "react-router-dom";
-import StudentsAttendanceTable from "./students-attendance-table";
+import StudentsAttendanceTable from "../table/students-attendance-table";
 import queryString from "query-string";
 
 const TeacherClassAttendance = () => {

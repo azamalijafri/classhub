@@ -1,10 +1,10 @@
+import { useSidebar } from "@/stores/sidebar-store";
 import React from "react";
 import { Navbar } from "./navbar";
 import Sidebar from "./sidebar";
-import Loader from "./loader";
-import { useSidebar } from "../stores/sidebar-store";
+import BarLoader from "../loader/bar-loader";
 
-const Layout = ({ children }: { children: React.ReactNode }) => {
+const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const { isCollapsed } = useSidebar();
 
   return (
@@ -12,7 +12,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       <div className="flex-1 flex flex-col">
         <div className="w-full border-b-[1px] border-gray-300 fixed bg-white z-50">
           <Navbar />
-          <Loader />
+          <BarLoader />
         </div>
         <main className="flex mt-20 w-screen">
           <div className="fixed">
@@ -33,4 +33,4 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export default Layout;
+export default MainLayout;

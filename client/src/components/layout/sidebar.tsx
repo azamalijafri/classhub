@@ -1,5 +1,4 @@
 import React from "react";
-import { useSidebar } from "../stores/sidebar-store";
 import useAuthStore from "@/stores/auth-store";
 import {
   PrincipalItems,
@@ -8,6 +7,7 @@ import {
 } from "@/constants/sidebar-items";
 import { Link, useLocation } from "react-router-dom";
 import { LucideProps } from "lucide-react";
+import { useSidebar } from "@/stores/sidebar-store";
 
 const Sidebar = () => {
   const { isCollapsed } = useSidebar();

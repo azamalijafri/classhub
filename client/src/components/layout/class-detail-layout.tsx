@@ -1,9 +1,9 @@
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
-import { Button, buttonVariants } from "./ui/button";
-import { apiUrls } from "../constants/api-urls";
-import { useModal } from "../stores/modal-store";
+import { Button, buttonVariants } from "../ui/button";
+import { apiUrls } from "../../constants/api-urls";
+import { useModal } from "../../stores/modal-store";
 import { cn } from "@/lib/utils";
-import ClassTeacherButton from "./class-teacher-button";
+import ClassTeacherButton from "../teacher/class-teacher-button";
 import { useFetchData } from "@/hooks/useFetchData";
 import useAuthStore from "@/stores/auth-store";
 import { useEffect } from "react";

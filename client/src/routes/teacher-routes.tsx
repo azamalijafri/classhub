@@ -1,11 +1,12 @@
 import { Routes, Route } from "react-router-dom";
 import { TeacherDashboard } from "../pages/teacher/dashboard";
-import ClassDetailsLayout from "@/components/class-detail-layout";
+
 import Timetable from "@/pages/common/timetable";
 import ClassStudents from "@/pages/common/class-students";
 import Schedule from "@/pages/teacher/schedule";
 import Attendance from "@/pages/teacher/attendance";
-import TeacherClassAttendance from "@/components/teacher-class-attendance";
+import ClassDetailsLayout from "@/components/layout/class-detail-layout";
+import TeacherClassAttendance from "@/components/teacher/teacher-class-attendance";
 
 function TeacherRoutes() {
   return (

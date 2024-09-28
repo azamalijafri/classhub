@@ -1,4 +1,4 @@
-import StudentsList from "@/components/students/all-students-list";
+import StudentsList from "@/components/student/all-students-list";
 import { useEffect } from "react";
 
 const Students = () => {

@@ -1,4 +1,4 @@
-import TimetableGrid from "@/components/timetable-grid";
+import TimetableGrid from "@/components/classroom/timetable-grid";
 
 const Timetable = () => {
   return (

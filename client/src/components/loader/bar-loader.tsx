@@ -1,6 +1,6 @@
-import { useLoading } from "../stores/loader-store";
+import { useLoading } from "../../stores/loader-store";
 
-const Loader = () => {
+const BarLoader = () => {
   const { isLoading } = useLoading();
 
   return (
@@ -10,4 +10,4 @@ const Loader = () => {
   );
 };
 
-export default Loader;
+export default BarLoader;

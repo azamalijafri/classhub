@@ -13,10 +13,13 @@ export const useFetchData = ({
   const { isLoading, startLoading, stopLoading } = useLoading();
 
   const fetchData = async () => {
-    startLoading();
-    const response = await axiosInstance.get(apiUrl);
-    stopLoading();
-    return response.data;
+    try {
+      startLoading();
+      const response = await axiosInstance.get(apiUrl);
+      return response.data;
+    } finally {
+      stopLoading();
+    }
   };
 
   const { data, refetch, isError } = useQuery({

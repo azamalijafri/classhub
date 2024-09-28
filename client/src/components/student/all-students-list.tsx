@@ -1,14 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useFetchData } from "@/hooks/useFetchData";
-import DataTable from "@/components/data-table";
+import DataTable from "@/components/table/data-table";
 import { apiUrls } from "@/constants/api-urls";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useModal } from "@/stores/modal-store";
 import axiosInstance from "@/lib/axios-instance";
 import queryString from "query-string";
-import { useQueryClient } from "@tanstack/react-query";
+import { scrollToTop } from "@/lib/utils";
 
 const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
   const location = useLocation();
@@ -41,13 +42,9 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
     apiUrl,
   });
 
-  const queryClient = useQueryClient();
   useEffect(() => {
-    (async () => {
-      const response = await axiosInstance.get(apiUrl);
-      queryClient.setQueryData([queryKey, "students"], response.data);
-    })();
-  }, [search, classFilter, page, sf, so, apiUrl, queryClient, queryKey]);
+    refetch().then(() => scrollToTop());
+  }, [search, classFilter, page, sf, so, apiUrl, refetch]);
 
   const { openModal } = useModal();
 
@@ -59,6 +56,14 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
     );
   };
 
+  const handleToggleSelectAll = () => {
+    if (selectedStudents.length === data?.students.length) {
+      setSelectedStudents([]);
+    } else {
+      setSelectedStudents(data?.students.map((student: any) => student._id));
+    }
+  };
+
   const handleAssign = () => {
     openModal("assign-students", { selectedStudents });
   };
@@ -66,7 +71,7 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
   const columns = [
     {
       label: "Select",
-      render: (student: IStudent) => (
+      render: (student: IStudent & { classrooms: IClassroom[] }) => (
         <Checkbox
           checked={selectedStudents.includes(student._id)}
           onClick={() => toggleSelectStudent(student._id)}
@@ -89,7 +94,13 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
     },
     {
       label: "Class",
-      render: (student: IStudent) => student?.classroom?.name ?? "Not Assigned",
+      render: (student: IStudent & { classrooms: IClassroom[] }) => {
+        if (student?.classrooms?.length > 0) {
+          return student.classrooms.map((cls) => cls?.name).join(", ");
+        } else {
+          return "Not Assigned";
+        }
+      },
       value: "classroom",
       colspan: 2,
     },
@@ -106,7 +117,7 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
       <Button
         variant="default"
         onClick={() => {
-          openModal("upsert-student", { student: student });
+          openModal("upsert-student", { student });
         }}
       >
         Edit
@@ -136,13 +147,20 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
         <h3 className="font-medium text-xl underline underline-offset-4">
           All Students
         </h3>
-        <Button
-          variant="default"
-          onClick={handleAssign}
-          disabled={selectedStudents.length === 0}
-        >
-          Assign Class
-        </Button>
+        <div className="flex justify-between items-center mb-2 gap-x-3">
+          <Button onClick={handleToggleSelectAll}>
+            {selectedStudents?.length === data?.students?.length
+              ? "Deselect All"
+              : "Select All"}
+          </Button>
+          <Button
+            variant="default"
+            onClick={handleAssign}
+            disabled={selectedStudents.length === 0}
+          >
+            Assign Class
+          </Button>
+        </div>
       </div>
 
       <DataTable

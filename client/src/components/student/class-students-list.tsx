@@ -1,13 +1,15 @@
 import { useLocation, useParams } from "react-router-dom";
 import { useFetchData } from "@/hooks/useFetchData";
-import DataTable from "@/components/data-table";
+import DataTable from "@/components/table/data-table";
 import { apiUrls } from "@/constants/api-urls";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/stores/modal-store";
 import axiosInstance from "@/lib/axios-instance";
 import queryString from "query-string";
+import { useEffect } from "react";
+import { scrollToTop } from "@/lib/utils";
 
-const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
+const ClassStudentsList = () => {
   const location = useLocation();
   const { classroomId } = useParams();
 
@@ -27,9 +29,14 @@ const ClassStudentsList = ({ queryKey }: { queryKey: string }) => {
   );
 
   const { data = [], refetch } = useFetchData({
-    queryKey: [queryKey, "classStudents", search, page.toString(), sf, so],
+    queryKey: [classroomId, "class-students"],
     apiUrl,
   });
+
+  useEffect(() => {
+    refetch().then(() => scrollToTop());
+  }, [search, page, sf, so, refetch]);
+
   const { openModal } = useModal();
 
   const columns = [

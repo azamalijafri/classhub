@@ -1,12 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import { JSX } from "react/jsx-runtime";
-import { PrincipalDashboard } from "../pages/principal/dashboard";
 import { StudentDashboard } from "../pages/student/dashboard";
 import { TeacherDashboard } from "../pages/teacher/dashboard";
 import useAuthStore from "../stores/auth-store";
 import { Routes, useNavigate } from "react-router-dom";
 import ProtectedRoute from "./protected-route";
-import Layout from "../components/layout";
+import PrincipalDashboard from "@/pages/principal/dashboard";
+import MainLayout from "@/components/layout/main-layout";
 
 export const principalRoutes = [
   { path: "/principal/dashboard", component: PrincipalDashboard },
@@ -42,7 +42,7 @@ const RoleBasedRoutes: React.FC = () => {
   }
 
   return (
-    <Layout>
+    <MainLayout>
       <Routes>
         {roleRoutes.map((route, index) => (
           <ProtectedRoute
@@ -53,7 +53,7 @@ const RoleBasedRoutes: React.FC = () => {
           // <Route path={route.path} element={<route.component />} />
         ))}
       </Routes>
-    </Layout>
+    </MainLayout>
   );
 };
 

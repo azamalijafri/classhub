@@ -1,7 +1,7 @@
 import { useSidebar } from "@/stores/sidebar-store";
 import ClassroomCard from "./classroom-card";
 
-export const ClassroomsGrid = ({
+const ClassroomsGrid = ({
   isLoading,
   isError,
   data,
@@ -34,3 +34,5 @@ export const ClassroomsGrid = ({
     </div>
   );
 };
+
+export default ClassroomsGrid;

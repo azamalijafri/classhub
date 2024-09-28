@@ -1,15 +1,16 @@
 import { useNavigate } from "react-router-dom";
+
+import { useModal } from "@/stores/modal-store";
+import useAuthStore from "@/stores/auth-store";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
-import useAuthStore from "../stores/auth-store";
-import { Button } from "./ui/button";
-import { useModal } from "@/stores/modal-store";
+} from "../ui/dropdown-menu";
+import { Button } from "../ui/button";
 
-export function UserAvatar() {
+function UserAvatar() {
   const { profile, logout } = useAuthStore();
   const { openModal } = useModal();
   const navigate = useNavigate();
@@ -38,3 +39,5 @@ export function UserAvatar() {
     </DropdownMenu>
   );
 }
+
+export default UserAvatar;

@@ -10,9 +10,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
-import { Button } from "./ui/button";
-import { ModalType, useModal } from "../stores/modal-store";
+} from "../ui/dropdown-menu";
+import { Button } from "../ui/button";
+import { ModalType, useModal } from "@/stores/modal-store";
 
 const navs = [
   {

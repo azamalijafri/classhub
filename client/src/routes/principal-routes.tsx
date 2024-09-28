@@ -3,7 +3,7 @@ import { Routes, Route } from "react-router-dom";
 
 const PrincipalDashboard = lazy(() => import("../pages/principal/dashboard"));
 const ClassDetailsLayout = lazy(
-  () => import("../components/class-detail-layout")
+  () => import("../components/layout/class-detail-layout")
 );
 const Timetable = lazy(() => import("../pages/common/timetable"));
 const ClassStudents = lazy(() => import("../pages/common/class-students"));

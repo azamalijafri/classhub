@@ -40,9 +40,7 @@ const ModalProvider = () => {
           <Suspense
             key={modal.type}
             fallback={
-              <div>
-                <Loader2Icon className="animate-spin size-6" />
-              </div>
+              <Loader2Icon className="animate-spin size-6 absolute inset-0" />
             }
           >
             <ModalComponent />

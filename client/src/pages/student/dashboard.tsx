@@ -1,4 +1,4 @@
-import { ClassroomsGrid } from "@/components/classrooms-grid";
+import ClassroomsGrid from "@/components/classroom/classrooms-grid";
 import { apiUrls } from "@/constants/api-urls";
 import axiosInstance from "@/lib/axios-instance";
 import { useLoading } from "@/stores/loader-store";

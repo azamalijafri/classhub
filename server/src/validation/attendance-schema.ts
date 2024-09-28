@@ -8,9 +8,6 @@ export const markAttendanceSchema = z.object({
   subjectId: z.string().refine((id) => Types.ObjectId.isValid(id), {
     message: "Invalid subject ID",
   }),
-  teacherId: z.string().refine((id) => Types.ObjectId.isValid(id), {
-    message: "Invalid teacher ID",
-  }),
   periodId: z.string().refine((id) => Types.ObjectId.isValid(id), {
     message: "Invalid period ID",
   }),

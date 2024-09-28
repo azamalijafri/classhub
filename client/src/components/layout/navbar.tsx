@@ -1,9 +1,9 @@
 import { MenuIcon, PresentationIcon } from "lucide-react";
-import { UserAvatar } from "./user-avatar";
-import CreateButton from "./create-button";
-import { useSidebar } from "../stores/sidebar-store";
+import { useSidebar } from "../../stores/sidebar-store";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "@/stores/auth-store";
+import CreateButton from "../button/create-button";
+import UserAvatar from "../button/user-avatar";
 
 export const Navbar = () => {
   const { toggleSidebar } = useSidebar();

@@ -1,4 +1,4 @@
-import AllTeachersList from "@/components/teachers/all-teachers-list";
+import AllTeachersList from "@/components/teacher/all-teachers-list";
 import { useEffect } from "react";
 
 const Teachers = () => {

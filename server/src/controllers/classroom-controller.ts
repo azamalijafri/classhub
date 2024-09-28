@@ -120,18 +120,38 @@ export const assignStudentsToClassroom = asyncTransactionWrapper(
       throw new CustomError("Some students not found", 404);
     }
 
-    const classroomStudentAssociations = students.map((student) => ({
+    const existingAssociations = await ClassroomStudentAssociation.find({
+      student: { $in: studentsIds },
+      classroom: classroomId,
+    }).session(session);
+
+    const alreadyAssignedStudentIds = existingAssociations.map((assoc) =>
+      assoc.student.toString()
+    );
+
+    const studentsToAssign = students.filter(
+      (student) =>
+        !alreadyAssignedStudentIds.includes(student?._id?.toString()!)
+    );
+
+    if (studentsToAssign.length === 0) {
+      return res.status(200).json({
+        message: "All students are already assigned to this classroom",
+        showMessage: true,
+      });
+    }
+
+    const newAssociations = studentsToAssign.map((student) => ({
       student: student._id,
       classroom: classroomId,
     }));
 
-    await ClassroomStudentAssociation.insertMany(classroomStudentAssociations, {
-      session,
-    });
+    await ClassroomStudentAssociation.insertMany(newAssociations, { session });
 
     res.status(200).json({
       message: "Students successfully assigned to classroom",
       showMessage: true,
+      newlyAssignedStudents: studentsToAssign.map((student) => student._id),
     });
   }
 );

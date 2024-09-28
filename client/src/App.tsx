@@ -2,10 +2,10 @@ import { useEffect, useState, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import useAuthStore from "./stores/auth-store";
 import RootProvider from "./components/providers/root-provider";
-import MainLoader from "./components/main-loader";
+import MainLoader from "./components/loader/main-loader";
 
-const SplashScreen = lazy(() => import("./components/splash-screen"));
-const Layout = lazy(() => import("./components/layout"));
+const SplashScreen = lazy(() => import("./components/loader/splash-screen"));
+const MainLayout = lazy(() => import("./components/layout/main-layout"));
 const Login = lazy(() => import("./pages/no-auth/login"));
 const Register = lazy(() => import("./pages/no-auth/register"));
 const PrincipalRoutes = lazy(() => import("./routes/principal-routes"));
@@ -42,11 +42,11 @@ function App() {
                   path="/*"
                   element={
                     user ? (
-                      <Layout>
+                      <MainLayout>
                         {user.role === "principal" && <PrincipalRoutes />}
                         {user.role === "teacher" && <TeacherRoutes />}
                         {user.role === "student" && <StudentRoutes />}
-                      </Layout>
+                      </MainLayout>
                     ) : (
                       <Navigate to="/login" replace />
                     )

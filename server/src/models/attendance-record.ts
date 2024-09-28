@@ -3,7 +3,6 @@ import { Schema, model, Document, Types } from "mongoose";
 export interface IAttendanceRecord extends Document {
   classroom: Types.ObjectId;
   subject: Types.ObjectId;
-  teacher: Types.ObjectId;
   period: Types.ObjectId;
   date: Date;
   createdAt: Date;
@@ -19,7 +18,6 @@ const AttendanceRecordSchema = new Schema<IAttendanceRecord>(
     },
     subject: { type: Schema.Types.ObjectId, ref: "Subject", required: true },
     period: { type: Schema.Types.ObjectId, required: true },
-    teacher: { type: Schema.Types.ObjectId, ref: "Teacher", required: true },
     date: { type: Date, required: true },
   },
   {

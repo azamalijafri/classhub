@@ -10,25 +10,32 @@ import { validate } from "../libs/utils";
 import Student from "../models/student";
 import { asyncTransactionWrapper } from "../libs/async-transaction-wrapper";
 import { CustomError } from "../libs/custom-error";
+import Timetable from "../models/timetable";
 
 export const markAttendance = asyncTransactionWrapper(
   async (req: Request, res: Response, session: ClientSession) => {
     const validatedData = validate(markAttendanceSchema, req.body, res);
     if (!validatedData) return;
 
-    const { classroomId, subjectId, teacherId, date, students, periodId } =
-      validatedData;
+    const { classroomId, subjectId, date, students, periodId } = validatedData;
 
-    const [classroom, subject, teacher] = await Promise.all([
+    const [classroom, subject] = await Promise.all([
       Classroom.findById(classroomId).session(session),
       Subject.findById(subjectId).session(session),
-      Teacher.findById(teacherId).session(session),
     ]);
 
     if (!classroom)
       return res.status(404).json({ message: "Classroom not found" });
     if (!subject) return res.status(404).json({ message: "Subject not found" });
-    if (!teacher) return res.status(404).json({ message: "Teacher not found" });
+
+    const timetable = await Timetable.findOne({
+      classroom: classroomId,
+    }).session(session);
+
+    const period = timetable?.periods?.find((period) => period.id == periodId);
+
+    if (!period || period.teacher != req.user.profile._id)
+      throw new CustomError("You are not assigned to this period");
 
     const studentIds = students.map((s: { studentId: string }) => s.studentId);
     const validStudents = await Student.find({
@@ -43,7 +50,6 @@ export const markAttendance = asyncTransactionWrapper(
     const attendance = new AttendanceRecord({
       classroom: classroomId,
       subject: subjectId,
-      teacher: teacherId,
       period: periodId,
       date,
     });

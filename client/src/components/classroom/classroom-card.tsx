@@ -1,12 +1,12 @@
 import { EllipsisVerticalIcon } from "lucide-react";
-import { Card, CardContent, CardHeader } from "./ui/card";
-import { Separator } from "./ui/separator";
+import { Card, CardContent, CardHeader } from "../ui/card";
+import { Separator } from "../ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+} from "../ui/dropdown-menu";
 import { useLocation, useNavigate } from "react-router-dom";
 import axiosInstance from "@/lib/axios-instance";
 import { apiUrls } from "@/constants/api-urls";
@@ -75,7 +75,7 @@ const ClassroomCard = ({ classroom }: { classroom: IClassroom }) => {
 
         <span
           onClick={() => navigate(navigateLink)}
-          className="hover:underline underline-offset-2 cursor-pointer transition w-full text-ellipsis overflow-hidden"
+          className="hover:underline underline-offset-2 cursor-pointer transition w-full text-ellipsis overflow-hidden whitespace-nowrap"
         >
           {classroom?.name}
         </span>
@@ -84,8 +84,8 @@ const ClassroomCard = ({ classroom }: { classroom: IClassroom }) => {
       {path != "attendance" && (
         <CardContent className="py-2">
           <span className="text-sm font-medium">
-            {classroom?.teacher
-              ? `Assigned to ${classroom?.teacher?.name}`
+            {classroom?.mentor
+              ? `Assigned to ${classroom?.mentor?.name}`
               : "No teacher assigned"}
           </span>
         </CardContent>

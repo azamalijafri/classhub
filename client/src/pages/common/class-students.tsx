@@ -1,9 +1,9 @@
-import ClassStudentsList from "@/components/students/class-students-list";
+import ClassStudentsList from "@/components/student/class-students-list";
 
 const ClassStudents = () => {
   return (
     <div>
-      <ClassStudentsList queryKey="class" />
+      <ClassStudentsList />
     </div>
   );
 };
