@@ -12,7 +12,7 @@ export const login = asyncTransactionWrapper(
     const { email, password } = validate(userSchema, req.body, res);
 
     const user = await User.findOne({ email });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user || !(await user?.comparePassword(password))) {
       throw new CustomError("Invalid Credentials", 401);
     }
 

@@ -16,5 +16,9 @@ export const createBulkStudentSchema = z.object({
 
 export const updateStudentSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  // roll: z.string().min(1, "Roll No is required"),
+  password: z
+    .string()
+    .min(6, "Password should be atleast 6 character")
+    .optional()
+    .or(z.literal("")),
 });

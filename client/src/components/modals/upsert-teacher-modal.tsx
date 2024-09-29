@@ -62,6 +62,7 @@ const UpsertTeacherModal = () => {
       name: teacher?.name || "",
       email: teacher?.user.email || "",
       subject: teacher?.subject._id || "",
+      password: "",
     },
   });
 
@@ -247,6 +248,16 @@ const UpsertTeacherModal = () => {
                 label="Subject"
                 name="subject"
               />
+              <TextInput
+                label="Password"
+                control={form.control}
+                name="password"
+                placeholder="Change Password"
+                description="only enter if you wish to change password (6 character long)"
+                type="password"
+                error={errors.password?.message}
+              />
+
               <Button
                 isLoading={isSubmitting}
                 disabled={isSubmitting || !isValid || isLoading}

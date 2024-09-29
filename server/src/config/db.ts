@@ -1,6 +1,11 @@
-import mongoose, { ConnectOptions } from "mongoose";
+import mongoose from "mongoose";
 
 const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) {
+    console.log("MongoDB is already connected.");
+    return;
+  }
+
   try {
     await mongoose.connect(
       process.env.DB_URI ||
@@ -9,7 +14,7 @@ const connectDB = async () => {
     console.log("MongoDB connected");
   } catch (err) {
     console.error("Error connecting to MongoDB", err);
-    process.exit(1);
+    process.exit(1); // Exit if connection fails
   }
 };
 

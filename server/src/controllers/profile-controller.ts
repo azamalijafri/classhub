@@ -45,11 +45,10 @@ export const createUserAndProfile = async ({
     : `${emailName}@${school.code}.edu.com`;
 
   const uniqueEmail = await generateUniqueEmail(userSchoolEmail);
-  const hashedPassword = await hashPassword(password);
 
   const user = new User({
     email: uniqueEmail,
-    password: hashedPassword,
+    password,
     role,
   });
 

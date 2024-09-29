@@ -1,4 +1,5 @@
 import {
+  BookOpenIcon,
   BookType,
   CalendarCheckIcon,
   LayoutDashboardIcon,
@@ -21,6 +22,11 @@ export const PrincipalItems = [
     label: "Students",
     href: "/students",
     icon: UsersIcon,
+  },
+  {
+    label: "Subjects",
+    href: "/subjects",
+    icon: BookOpenIcon,
   },
 ];
 

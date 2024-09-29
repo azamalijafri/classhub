@@ -1,3 +1,4 @@
+import { hashPassword } from "./../libs/utils";
 import { Request, Response } from "express";
 import Student, { IStudent } from "../models/student";
 import { delay, getSchool, sendEmail, validate } from "../libs/utils";
@@ -17,6 +18,8 @@ import { ClientSession, Types } from "mongoose";
 import { asyncTransactionWrapper } from "../libs/async-transaction-wrapper";
 import { CustomError } from "../libs/custom-error";
 import { Schema } from "mongoose";
+import ClassroomStudentAssociation from "../models/classroom-student";
+import User from "../models/user";
 
 export const createStudent = asyncTransactionWrapper(
   async (req: Request, res: Response, session: ClientSession) => {
@@ -24,6 +27,14 @@ export const createStudent = asyncTransactionWrapper(
     if (!validatedData) return;
 
     const { name, email, roll, classroom: classroomId } = validatedData;
+
+    const existingRoll = await Student.findOne({
+      roll,
+      school: req.user.profile.school._id,
+    });
+
+    if (existingRoll)
+      throw new CustomError("Student with this roll already exist", 409);
 
     const school = await getSchool(req);
 
@@ -75,6 +86,14 @@ export const createBulkStudents = asyncTransactionWrapper(
 
     const createPromises = students.map(async (student: any) => {
       const { name, email, roll } = student;
+
+      const existingRoll = await Student.findOne({
+        roll,
+        school: req.user.profile.school._id,
+      });
+
+      if (existingRoll)
+        throw new CustomError(`Student with roll ${roll} already exist`, 409);
 
       try {
         const emailInfo = await createUserAndProfile({
@@ -195,6 +214,7 @@ export const getAllStudent = asyncTransactionWrapper(
         roll: { $first: "$roll" },
         user: { $first: "$user" },
         classrooms: { $addToSet: "$classrooms" },
+        createdAt: { $addToSet: "$createdAt" },
       },
     };
 
@@ -236,8 +256,6 @@ export const getAllStudent = asyncTransactionWrapper(
 
     const students = result[0]?.paginatedResults || [];
     const totalCount = result[0]?.totalCount[0]?.count || 0;
-
-    console.log(students[0]);
 
     res.status(200).json({
       message: "Students fetched successfully",
@@ -373,9 +391,18 @@ export const updateStudent = asyncTransactionWrapper(
     const validatedData = validate(updateStudentSchema, req.body, res);
     if (!validatedData) return;
 
-    const { name } = validatedData;
+    const { name, password } = validatedData;
 
     await student.updateOne({ name }, { session });
+    if (password) {
+      const hashedPassword = await hashPassword(password);
+      await User.findByIdAndUpdate(
+        student.user,
+        { password: hashedPassword },
+        { session }
+      );
+    }
+
     res
       .status(200)
       .json({ message: "Student updated successfully", showMessage: true });
@@ -384,21 +411,27 @@ export const updateStudent = asyncTransactionWrapper(
 
 export const kickStudentFromClass = asyncTransactionWrapper(
   async (req: Request, res: Response) => {
-    const { studentId } = req.params;
+    const { studentId, classroomId } = req.query;
 
-    if (!Types.ObjectId.isValid(studentId)) {
+    console.log(studentId, classroomId);
+
+    if (
+      !Types.ObjectId.isValid(studentId as string) ||
+      !Types.ObjectId.isValid(classroomId as string)
+    ) {
       throw new CustomError("Invalid ID format", 400);
     }
 
-    const student = await Student.findByIdAndUpdate(
-      studentId,
-      { classroom: null },
-      { new: true }
-    );
+    const student = await Student.findById(studentId);
 
     if (!student) {
       throw new CustomError("Student not found", 404);
     }
+
+    await ClassroomStudentAssociation.findOneAndDelete({
+      student: studentId,
+      classroom: classroomId,
+    });
 
     res
       .status(200)

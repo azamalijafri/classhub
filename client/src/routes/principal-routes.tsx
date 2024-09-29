@@ -1,3 +1,5 @@
+import SecondaryLoader from "@/components/loader/secondary-loader";
+import Subjects from "@/pages/principal/subject";
 import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 
@@ -13,7 +15,7 @@ const Teachers = lazy(() => import("@/pages/principal/teachers"));
 function PrincipalRoutes() {
   return (
     <div className="w-full">
-      <Suspense fallback={<></>}>
+      <Suspense fallback={<SecondaryLoader />}>
         <Routes>
           <Route path="/" element={<PrincipalDashboard />} />
           <Route path="/class/:classroomId" element={<ClassDetailsLayout />}>
@@ -22,6 +24,7 @@ function PrincipalRoutes() {
           </Route>
           <Route path="/teachers" element={<Teachers />} />
           <Route path="/students" element={<AllStudents />} />
+          <Route path="/subjects" element={<Subjects />} />
         </Routes>
       </Suspense>
     </div>

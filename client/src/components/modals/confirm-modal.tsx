@@ -19,11 +19,14 @@ const ConfirmModal = () => {
         <Button
           isLoading={loading}
           disabled={loading}
-          onClick={() => {
-            setLoading(true);
-            performingAction!();
-            closeModal();
-            setLoading(false);
+          onClick={async () => {
+            try {
+              setLoading(true);
+              await performingAction!();
+              closeModal();
+            } finally {
+              setLoading(false);
+            }
           }}
         >
           Confirm

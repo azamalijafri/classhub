@@ -249,9 +249,11 @@ const DataTable = ({
       </Table>
 
       <div className="flex justify-between mt-4 items-center">
-        <p className="text-sm font-medium">
-          Page {params.page} of {totalPages || 0}
-        </p>
+        {totalPages != 0 && (
+          <p className="text-sm font-medium">
+            Page {params.page} of {totalPages || 0}
+          </p>
+        )}
         <Pagination
           currentPage={params.page}
           totalPages={totalPages}

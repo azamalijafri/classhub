@@ -68,7 +68,7 @@ const ClassStudentsList = () => {
           openModal("confirm", {
             performingAction: async () => {
               const response = await axiosInstance.put(
-                `${apiUrls.student.kickStudentFromClass}/${student._id}`
+                `${apiUrls.student.kickStudentFromClass}?studentId=${student._id}&classroomId=${classroomId}`
               );
               if (response) {
                 refetch();

@@ -5,6 +5,7 @@ import School from "../models/school";
 import User from "../models/user";
 import mongoose, { ClientSession } from "mongoose";
 import { CustomError } from "./custom-error";
+import { createStudentSchema } from "../validation/student-schema";
 
 export const getSchool = async (req: Request) => {
   const school = await School.findOne({ _id: req.user.profile.school });

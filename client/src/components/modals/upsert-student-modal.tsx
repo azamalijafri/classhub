@@ -51,6 +51,7 @@ const UpsertStudentModal = () => {
       name: student?.name || "",
       email: student?.user?.email || "",
       roll: student?.roll || "",
+      password: "",
     },
   });
 
@@ -82,9 +83,7 @@ const UpsertStudentModal = () => {
         : apiUrls.student.createStudent;
 
       const response = isUpdateMode
-        ? await axiosInstance.put(apiUrl, {
-            values,
-          })
+        ? await axiosInstance.put(apiUrl, values)
         : await axiosInstance.post(apiUrl, {
             ...values,
             classroom: selectedClass,
@@ -267,6 +266,16 @@ const UpsertStudentModal = () => {
                   error={errors.roll?.message}
                 />
               )}
+
+              <TextInput
+                label="Password"
+                control={form.control}
+                name="password"
+                placeholder="Change Password"
+                description="only enter if you wish to change password (6 character long)"
+                type="password"
+                error={errors.password?.message}
+              />
 
               <Separator />
 

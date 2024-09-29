@@ -36,10 +36,9 @@ export const registerPrincipal = asyncTransactionWrapper(
 
     await school.save({ session });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({
       email,
-      password: hashedPassword,
+      password,
       role: "principal",
     });
 

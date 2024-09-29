@@ -96,7 +96,9 @@ const AllStudentsList = ({ queryKey }: { queryKey: string }) => {
       label: "Class",
       render: (student: IStudent & { classrooms: IClassroom[] }) => {
         if (student?.classrooms?.length > 0) {
-          return student.classrooms.map((cls) => cls?.name).join(", ");
+          return student?.classrooms?.length > 1
+            ? `Assigned to ${student?.classrooms?.length} classes`
+            : student?.classrooms[0].name;
         } else {
           return "Not Assigned";
         }

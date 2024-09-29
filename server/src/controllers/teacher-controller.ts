@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import Teacher from "../models/teacher";
-import { getSchool, validate } from "../libs/utils";
+import { getSchool, hashPassword, validate } from "../libs/utils";
 import { createUserAndProfile } from "./profile-controller";
 import {
   createBulkTeacherSchema,
@@ -18,6 +18,7 @@ import Student from "../models/student";
 import StudentAttendance from "../models/student-attendence";
 import { asyncTransactionWrapper } from "../libs/async-transaction-wrapper";
 import { CustomError } from "../libs/custom-error";
+import User from "../models/user";
 
 export const getAllTeachers = asyncTransactionWrapper(
   async (req: Request, res: Response) => {
@@ -209,7 +210,7 @@ export const createBulkTeachers = asyncTransactionWrapper(
 );
 
 export const updateTeacher = asyncTransactionWrapper(
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response, session: ClientSession) => {
     const { teacherId } = req.params;
 
     if (!Types.ObjectId.isValid(teacherId))
@@ -225,7 +226,7 @@ export const updateTeacher = asyncTransactionWrapper(
 
     if (!validatedData) return;
 
-    const { name, subject: subjectId } = validatedData;
+    const { name, subject: subjectId, password } = validatedData;
 
     const subject = await Subject.findById(subjectId);
 
@@ -233,8 +234,17 @@ export const updateTeacher = asyncTransactionWrapper(
       throw new CustomError("Subject not found", 404);
     }
 
-    await teacher.updateOne({ name, subject });
+    await teacher.updateOne({ name, subject }, { session });
     await teacher.save();
+
+    if (password) {
+      const hashedPassword = await hashPassword(password);
+      await User.findByIdAndUpdate(
+        teacher.user,
+        { password: hashedPassword },
+        { session }
+      );
+    }
 
     res
       .status(200)

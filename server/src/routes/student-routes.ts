@@ -38,7 +38,7 @@ router.put(
 );
 
 router.put(
-  "/kick/student/:studentId",
+  "/kick/student",
   requireRole(["principal", "teacher"]),
   kickStudentFromClass
 );

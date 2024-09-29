@@ -81,15 +81,16 @@ const ClassroomCard = ({ classroom }: { classroom: IClassroom }) => {
         </span>
       </CardHeader>
       <Separator />
-      {path != "attendance" && (
-        <CardContent className="py-2">
-          <span className="text-sm font-medium">
-            {classroom?.mentor
-              ? `Assigned to ${classroom?.mentor?.name}`
-              : "No teacher assigned"}
-          </span>
-        </CardContent>
-      )}
+
+      <CardContent className="py-2 flex flex-col space-y-2">
+        <span className="text-sm font-medium">
+          {classroom?.mentor
+            ? `Assigned to ${classroom?.mentor?.name}`
+            : "No teacher assigned"}
+        </span>
+        {/* <Separator />
+        <span className="text-sm">No. of students</span> */}
+      </CardContent>
     </Card>
   );
 };

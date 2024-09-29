@@ -15,4 +15,9 @@ export const createBulkTeacherSchema = z.object({
 export const updateTeacherSchema = z.object({
   name: z.string().min(1, "Name is required"),
   subject: z.string().min(1, "Subject is required"),
+  password: z
+    .string()
+    .min(6, "Password should be atleast 6 character")
+    .optional()
+    .or(z.literal("")),
 });
