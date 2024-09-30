@@ -2,18 +2,12 @@ import { useSidebar } from "@/stores/sidebar-store";
 import ClassroomCard from "./classroom-card";
 
 const ClassroomsGrid = ({
-  isError,
   data,
 }: {
   isLoading: boolean;
-  isError: boolean;
   data: IClassroom[];
 }) => {
   const { isCollapsed } = useSidebar();
-
-  if (isError) {
-    return <div>Failed to load classrooms. Please try again later.</div>;
-  }
 
   const classrooms: IClassroom[] = data || [];
 

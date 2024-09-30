@@ -1,5 +1,4 @@
 import { useLocation, useParams } from "react-router-dom";
-import { useFetchData } from "@/hooks/useFetchData";
 import DataTable from "@/components/table/data-table";
 import { apiUrls } from "@/constants/api-urls";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import axiosInstance from "@/lib/axios-instance";
 import queryString from "query-string";
 import { useEffect } from "react";
 import { scrollToTop } from "@/lib/utils";
+import { useApi } from "@/hooks/useApiRequest";
 
 const ClassStudentsList = () => {
   const location = useLocation();
@@ -28,9 +28,9 @@ const ClassStudentsList = () => {
     { skipEmptyString: true, skipNull: true }
   );
 
-  const { data = [], refetch } = useFetchData({
-    queryKey: [classroomId, "class-students"],
+  const { fetchedData: data, refetch } = useApi({
     apiUrl,
+    queryKey: [classroomId, "class-students"],
   });
 
   useEffect(() => {

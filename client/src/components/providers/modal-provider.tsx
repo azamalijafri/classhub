@@ -12,8 +12,8 @@ const AssignTeacherModal = lazy(() => import("../modals/assign-teacher-modal"));
 const TimetableModal = lazy(() => import("../modals/timetable-modal"));
 const CreateStudentModal = lazy(() => import("../modals/upsert-student-modal"));
 const AssignStudentModal = lazy(() => import("../modals/assign-student-modal"));
-const CreateSubjectsModal = lazy(
-  () => import("../modals/create-subject-modal")
+const UpsertSubjectsModal = lazy(
+  () => import("../modals/upsert-subject-modal")
 );
 const AttendanceModal = lazy(() => import("../modals/attendance-modal"));
 
@@ -25,7 +25,7 @@ const modalComponents = {
   "assign-teacher": AssignTeacherModal,
   "edit-timetable": TimetableModal,
   "assign-students": AssignStudentModal,
-  "create-subject": CreateSubjectsModal,
+  "upsert-subject": UpsertSubjectsModal,
   attendance: AttendanceModal,
 };
 

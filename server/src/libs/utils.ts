@@ -19,9 +19,11 @@ export const getSchool = async (req: Request) => {
 export const validate = (
   schema: { safeParse: (arg0: any) => any },
   values: any,
-  res: Response
+  res?: Response
 ) => {
   const result = schema.safeParse(values);
+
+  console.log(result?.error);
 
   if (!result.success) {
     throw new CustomError(result.error.errors[0].message, 400);

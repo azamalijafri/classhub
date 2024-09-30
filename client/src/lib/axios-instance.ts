@@ -23,7 +23,7 @@ export const setupAxiosInterceptors = (
         config.headers.Authorization = `Bearer ${token}`;
       }
 
-      console.log(`API URL: ${config.url}`);
+      // console.log(`API URL: ${config.url}`);
 
       return config;
     },

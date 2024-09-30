@@ -38,6 +38,7 @@ export const apiUrls = {
     removeStudentFromSchool: "/remove/student",
     getAllStudents: "/get/all/students",
     kickStudentFromClass: "/kick/student",
+    getMyClassrooms: "/student/get/my/classrooms",
   },
   timetable: {
     getTimetable: "/get/timetable",
@@ -46,6 +47,10 @@ export const apiUrls = {
   subject: {
     createSubjects: "/create/subjects",
     getAllSubjects: "/get/all/subjects",
+    getAllSubjectsWithClassCount: "/get/all/subjects/with/classroom/count",
+    updateSubject: "/update/subject",
+    enableSubject: "/enable/subject",
+    disableSubject: "/disable/subject",
   },
   attendance: {
     markAttendance: "/mark/attendance",

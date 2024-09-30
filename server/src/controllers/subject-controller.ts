@@ -1,8 +1,12 @@
 import { Request, Response } from "express";
-import { createSubjectsSchema } from "../validation/subject-schema";
+import {
+  createSubjectsSchema,
+  updateSubjectSchema,
+} from "../validation/subject-schema";
 import Subject, { ISubject } from "../models/subject";
 import { validate } from "../libs/utils";
 import { asyncTransactionWrapper } from "../libs/async-transaction-wrapper";
+import { CustomError } from "../libs/custom-error";
 
 export const createSubjects = asyncTransactionWrapper(
   async (req: Request, res: Response) => {
@@ -16,6 +20,7 @@ export const createSubjects = asyncTransactionWrapper(
       {
         name: { $in: subjects.map((subject: ISubject) => subject.name) },
         school: schoolId,
+        status: 1,
       },
       { name: 1 }
     ).lean();
@@ -62,5 +67,135 @@ export const getAllSubjects = asyncTransactionWrapper(
     return res
       .status(200)
       .json({ subjects, message: "Subjects fetched successfully" });
+  }
+);
+
+export const getAllSubjectsWithClassroomCount = asyncTransactionWrapper(
+  async (req: Request, res: Response) => {
+    const {
+      page = 1,
+      limit = 10,
+      sf = "name",
+      so = "asc",
+      search = "",
+    } = req.query;
+    const sortOrder = so === "asc" ? 1 : -1;
+
+    const match: any = {
+      school: req.user.profile.school,
+      status: 1,
+    };
+
+    if (search) {
+      match.name = { $regex: search, $options: "i" };
+    }
+
+    const subjects = await Subject.aggregate([
+      { $match: match },
+      {
+        $lookup: {
+          from: "classroomsubjectassociations",
+          localField: "_id",
+          foreignField: "subject",
+          as: "classrooms",
+        },
+      },
+      {
+        $addFields: {
+          classroomCount: { $size: "$classrooms" },
+        },
+      },
+      {
+        $sort: { [sf.toString()]: sortOrder },
+      },
+      {
+        $skip: (Number(page) - 1) * Number(limit),
+      },
+      {
+        $limit: Number(limit),
+      },
+    ]);
+
+    const totalSubjects = await Subject.countDocuments(match);
+
+    return res.status(200).json({
+      subjects,
+      totalSubjects,
+      page: Number(page),
+      totalPages: Math.ceil(totalSubjects / Number(limit)),
+    });
+  }
+);
+
+export const updateSubject = asyncTransactionWrapper(
+  async (req: Request, res: Response) => {
+    const { subjectId } = req.params;
+
+    const validatedData = validate(updateSubjectSchema, req.body);
+    if (!validatedData) return;
+
+    const updatedSubject = await Subject.findOneAndUpdate(
+      { _id: subjectId, school: req.user.profile.school },
+      {
+        $set: validatedData,
+      },
+      { new: true }
+    );
+
+    if (!updatedSubject) {
+      throw new CustomError("Subject not found", 404);
+    }
+
+    return res.status(200).json({
+      message: "Subject updated successfully",
+      subject: updatedSubject,
+      showMessage: true,
+    });
+  }
+);
+
+export const disableSubject = asyncTransactionWrapper(
+  async (req: Request, res: Response) => {
+    const { subjectId } = req.params;
+
+    const enabledSubject = await Subject.findOneAndUpdate(
+      { _id: subjectId, school: req.user.profile.school },
+      {
+        status: 0,
+      },
+      { new: true }
+    );
+
+    if (!enabledSubject) {
+      throw new CustomError("Subject not found", 404);
+    }
+
+    return res.status(200).json({
+      message: "Subject deleted successfully",
+      showMessage: true,
+    });
+  }
+);
+
+export const enableSubject = asyncTransactionWrapper(
+  async (req: Request, res: Response) => {
+    const { subjectId } = req.params;
+
+    const enabledSubject = await Subject.findOneAndUpdate(
+      { _id: subjectId, school: req.user.profile.school },
+      {
+        status: 1,
+      },
+      { new: true }
+    );
+
+    if (!enabledSubject) {
+      throw new CustomError("Subject not found", 404);
+    }
+
+    return res.status(200).json({
+      message: "Subject enabled successfully",
+      showMessage: true,
+    });
   }
 );

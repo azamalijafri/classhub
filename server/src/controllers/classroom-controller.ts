@@ -5,7 +5,7 @@ import {
   assignTeacherSchema,
   createClassroomSchema,
 } from "../validation/classroom-schema";
-import { Types } from "mongoose";
+import { ClientSession, Types } from "mongoose";
 import Teacher from "../models/teacher";
 import Student from "../models/student";
 import { getSchool, validate } from "../libs/utils";
@@ -215,7 +215,10 @@ export const deleteClassroom = asyncTransactionWrapper(
   async (req: Request, res: Response) => {
     const { classroomId } = req.params;
 
-    const classroom = await Classroom.findById(classroomId);
+    const classroom = await Classroom.findOne({
+      _id: classroomId,
+      school: req.user.profile.school,
+    });
 
     if (!classroom) {
       throw new CustomError("Classroom not found", 404);
@@ -234,7 +237,7 @@ export const deleteClassroom = asyncTransactionWrapper(
 );
 
 export const updateClassroom = asyncTransactionWrapper(
-  async (req: Request, res: Response, session) => {
+  async (req: Request, res: Response, session: ClientSession) => {
     const { classroomId } = req.params;
 
     const validatedData = validate(createClassroomSchema, req.body, res);
@@ -242,50 +245,56 @@ export const updateClassroom = asyncTransactionWrapper(
 
     const { name, subjects } = validatedData;
 
-    const existingClassroomWithSameNamePromise = Classroom.findOne({
-      name,
-      school: req.user.profile.school,
-      _id: { $ne: classroomId },
-      status: 1,
-    }).session(session);
-
-    const existingClassroomPromise =
-      Classroom.findById(classroomId).session(session);
-
-    const [existingClassroomWithSameName, existingClassroom] =
-      await Promise.all([
-        existingClassroomWithSameNamePromise,
-        existingClassroomPromise,
-      ]);
-
-    if (existingClassroomWithSameName) {
-      throw new CustomError("Classroom with this name already present", 409);
-    }
-
-    if (!existingClassroom) {
-      throw new CustomError("Classroom not found", 404);
-    }
-
-    if (subjects && subjects.length > 0) {
-      await ClassroomSubjectAssociation.deleteMany({
-        classroom: classroomId,
+    try {
+      const existingClassroomWithSameNamePromise = Classroom.findOne({
+        name,
+        school: req.user.profile.school,
+        _id: { $ne: classroomId },
+        status: 1,
       }).session(session);
 
-      const classroomSubjects = subjects.map((subject: Types.ObjectId) => ({
-        classroom: classroomId,
-        subject,
-      }));
+      const existingClassroomPromise = Classroom.findById({
+        _id: classroomId,
+        school: req.user.profile.school,
+      }).session(session);
 
-      await ClassroomSubjectAssociation.insertMany(classroomSubjects, {
-        session,
-      });
+      const [existingClassroomWithSameName, existingClassroom] =
+        await Promise.all([
+          existingClassroomWithSameNamePromise,
+          existingClassroomPromise,
+        ]);
+
+      if (existingClassroomWithSameName) {
+        throw new CustomError("Classroom with this name already present", 409);
+      }
+
+      if (!existingClassroom) {
+        throw new CustomError("Classroom not found", 404);
+      }
+
+      if (subjects && subjects.length > 0) {
+        await ClassroomSubjectAssociation.deleteMany({
+          classroom: classroomId,
+        }).session(session);
+
+        const classroomSubjects = subjects.map((subject: Types.ObjectId) => ({
+          classroom: classroomId,
+          subject,
+        }));
+
+        await ClassroomSubjectAssociation.insertMany(classroomSubjects, {
+          session,
+        });
+      }
+
+      existingClassroom.name = name;
+      await existingClassroom.save({ session });
+
+      return res
+        .status(200)
+        .json({ message: "Classroom updated successfully", showMessage: true });
+    } catch (error) {
+      throw error;
     }
-
-    existingClassroom.name = name;
-    await existingClassroom.save({ session });
-
-    return res
-      .status(200)
-      .json({ message: "Classroom updated successfully", showMessage: true });
   }
 );

@@ -32,7 +32,7 @@ const navs = [
   },
   {
     label: "Subject",
-    key: "create-subject",
+    key: "upsert-subject",
     icon: BellElectricIcon,
   },
 ];

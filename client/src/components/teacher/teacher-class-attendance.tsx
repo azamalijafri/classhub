@@ -1,8 +1,8 @@
 import { apiUrls } from "@/constants/api-urls";
-import { useFetchData } from "@/hooks/useFetchData";
 import { useLocation, useParams } from "react-router-dom";
 import StudentsAttendanceTable from "../table/students-attendance-table";
 import queryString from "query-string";
+import { useApi } from "@/hooks/useApiRequest";
 
 const TeacherClassAttendance = () => {
   const { classroomId } = useParams();
@@ -22,16 +22,13 @@ const TeacherClassAttendance = () => {
     { skipEmptyString: true, skipNull: true }
   );
 
-  const { data, isLoading } = useFetchData({
-    queryKey: [
-      "teacher-subject-attendance",
-      String(classroomId),
-      page.toString(),
-    ],
+  const { fetchedData: data, isLoading } = useApi({
     apiUrl,
+    queryKey: ["teacher-subject-attendance"],
   });
 
   if (isLoading) return null;
+
   return (
     <div className="p-4 space-y-4">
       <span className="font-medium underline underline-offset-4">

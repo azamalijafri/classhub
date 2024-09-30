@@ -1,14 +1,12 @@
 import React from "react";
 import dayjs from "dayjs";
-import { useQuery } from "@tanstack/react-query";
-import axiosInstance from "@/lib/axios-instance";
 import { apiUrls } from "@/constants/api-urls";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PartyPopperIcon } from "lucide-react";
-import { useLoading } from "@/stores/loader-store";
 import { Button } from "../ui/button";
 import { useModal } from "@/stores/modal-store";
+import { useApi } from "@/hooks/useApiRequest";
 
 dayjs.extend(customParseFormat);
 
@@ -17,26 +15,15 @@ const formatTime = (time: string) => {
 };
 
 const TeacherScheduleGrid: React.FC = () => {
-  const { startLoading, stopLoading } = useLoading();
   const { openModal } = useModal();
 
-  const fetchTeacherSchedule = async () => {
-    try {
-      startLoading();
-      const response = await axiosInstance.get(apiUrls.teacher.getMySchedule);
-      return response.data;
-    } finally {
-      stopLoading();
-    }
-  };
-
-  const { data: timetable, isLoading: isLoadingTimetable } = useQuery({
+  const { data } = useApi({
+    apiUrl: apiUrls.teacher.getMySchedule,
     queryKey: ["teacher-schedule"],
-    queryFn: fetchTeacherSchedule,
   });
 
   const renderPeriods = (day: string) => {
-    const daySchedule = timetable?.[day];
+    const daySchedule = data?.timetable?.[day];
 
     if (!daySchedule || daySchedule.length === 0) {
       return (
@@ -90,9 +77,7 @@ const TeacherScheduleGrid: React.FC = () => {
     );
   };
 
-  if (isLoadingTimetable) return null;
-
-  const availableDays = Object.keys(timetable || {});
+  const availableDays = Object.keys(data?.timetable || {});
 
   if (availableDays.length === 0) return null;
 

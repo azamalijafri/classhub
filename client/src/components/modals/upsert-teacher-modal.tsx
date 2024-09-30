@@ -26,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { useRefetchQuery } from "@/hooks/useRefetchQuery";
+import { useApi } from "@/hooks/useApiRequest";
 
 const UpsertTeacherModal = () => {
   const { modals, closeModal } = useModal();
@@ -34,7 +34,6 @@ const UpsertTeacherModal = () => {
   const teacher = modal?.data?.teacher;
   const isUpdateMode = !!teacher;
 
-  const [isLoading, setIsLoading] = useState(false);
   const [subjects, setSubjects] = useState<{ id: string; label: string }[]>([]);
   const [isBulkUpload, setIsBulkUpload] = useState(false);
   const [fileTeachers, setFileTeachers] = useState<
@@ -66,29 +65,23 @@ const UpsertTeacherModal = () => {
     },
   });
 
-  const refetchQuery = useRefetchQuery();
-
   const { isValid, isSubmitting, errors } = form.formState;
 
+  const { mutateData, isLoading } = useApi({ enabledFetch: false });
+
   const handleSubmit = async (values: CreateTeacherFormValues) => {
-    try {
-      setIsLoading(true);
+    const apiUrl = isUpdateMode
+      ? `${apiUrls.teacher.updateTeacher}/${teacher._id}`
+      : apiUrls.teacher.createTeacher;
 
-      const apiUrl = isUpdateMode
-        ? `${apiUrls.teacher.updateTeacher}/${teacher._id}`
-        : apiUrls.teacher.createTeacher;
+    await mutateData({
+      url: apiUrl,
+      method: isUpdateMode ? "PUT" : "POST",
+      payload: values,
+      queryKey: ["all-teachers"],
+    });
 
-      const response = isUpdateMode
-        ? await axiosInstance.put(apiUrl, values)
-        : await axiosInstance.post(apiUrl, values);
-
-      if (response) {
-        refetchQuery(["all", "teachers"]);
-        closeModal();
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    closeModal();
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,23 +137,17 @@ const UpsertTeacherModal = () => {
   };
 
   const handleBulkSubmit = async () => {
-    try {
-      setIsLoading(true);
-      if (fileTeachers.length > 0) {
-        const response = await axiosInstance.post(
-          apiUrls.teacher.createBulkTeachers,
-          {
-            teachers: fileTeachers,
-          }
-        );
+    if (fileTeachers.length > 0) {
+      await mutateData({
+        url: apiUrls.teacher.createBulkTeachers,
+        method: "POST",
+        payload: {
+          teachers: fileTeachers,
+        },
+        queryKey: ["all-teachers"],
+      });
 
-        if (response) {
-          refetchQuery(["all", "teachers"]);
-          closeModal();
-        }
-      }
-    } finally {
-      setIsLoading(false);
+      closeModal();
     }
   };
 
@@ -248,6 +235,7 @@ const UpsertTeacherModal = () => {
                 label="Subject"
                 name="subject"
               />
+
               <TextInput
                 label="Password"
                 control={form.control}
@@ -261,6 +249,7 @@ const UpsertTeacherModal = () => {
               <Button
                 isLoading={isSubmitting}
                 disabled={isSubmitting || !isValid || isLoading}
+                type="submit"
               >
                 {isUpdateMode ? "Update Teacher" : "Create"}
               </Button>

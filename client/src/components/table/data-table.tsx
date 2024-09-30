@@ -163,6 +163,7 @@ const DataTable = ({
         {classFilter && (
           <div className="col-span-3">
             <ComboBox
+              isAbsolute={true}
               items={classes}
               placeholder="Filter by class"
               onSelect={(id) => handleParamChange("class", id)}
@@ -174,6 +175,7 @@ const DataTable = ({
         {subjectFilter && (
           <div className="col-span-3">
             <ComboBox
+              isAbsolute={true}
               items={subjects}
               placeholder="Filter by subject"
               onSelect={(id) => handleParamChange("subject", id)}

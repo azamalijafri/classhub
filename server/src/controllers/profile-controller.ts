@@ -11,7 +11,7 @@ import {
   hashPassword,
   sendEmail,
 } from "../libs/utils";
-import { ClientSession } from "mongoose";
+import { ClientSession, Types } from "mongoose";
 import ClassroomStudentAssociation from "../models/classroom-student";
 import { asyncTransactionWrapper } from "../libs/async-transaction-wrapper";
 import { CustomError } from "../libs/custom-error";
@@ -59,14 +59,12 @@ export const createUserAndProfile = async ({
   if (role === "student") {
     profile = new Student({ user: user._id, name, school: school._id, roll });
   } else if (role === "teacher") {
-    profile = new Teacher([
-      {
-        user: user._id,
-        name,
-        school: school._id,
-        subject,
-      },
-    ]);
+    profile = new Teacher({
+      user: user._id,
+      name,
+      school: school._id,
+      subject,
+    });
   }
 
   if (profile) {

@@ -3,14 +3,13 @@ import { useModal } from "../../stores/modal-store";
 import { ModalLayout } from "./modal-layout";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import axiosInstance from "../../lib/axios-instance";
 import { apiUrls } from "../../constants/api-urls";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
-import { useRefetchQuery } from "@/hooks/useRefetchQuery";
 import ComboBox from "../inputs/combo-box";
 import { XIcon } from "lucide-react";
+import { useApi } from "@/hooks/useApiRequest";
 
 const UpsertClassroomModal = () => {
   const { modals, closeModal } = useModal();
@@ -20,56 +19,66 @@ const UpsertClassroomModal = () => {
   const [name, setName] = useState("");
   const [subjects, setSubjects] = useState<{ id: string; label: string }[]>([]);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const refetchQuery = useRefetchQuery();
+  const { mutateData, isLoading } = useApi({ enabledFetch: false });
+
+  const { data: subjectsData, fetchData: fetchSubjects } = useApi<{
+    subjects: ISubject[];
+  }>({
+    apiUrl: apiUrls.subject.getAllSubjects,
+    queryKey: ["subjects"],
+    enabledFetch: false,
+  });
+
+  const { data: classroomDetailsData, fetchData: fetchClassroomDetails } =
+    useApi({
+      apiUrl: classroomId
+        ? `${apiUrls.classroom.getClassroomDetails}/${classroomId}`
+        : "",
+      queryKey: ["classroom-details", classroomId],
+      enabledFetch: false,
+    });
+
+  const { data: classroomSubjectsData, fetchData: fetchClassroomSubjects } =
+    useApi({
+      apiUrl: classroomId
+        ? `${apiUrls.classroom.getClassroomSubjects}/${classroomId}`
+        : "",
+      queryKey: ["classroom-subjects", classroomId],
+      enabledFetch: false,
+    });
 
   useEffect(() => {
-    const fetchSubjects = async () => {
-      try {
-        const response = await axiosInstance.get(
-          apiUrls.subject.getAllSubjects
-        );
-        const formattedSubjects = response.data.subjects.map(
-          (sub: ISubject) => {
-            return { id: sub._id, label: sub.name };
-          }
-        );
-        setSubjects(formattedSubjects);
-      } catch (error) {
-        console.error("Failed to fetch subjects", error);
-      }
-    };
-
     fetchSubjects();
-  }, []);
+  }, [fetchSubjects]);
 
   useEffect(() => {
-    const fetchClassData = async () => {
-      if (!classroomId) return;
+    if (classroomId) {
+      fetchClassroomDetails();
+      fetchClassroomSubjects();
+    }
+  }, [classroomId, fetchClassroomDetails, fetchClassroomSubjects]);
 
-      try {
-        const [detailsResponse, subjectsResponse] = await Promise.all([
-          axiosInstance.get(
-            `${apiUrls.classroom.getClassroomDetails}/${classroomId}`
-          ),
-          axiosInstance.get(
-            `${apiUrls.classroom.getClassroomSubjects}/${classroomId}`
-          ),
-        ]);
+  useEffect(() => {
+    if (classroomDetailsData) {
+      setName(classroomDetailsData.classroom.name);
+    }
 
-        setName(detailsResponse.data.classroom.name);
-        const subjects = subjectsResponse?.data?.subjects?.map(
-          (sub: ISubject) => sub._id
-        );
-        setSelectedSubjects(subjects);
-      } catch (error) {
-        console.error("Failed to fetch class data", error);
-      }
-    };
+    if (subjectsData) {
+      const formattedSubjects = subjectsData.subjects.map((sub: ISubject) => {
+        return { id: sub._id, label: sub.name };
+      });
+      setSubjects(formattedSubjects);
+    }
 
-    fetchClassData();
-  }, [classroomId]);
+    if (classroomSubjectsData) {
+      const selectedSubjects = classroomSubjectsData.subjects.map(
+        (sub: ISubject) => sub._id
+      );
+
+      setSelectedSubjects(selectedSubjects);
+    }
+  }, [classroomDetailsData, classroomSubjectsData, subjectsData]);
 
   const handleSubjectSelect = (subjectId: string) => {
     if (!selectedSubjects.includes(subjectId)) {
@@ -81,47 +90,21 @@ const UpsertClassroomModal = () => {
     setSelectedSubjects((prev) => prev.filter((id) => id !== subjectId));
   };
 
-  //   selectedTimeSlots: {
-  //     day: string;
-  //     isChecked: boolean;
-  //     startTime: string;
-  //     endTime: string;
-  //   }[]
-  // ) => {
-  //   if (!name) return false;
-  //   for (const timeslot of selectedTimeSlots) {
-  //     if (!timeslot.startTime || !timeslot.endTime) return false;
-  //   }
-  //   if (!selectedSubjects.length) return false;
-
-  //   return true;
-  // };
-
   const handleSubmit = async () => {
-    const requestData = {
-      name,
-      subjects: selectedSubjects,
-    };
+    const url = classroomId
+      ? `${apiUrls.classroom.updateClassroom}/${classroomId}`
+      : apiUrls.classroom.createClassroom;
 
-    setIsSubmitting(true);
-    try {
-      if (classroomId) {
-        await axiosInstance.put(
-          `${apiUrls.classroom.updateClassroom}/${classroomId}`,
-          requestData
-        );
-      } else {
-        await axiosInstance.post(
-          apiUrls.classroom.createClassroom,
-          requestData
-        );
-      }
-
-      refetchQuery(["classrooms"]);
-      closeModal();
-    } finally {
-      setIsSubmitting(false);
-    }
+    await mutateData({
+      url,
+      method: classroomId ? "PUT" : "POST",
+      payload: {
+        name,
+        subjects: selectedSubjects,
+      },
+      queryKey: ["all-classrooms"],
+    });
+    closeModal();
   };
 
   return (
@@ -180,8 +163,8 @@ const UpsertClassroomModal = () => {
 
         <Button
           onClick={handleSubmit}
-          isLoading={isSubmitting}
-          disabled={isSubmitting}
+          isLoading={isLoading}
+          disabled={isLoading}
         >
           {classroomId ? "Save Changes" : "Create"}
         </Button>

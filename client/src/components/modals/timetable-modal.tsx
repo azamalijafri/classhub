@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
-import axiosInstance from "@/lib/axios-instance";
 import { apiUrls } from "@/constants/api-urls";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -17,9 +16,9 @@ import { Label } from "../ui/label";
 import { Loader2 } from "lucide-react";
 import ComboBox from "../inputs/combo-box";
 import qs from "query-string";
-import { useRefetchQuery } from "@/hooks/useRefetchQuery";
 import { daysOfWeek } from "@/constants/variables";
 import { Input } from "../ui/input";
+import { useApi } from "@/hooks/useApiRequest";
 
 dayjs.extend(customParseFormat);
 
@@ -44,81 +43,97 @@ const EditTimetableModal: React.FC = () => {
   const modal = modals.find((modal) => modal?.type === "edit-timetable");
   const classroomId = modal?.data?.classroomId;
 
-  const [loadingTimetable, setLoadingTimetable] = useState(true);
   const [timetable, setTimetable] = useState<ITimetable[]>([]);
   const [activePeriod, setActivePeriod] = useState<IPeriod | null>(null);
   const [editingPeriod, setEditingPeriod] = useState<number | null>(null);
   const [activeDay, setActiveDay] = useState<string>(daysOfWeek[0]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [teachers, setTeachers] = useState<{ id: string; label: string }[]>([]);
-  const [subjects, setSubjects] = useState<{ id: string; label: string }[]>([]);
+
+  const { isLoading: isSubmitting, mutateData } = useApi({
+    enabledFetch: false,
+  });
+
+  const {
+    data: teachersData,
+    fetchData: fetchTeachers,
+    isLoading: teachersLoading,
+  } = useApi({
+    apiUrl: qs.stringifyUrl({
+      url: apiUrls.teacher.getAllTeachers,
+      query: { subject: activePeriod?.subject },
+    }),
+    enabledFetch: false,
+  });
+
+  const {
+    data: subjectsData,
+    fetchData: fetchSubjects,
+    isLoading: subjectsLoading,
+  } = useApi({
+    apiUrl: `${apiUrls.classroom.getClassroomSubjects}/${classroomId}`,
+    queryKey: ["classroom-subjects", classroomId],
+    enabledFetch: false,
+  });
+
+  const {
+    data: timetableData,
+    fetchData: fetchTimetable,
+    isLoading: timetableLoading,
+  } = useApi({
+    apiUrl: `${apiUrls.timetable.getTimetable}/${classroomId}`,
+    // queryKey: [`${classroomId}-timetable`],
+    enabledFetch: false,
+  });
+
+  const isLoading = teachersLoading || subjectsLoading || timetableLoading;
 
   useEffect(() => {
-    const fetchTeachers = async () => {
-      try {
-        const apiUrl = qs.stringifyUrl({
-          url: apiUrls.teacher.getAllTeachers,
-          query: { subject: activePeriod?.subject },
-        });
-        const response = await axiosInstance.get(apiUrl);
-        const fetchedTeachers = response.data.teachers.map((teacher: any) => ({
-          id: teacher._id,
-          label: teacher.name,
-        }));
-        setTeachers(fetchedTeachers);
-      } catch (error) {
-        console.error("Failed to fetch teachers:", error);
-      }
-    };
-    fetchTeachers();
-  }, [activePeriod?.subject]);
+    if (activePeriod?.subject) {
+      fetchTeachers();
+    }
+  }, [activePeriod?.subject, fetchTeachers]);
 
   useEffect(() => {
-    const fetchSubjects = async () => {
-      try {
-        const response = await axiosInstance.get(
-          `${apiUrls.classroom.getClassroomSubjects}/${classroomId}`
-        );
-        const fetchedSubjects = response.data.subjects.map((subject: any) => ({
-          id: subject._id,
-          label: subject.name,
-        }));
-        setSubjects(fetchedSubjects);
-      } catch (error) {
-        console.error("Failed to fetch subjects:", error);
-      }
-    };
+    if (classroomId) {
+      fetchSubjects();
+      fetchTimetable();
+    }
+  }, [classroomId, fetchSubjects, fetchTimetable]);
 
-    fetchSubjects();
-  }, [classroomId]);
+  const teachers: { id: string; label: string }[] = useMemo(() => {
+    if (!teachersData) return [];
+    return teachersData.teachers.map((teacher: any) => ({
+      id: teacher._id,
+      label: teacher.name,
+    }));
+  }, [teachersData]);
 
-  const refetchQuery = useRefetchQuery();
+  const subjects: { id: string; label: string }[] = useMemo(() => {
+    if (!subjectsData) return [];
+    return subjectsData.subjects.map((subject: any) => ({
+      id: subject._id,
+      label: subject.name,
+    }));
+  }, [subjectsData]);
+
+  const mappedTimetable = useMemo(() => {
+    console.log(timetableData);
+
+    if (!timetableData) return [];
+    const fetchedTimetable = timetableData?.timetable;
+
+    return fetchedTimetable.map((schedule: any) => ({
+      ...schedule,
+      periods: schedule.periods.map((period: any) => ({
+        ...period,
+        subject: period.subject._id,
+        teacher: period.teacher._id,
+      })),
+    }));
+  }, [timetableData]);
 
   useEffect(() => {
-    const fetchTimetable = async () => {
-      try {
-        const response = await axiosInstance.get(
-          `${apiUrls.timetable.getTimetable}/${classroomId}`
-        );
-        const fetchedTimetable = response.data.timetable;
-
-        for (const schedule of fetchedTimetable) {
-          for (const period of schedule.periods) {
-            period.subject = period.subject._id;
-            period.teacher = period.teacher._id;
-          }
-        }
-
-        setTimetable(fetchedTimetable);
-      } catch (error) {
-        console.error("Failed to fetch timetable:", error);
-      } finally {
-        setLoadingTimetable(false);
-      }
-    };
-
-    fetchTimetable();
-  }, [classroomId]);
+    setTimetable(mappedTimetable);
+  }, [mappedTimetable]);
 
   const handleAddPeriod = (day: string) => {
     setActiveDay(day);
@@ -172,26 +187,18 @@ const EditTimetableModal: React.FC = () => {
   };
 
   const handleSaveTimetable = async () => {
-    try {
-      setIsLoading(true);
-      console.log(timetable);
+    const timetableData = timetable.map((schedule: any) => {
+      return { ...schedule, day: schedule.day };
+    });
 
-      const timetableData = timetable.map((schedule: any) => {
-        return { ...schedule, day: schedule.day };
-      });
+    await mutateData({
+      url: apiUrls.timetable.updateTimetable,
+      payload: { timetableData: timetableData, classroomId: classroomId },
+      method: "POST",
+      queryKey: [`${classroomId}-timetable`],
+    });
 
-      const response = await axiosInstance.post(
-        apiUrls.timetable.updateTimetable,
-        { timetableData: timetableData, classroomId: classroomId }
-      );
-
-      if (response) {
-        refetchQuery(["timetable", classroomId]);
-        closeModal();
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    closeModal();
   };
 
   const renderPeriods = (day: string) => {
@@ -262,7 +269,7 @@ const EditTimetableModal: React.FC = () => {
         {daysOfWeek.map((day) => (
           <TabsContent key={day} value={day} className="p-4">
             <div className="flex flex-col gap-y-4">
-              {loadingTimetable ? (
+              {isLoading ? (
                 <Loader2 className="animate-spin size-6 mx-auto mt-4" />
               ) : (
                 <div>{renderPeriods(day)}</div>
@@ -280,6 +287,7 @@ const EditTimetableModal: React.FC = () => {
                 <div>
                   {activePeriod && activeDay === day && (
                     <ComboBox
+                      isAbsolute={true}
                       selectedValue={activePeriod.subject}
                       items={subjects}
                       placeholder="Select a subject"
@@ -296,6 +304,7 @@ const EditTimetableModal: React.FC = () => {
                 <div>
                   {activePeriod && activeDay === day && (
                     <ComboBox
+                      isAbsolute={true}
                       disabled={activePeriod.subject ? false : true}
                       selectedValue={activePeriod.teacher}
                       items={teachers}
@@ -387,8 +396,8 @@ const EditTimetableModal: React.FC = () => {
       <DialogFooter className="mx-auto flex gap-x-4 mt-4">
         <Button
           onClick={handleSaveTimetable}
-          isLoading={isLoading}
-          disabled={isLoading}
+          isLoading={isSubmitting}
+          disabled={isSubmitting || isLoading}
           className="w-full"
         >
           Save Timetable

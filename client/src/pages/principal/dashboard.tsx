@@ -4,11 +4,7 @@ import { useApi } from "@/hooks/useApiRequest";
 import { useEffect } from "react";
 
 const PrincipalDashboard = () => {
-  const {
-    fetchedData: data,
-    isLoading,
-    error,
-  } = useApi({
+  const { fetchedData: data, isLoading } = useApi({
     apiUrl: apiUrls.classroom.getAllClassrooms,
     queryKey: ["all-classrooms"],
   });
@@ -23,13 +19,7 @@ const PrincipalDashboard = () => {
         <span className="font-medium">You haven't created a class yet</span>
       </div>
     );
-  return (
-    <ClassroomsGrid
-      data={data?.classrooms}
-      isLoading={isLoading}
-      isError={!!error}
-    />
-  );
+  return <ClassroomsGrid data={data?.classrooms} isLoading={isLoading} />;
 };
 
 export default PrincipalDashboard;

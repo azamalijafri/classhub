@@ -5,12 +5,10 @@ import { Button } from "@/components/ui/button";
 import { DialogFooter, DialogTitle } from "../ui/dialog";
 import { ModalLayout } from "./modal-layout";
 import { Checkbox } from "../ui/checkbox";
-import { useFetchData } from "@/hooks/useFetchData";
 import { Loader2Icon } from "lucide-react";
-import axiosInstance from "@/lib/axios-instance";
-import { useRefetchQuery } from "@/hooks/useRefetchQuery";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useApi } from "@/hooks/useApiRequest";
 
 const AttendanceModal = () => {
   const { modals, closeModal, openModal } = useModal();
@@ -18,13 +16,14 @@ const AttendanceModal = () => {
 
   const [attendance, setAttendance] = useState<Record<string, number>>({});
   const [toggleAll, setToggleAll] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data, isLoading } = useFetchData({
+  const {
+    fetchedData: data,
+    isLoading,
+    mutateData,
+  } = useApi({
     apiUrl: `${apiUrls.classroom.getClassStudents}/${modal?.data?.classroom?._id}?pageLimit=all`,
   });
-
-  const refetchQuery = useRefetchQuery();
 
   useEffect(() => {
     if (data?.students) {
@@ -77,33 +76,23 @@ const AttendanceModal = () => {
   };
 
   const handleSubmitAttendance = async () => {
-    try {
-      setIsSubmitting(true);
-      const response = await axiosInstance.post(
-        apiUrls.attendance.markAttendance,
-        {
-          classroomId: modal?.data?.classroom?._id,
-          subjectId: modal?.data?.subjectId,
-          teacherId: modal?.data?.teacherId,
-          periodId: modal?.data?.periodId,
-          date: new Date(),
-          students: Object.keys(attendance).map((studentId) => ({
-            studentId,
-            status: attendance[studentId].toString(),
-          })),
-        }
-      );
+    await mutateData({
+      url: apiUrls.attendance.markAttendance,
+      method: "POST",
+      payload: {
+        classroomId: modal?.data?.classroom?._id,
+        subjectId: modal?.data?.subjectId,
+        periodId: modal?.data?.periodId,
+        date: new Date(),
+        students: Object.keys(attendance).map((studentId) => ({
+          studentId,
+          status: attendance[studentId].toString(),
+        })),
+      },
+      queryKey: ["teacher-schedule"],
+    });
 
-      if (response) {
-        refetchQuery(["teacher-schedule"]);
-        // generatePdf();
-        closeModal();
-      }
-    } catch (error) {
-      console.error("Failed to mark attendance", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    closeModal();
   };
 
   return (
@@ -148,8 +137,8 @@ const AttendanceModal = () => {
           onClick={() =>
             openModal("confirm", { performingAction: handleSubmitAttendance })
           }
-          disabled={!Object.keys(attendance).length || isSubmitting}
-          isLoading={isSubmitting}
+          disabled={!Object.keys(attendance).length || isLoading}
+          isLoading={isLoading}
         >
           Submit Attendance
         </Button>

@@ -30,7 +30,7 @@ export const createStudent = asyncTransactionWrapper(
 
     const existingRoll = await Student.findOne({
       roll,
-      school: req.user.profile.school._id,
+      school: req.user.profile.school,
     });
 
     if (existingRoll)
@@ -89,7 +89,7 @@ export const createBulkStudents = asyncTransactionWrapper(
 
       const existingRoll = await Student.findOne({
         roll,
-        school: req.user.profile.school._id,
+        school: req.user.profile.school,
       });
 
       if (existingRoll)
@@ -382,7 +382,10 @@ export const updateStudent = asyncTransactionWrapper(
       throw new CustomError("Invalid ID format", 400);
     }
 
-    const student = await Student.findById(studentId);
+    const student = await Student.findOne({
+      _id: studentId,
+      school: req.user.profile.school,
+    });
 
     if (!student) {
       throw new CustomError("Student not found", 404);
@@ -413,8 +416,6 @@ export const kickStudentFromClass = asyncTransactionWrapper(
   async (req: Request, res: Response) => {
     const { studentId, classroomId } = req.query;
 
-    console.log(studentId, classroomId);
-
     if (
       !Types.ObjectId.isValid(studentId as string) ||
       !Types.ObjectId.isValid(classroomId as string)
@@ -422,7 +423,17 @@ export const kickStudentFromClass = asyncTransactionWrapper(
       throw new CustomError("Invalid ID format", 400);
     }
 
-    const student = await Student.findById(studentId);
+    const classroom = await Classroom.findOne({
+      _id: classroomId,
+      mentor: req.user.profile._id,
+    });
+
+    if (!classroom) throw new CustomError("Classroom not found", 404);
+
+    const student = await Student.findOne({
+      _id: studentId,
+      school: req.user.profile.school,
+    });
 
     if (!student) {
       throw new CustomError("Student not found", 404);
@@ -447,8 +458,8 @@ export const removeStudentFromSchool = asyncTransactionWrapper(
       throw new CustomError("Invalid ID format", 400);
     }
 
-    const student = await Student.findByIdAndUpdate(
-      studentId,
+    const student = await Student.findOneAndUpdate(
+      { _id: studentId, school: req.user.profile.school },
       { status: 0, classroom: null },
       { new: true }
     );

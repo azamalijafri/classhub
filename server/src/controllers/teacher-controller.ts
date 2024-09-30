@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import Teacher from "../models/teacher";
-import { getSchool, hashPassword, validate } from "../libs/utils";
+import { getSchool, hashPassword, sendEmail, validate } from "../libs/utils";
 import { createUserAndProfile } from "./profile-controller";
 import {
   createBulkTeacherSchema,
@@ -158,8 +158,12 @@ export const createBulkTeachers = asyncTransactionWrapper(
     const { teachers } = validatedData;
 
     const school = await getSchool(req);
-    const createdTeachers: { name: string; email: string }[] = [];
 
+    const emailData: {
+      email: string;
+      uniqueEmail: string;
+      password: string;
+    }[] = [];
     await Promise.all(
       teachers.map(
         async (teacher: { name: string; email: string; subject: string }) => {
@@ -168,24 +172,25 @@ export const createBulkTeachers = asyncTransactionWrapper(
           try {
             const doesSubjectExist = await Subject.findOne({
               name: subject,
-              school: req.user.profile.school,
-            }).session(session);
+              school: school._id,
+            });
 
             if (!doesSubjectExist) {
               throw new CustomError(`${subject} doesn't exist`, 404);
             }
 
-            await createUserAndProfile({
+            const emailInfo = await createUserAndProfile({
               name,
               email,
               role: "teacher",
               school,
-              subject,
+              subject: doesSubjectExist._id as string,
               session,
             });
 
-            createdTeachers.push({ name, email });
+            emailData.push(emailInfo);
           } catch (error: any) {
+            console.log(error);
             throw new CustomError(
               `Error creating ${teacher?.name}: ${error.name}`,
               400
@@ -195,16 +200,12 @@ export const createBulkTeachers = asyncTransactionWrapper(
       )
     );
 
-    if (createdTeachers.length != teachers) {
-      throw new CustomError(
-        "No teacher created. Transaction aborted due to errors.",
-        400
-      );
-    }
+    // for (const { email, uniqueEmail, password } of emailData) {
+    //   await sendEmail(email, uniqueEmail, password);
+    // }
 
     res.status(200).json({
       message: `Teachers created successfully`,
-      createdTeachers,
     });
   }
 );
@@ -216,7 +217,10 @@ export const updateTeacher = asyncTransactionWrapper(
     if (!Types.ObjectId.isValid(teacherId))
       throw new CustomError("Invalid teacher ID", 400);
 
-    const teacher = await Teacher.findById(teacherId);
+    const teacher = await Teacher.findOne({
+      _id: teacherId,
+      school: req.user.profile.school,
+    });
 
     if (!teacher) {
       throw new CustomError("Teacher not found", 404);
@@ -259,7 +263,10 @@ export const removeTeacherFromSchool = asyncTransactionWrapper(
     if (!Types.ObjectId.isValid(teacherId))
       throw new CustomError("Invalid teacher ID", 400);
 
-    const teacher = await Teacher.findById(teacherId);
+    const teacher = await Teacher.findOne({
+      _id: teacherId,
+      school: req.user.profile._id,
+    });
 
     if (!teacher) {
       throw new CustomError("Teacher not found", 404);

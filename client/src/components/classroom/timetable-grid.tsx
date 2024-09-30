@@ -1,14 +1,12 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import dayjs from "dayjs";
-import { useQuery } from "@tanstack/react-query";
-import axiosInstance from "@/lib/axios-instance";
 import { apiUrls } from "@/constants/api-urls";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PartyPopperIcon } from "lucide-react";
-import { useLoading } from "@/stores/loader-store";
 import { daysOfWeek } from "@/constants/variables";
+import { useApi } from "@/hooks/useApiRequest";
 
 dayjs.extend(customParseFormat);
 
@@ -18,27 +16,14 @@ const formatTime = (time: string) => {
 
 const TimetableTabs: React.FC = () => {
   const { classroomId } = useParams<{ classroomId: string }>();
-  const { startLoading, stopLoading } = useLoading();
 
-  const fetchTimetable = async () => {
-    try {
-      startLoading();
-      const response = await axiosInstance.get(
-        `${apiUrls.timetable.getTimetable}/${classroomId}`
-      );
-      return response.data.timetable;
-    } finally {
-      stopLoading();
-    }
-  };
-
-  const { data: timetable, isLoading: isLoadingTimetable } = useQuery({
-    queryKey: ["timetable", classroomId],
-    queryFn: fetchTimetable,
+  const { data } = useApi({
+    apiUrl: `${apiUrls.timetable.getTimetable}/${classroomId}`,
+    queryKey: [`${classroomId}-timetable`],
   });
 
   const renderPeriods = (day: string) => {
-    const daySchedule = timetable?.find(
+    const daySchedule = data?.timetable?.find(
       (schedule: ITimetable) => schedule.day === day
     );
 
@@ -68,8 +53,6 @@ const TimetableTabs: React.FC = () => {
       </div>
     ));
   };
-
-  if (isLoadingTimetable) return null;
 
   return (
     <Tabs defaultValue={daysOfWeek[0]} className="w-full">

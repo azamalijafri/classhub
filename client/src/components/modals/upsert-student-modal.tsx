@@ -25,9 +25,9 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { useRefetchQuery } from "@/hooks/useRefetchQuery";
 import ComboBox from "../inputs/combo-box";
 import { Separator } from "../ui/separator";
+import { useApi } from "@/hooks/useApiRequest";
 
 const UpsertStudentModal = () => {
   const { modals, closeModal } = useModal();
@@ -35,7 +35,6 @@ const UpsertStudentModal = () => {
   const student = modal?.data?.student;
   const isUpdateMode = !!student;
 
-  const [isLoading, setIsLoading] = useState(false);
   const [isBulkUpload, setIsBulkUpload] = useState(false);
   const [fileStudents, setFileStudents] = useState<
     CreateBulkStudentFormValues["students"]
@@ -55,7 +54,6 @@ const UpsertStudentModal = () => {
     },
   });
 
-  const refetchQuery = useRefetchQuery();
   const { isValid, isSubmitting, errors } = form.formState;
 
   useEffect(() => {
@@ -74,28 +72,21 @@ const UpsertStudentModal = () => {
     fetchClasses();
   }, []);
 
+  const { mutateData, isLoading } = useApi({ enabledFetch: false });
+
   const handleSubmit = async (values: CreateStudentFormValues) => {
-    try {
-      setIsLoading(true);
+    const apiUrl = isUpdateMode
+      ? `${apiUrls.student.updateStudent}/${student._id}`
+      : apiUrls.student.createStudent;
 
-      const apiUrl = isUpdateMode
-        ? `${apiUrls.student.updateStudent}/${student._id}`
-        : apiUrls.student.createStudent;
+    await mutateData({
+      url: apiUrl,
+      method: isUpdateMode ? "PUT" : "POST",
+      payload: isUpdateMode ? values : { ...values, classroom: selectedClass },
+      queryKey: ["all-students"],
+    });
 
-      const response = isUpdateMode
-        ? await axiosInstance.put(apiUrl, values)
-        : await axiosInstance.post(apiUrl, {
-            ...values,
-            classroom: selectedClass,
-          });
-
-      if (response) {
-        refetchQuery(["all", "students"]);
-        closeModal();
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    closeModal();
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,24 +138,18 @@ const UpsertStudentModal = () => {
   };
 
   const handleBulkSubmit = async () => {
-    try {
-      setIsLoading(true);
-      if (fileStudents.length > 0) {
-        const response = await axiosInstance.post(
-          apiUrls.student.createBulkStudents,
-          {
-            students: fileStudents,
-            classroom: selectedClass,
-          }
-        );
+    if (fileStudents.length > 0) {
+      await mutateData({
+        url: apiUrls.student.createBulkStudents,
+        method: "POST",
+        payload: {
+          students: fileStudents,
+          classroom: selectedClass,
+        },
+        queryKey: ["all-students"],
+      });
 
-        if (response) {
-          refetchQuery(["all", "students"]);
-          closeModal();
-        }
-      }
-    } finally {
-      setIsLoading(false);
+      closeModal();
     }
   };
 
@@ -267,6 +252,16 @@ const UpsertStudentModal = () => {
                 />
               )}
 
+              {!isUpdateMode && (
+                <ComboBox
+                  items={classes}
+                  onSelect={(classroomId) => setSelectedClass(classroomId)}
+                  selectedValue={selectedClass}
+                  label="Want to assign to a class?"
+                  placeholder="Select a class"
+                />
+              )}
+
               <TextInput
                 label="Password"
                 control={form.control}
@@ -288,16 +283,6 @@ const UpsertStudentModal = () => {
               </Button>
             </form>
           </Form>
-        )}
-
-        {!isUpdateMode && !isBulkUpload && (
-          <ComboBox
-            items={classes}
-            onSelect={(classroomId) => setSelectedClass(classroomId)}
-            selectedValue={selectedClass}
-            label="Want to assign to a class?"
-            placeholder="Select a class"
-          />
         )}
 
         {!isUpdateMode && (

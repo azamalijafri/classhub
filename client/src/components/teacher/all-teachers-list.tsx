@@ -1,4 +1,3 @@
-import { useFetchData } from "@/hooks/useFetchData";
 import DataTable from "@/components/table/data-table";
 import { apiUrls } from "@/constants/api-urls";
 import { Button } from "@/components/ui/button";
@@ -8,10 +7,11 @@ import queryString from "query-string";
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { scrollToTop } from "@/lib/utils";
+import { useApi } from "@/hooks/useApiRequest";
 
 type Teacher = ITeacher & { classroom: IClassroom };
 
-const AllTeachersList = ({ queryKey }: { queryKey: string }) => {
+const AllTeachersList = () => {
   const location = useLocation();
 
   const {
@@ -38,9 +38,9 @@ const AllTeachersList = ({ queryKey }: { queryKey: string }) => {
     { skipEmptyString: true, skipNull: true }
   );
 
-  const { data = [], refetch } = useFetchData({
-    queryKey: [queryKey, "teachers"],
+  const { fetchedData: data, refetch } = useApi({
     apiUrl,
+    queryKey: ["all-teachers"],
   });
 
   useEffect(() => {
@@ -112,12 +112,12 @@ const AllTeachersList = ({ queryKey }: { queryKey: string }) => {
       </h3>
       <DataTable
         gridValue="10"
-        data={data.teachers}
+        data={data?.teachers}
         columns={columns}
         actions={actions}
         classFilter={true}
         subjectFilter={true}
-        totalItems={data.totalTeachers}
+        totalItems={data?.totalTeachers}
       />
     </div>
   );

@@ -6,17 +6,16 @@ import { apiUrls } from "@/constants/api-urls";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useModal } from "@/stores/modal-store";
-import axiosInstance from "@/lib/axios-instance";
+import { useApi } from "@/hooks/useApiRequest";
 import queryString from "query-string";
 import { scrollToTop } from "@/lib/utils";
-import { useApi } from "@/hooks/useApiRequest";
+import axiosInstance from "@/lib/axios-instance";
 
-const AllStudentsList = () => {
+const AllSubjects = () => {
   const location = useLocation();
 
   const {
     search,
-    class: classFilter,
     page = 1,
     sf,
     so,
@@ -24,10 +23,9 @@ const AllStudentsList = () => {
 
   const apiUrl = queryString.stringifyUrl(
     {
-      url: apiUrls.student.getAllStudents,
+      url: apiUrls.subject.getAllSubjectsWithClassCount,
       query: {
         search,
-        class: classFilter,
         page,
         sf,
         so,
@@ -36,46 +34,42 @@ const AllStudentsList = () => {
     { skipEmptyString: true, skipNull: true }
   );
 
-  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
 
   const { fetchedData: data, refetch } = useApi({
     apiUrl,
-    queryKey: ["all-students"],
+    queryKey: ["all-subjects"],
   });
 
   useEffect(() => {
     refetch().then(() => scrollToTop());
-  }, [search, classFilter, page, sf, so, apiUrl, refetch]);
+  }, [search, page, sf, so, apiUrl, refetch]);
 
   const { openModal } = useModal();
 
-  const toggleSelectStudent = (studentId: string) => {
-    setSelectedStudents((prevSelected) =>
-      prevSelected.includes(studentId)
-        ? prevSelected.filter((id) => id !== studentId)
-        : [...prevSelected, studentId]
+  const toggleSelectSubject = (subjectId: string) => {
+    setSelectedSubjects((prevSelected) =>
+      prevSelected.includes(subjectId)
+        ? prevSelected.filter((id) => id !== subjectId)
+        : [...prevSelected, subjectId]
     );
   };
 
   const handleToggleSelectAll = () => {
-    if (selectedStudents.length === data?.students.length) {
-      setSelectedStudents([]);
+    if (selectedSubjects.length === data?.subjects.length) {
+      setSelectedSubjects([]);
     } else {
-      setSelectedStudents(data?.students.map((student: any) => student._id));
+      setSelectedSubjects(data?.subjects.map((subject: any) => subject._id));
     }
-  };
-
-  const handleAssign = () => {
-    openModal("assign-students", { selectedStudents });
   };
 
   const columns = [
     {
       label: "Select",
-      render: (student: IStudent & { classrooms: IClassroom[] }) => (
+      render: (subject: any) => (
         <Checkbox
-          checked={selectedStudents.includes(student._id)}
-          onClick={() => toggleSelectStudent(student._id)}
+          checked={selectedSubjects.includes(subject._id)}
+          onClick={() => toggleSelectSubject(subject._id)}
         />
       ),
       value: "select",
@@ -83,44 +77,27 @@ const AllStudentsList = () => {
     },
     {
       label: "Name",
-      render: (student: IStudent) => student?.name,
+      render: (subject: any) => subject?.name,
       value: "name",
-      colspan: 2,
+      colspan: 3,
     },
     {
-      label: "Email",
-      render: (student: IStudent) => student?.user?.email,
-      value: "email",
-      colspan: 2,
-    },
-    {
-      label: "Class",
-      render: (student: IStudent & { classrooms: IClassroom[] }) => {
-        if (student?.classrooms?.length > 0) {
-          return student?.classrooms?.length > 1
-            ? `Assigned to ${student?.classrooms?.length} classes`
-            : student?.classrooms[0].name;
-        } else {
-          return "Not Assigned";
-        }
+      label: "Associated Classes",
+      render: (subject: any) => {
+        const count = subject?.classroomCount;
+        return count > 0 ? `${count}` : "Not assigned to any class";
       },
-      value: "classroom",
-      colspan: 2,
-    },
-    {
-      label: "Roll No",
-      render: (student: IStudent) => student?.roll,
-      value: "roll",
-      colspan: 1,
+      value: "classroomCount",
+      colspan: 3,
     },
   ];
 
-  const actions = (student: IStudent) => (
+  const actions = (subject: any) => (
     <div className="flex space-x-2">
       <Button
         variant="default"
         onClick={() => {
-          openModal("upsert-student", { student });
+          openModal("upsert-subject", { subject });
         }}
       >
         Edit
@@ -131,7 +108,7 @@ const AllStudentsList = () => {
           openModal("confirm", {
             performingAction: async () => {
               const response = await axiosInstance.put(
-                `${apiUrls.student.removeStudentFromSchool}/${student._id}`
+                `${apiUrls.subject.removeSubject}/${subject._id}`
               );
 
               if (response) refetch();
@@ -148,34 +125,33 @@ const AllStudentsList = () => {
     <div className="p-4 flex flex-col space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="font-medium text-xl underline underline-offset-4">
-          All Students
+          All Subjects
         </h3>
         <div className="flex justify-between items-center mb-2 gap-x-3">
           <Button onClick={handleToggleSelectAll}>
-            {selectedStudents?.length === data?.students?.length
+            {selectedSubjects?.length === data?.subjects?.length
               ? "Deselect All"
               : "Select All"}
           </Button>
           <Button
-            variant="default"
-            onClick={handleAssign}
-            disabled={selectedStudents.length === 0}
+            variant="destructive"
+            // onClick={handleAssign}
+            disabled={selectedSubjects.length === 0}
           >
-            Assign Class
+            Remove In Bulk
           </Button>
         </div>
       </div>
 
       <DataTable
         gridValue="10"
-        data={data?.students}
+        data={data?.subjects}
         columns={columns}
         actions={actions}
-        totalItems={data?.totalStudents}
-        classFilter={true}
+        totalItems={data?.totalSubjects}
       />
     </div>
   );
 };
 
-export default AllStudentsList;
+export default AllSubjects;

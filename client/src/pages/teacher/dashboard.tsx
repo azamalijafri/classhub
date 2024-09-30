@@ -1,20 +1,11 @@
 import ClassroomsGrid from "@/components/classroom/classrooms-grid";
 import { apiUrls } from "@/constants/api-urls";
-import axiosInstance from "@/lib/axios-instance";
-import { useLoading } from "@/stores/loader-store";
-import { useQuery } from "@tanstack/react-query";
+import { useApi } from "@/hooks/useApiRequest";
 
-export const TeacherDashboard = () => {
-  const { startLoading, stopLoading } = useLoading();
-
-  const { data, isLoading, isError } = useQuery({
+const TeacherDashboard = () => {
+  const { data, isLoading } = useApi({
+    apiUrl: apiUrls.teacher.getMyClassroom,
     queryKey: ["my-classroom"],
-    queryFn: async () => {
-      startLoading();
-      const response = await axiosInstance.get(apiUrls.teacher.getMyClassroom);
-      stopLoading();
-      return response.data.classroom;
-    },
   });
 
   if (!isLoading && data.length == 0)
@@ -25,5 +16,7 @@ export const TeacherDashboard = () => {
         </span>
       </div>
     );
-  return <ClassroomsGrid data={data} isLoading={isLoading} isError={isError} />;
+  return <ClassroomsGrid data={data?.classrooms} isLoading={isLoading} />;
 };
+
+export default TeacherDashboard;

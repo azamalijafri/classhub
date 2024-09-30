@@ -8,7 +8,7 @@ const Teachers = () => {
 
   return (
     <div>
-      <AllTeachersList queryKey="all" />
+      <AllTeachersList />
     </div>
   );
 };

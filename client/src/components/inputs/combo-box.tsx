@@ -11,7 +11,7 @@ import { ChevronsUpDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
-import { motion, AnimatePresence } from "framer-motion"; // Import from framer-motion
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ComboBoxProps {
   items: { id: string; label: string }[];
@@ -21,6 +21,7 @@ interface ComboBoxProps {
   selectedValue: string | undefined;
   disabled?: boolean;
   pickMode?: boolean;
+  isAbsolute?: boolean;
 }
 
 const ComboBox: React.FC<ComboBoxProps> = ({
@@ -31,6 +32,7 @@ const ComboBox: React.FC<ComboBoxProps> = ({
   selectedValue,
   disabled,
   pickMode,
+  isAbsolute,
 }) => {
   const [open, setOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<string | undefined>(
@@ -57,6 +59,7 @@ const ComboBox: React.FC<ComboBoxProps> = ({
         variant={"outline"}
         className="w-full border border-gray-300 rounded p-2 text-left overflow-hidden text-ellipsis"
         role="combobox"
+        type="button"
         aria-expanded={open}
         onClick={(e) => {
           e.stopPropagation();
@@ -72,13 +75,16 @@ const ComboBox: React.FC<ComboBoxProps> = ({
       <AnimatePresence>
         {open && (
           <motion.div
-            className="absolute z-50 w-full mt-1 border-[1px] rounded-md mb-4 bg-white shadow-md"
+            className={cn(
+              isAbsolute && "absolute",
+              "z-50 w-full mt-1 border-[1px] rounded-md mb-4 bg-white shadow-md"
+            )}
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
-            <Command className="">
+            <Command className="h-40">
               <CommandInput placeholder={`${placeholder}...`} />
               <CommandList id="item-list">
                 <CommandEmpty>No items found.</CommandEmpty>

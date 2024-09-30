@@ -19,7 +19,7 @@ export function ModalLayout({
       <DialogContent
         className={`min-w-fit ${customHeight} ${
           maxWidth && maxWidth
-        } max-h-[90vh] overflow-auto`}
+        } max-h-[90vh] overflow-auto z-50`}
       >
         {children}
       </DialogContent>

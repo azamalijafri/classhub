@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { ModalLayout } from "./modal-layout";
@@ -7,21 +7,28 @@ import { useModal } from "../../stores/modal-store";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { useToast } from "../ui/use-toast";
-import axiosInstance from "@/lib/axios-instance";
 import { apiUrls } from "@/constants/api-urls";
+import { useApi } from "@/hooks/useApiRequest";
 
 interface SubjectForm {
   name: string;
 }
 
-const CreateSubjectsModal = () => {
+const UpsertSubjectsModal = () => {
   const { modals, closeModal } = useModal();
-  const modal = modals.find((modal) => modal.type === "create-subject");
-
+  const modal = modals.find((modal) => modal.type === "upsert-subject");
   const { toast } = useToast();
 
   const [subjects, setSubjects] = useState<SubjectForm[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const isEditing = !!modal?.data?.subject;
+
+  const { mutateData, isLoading } = useApi({ enabledFetch: false });
+
+  useEffect(() => {
+    if (isEditing && modal?.data?.subject) {
+      setSubjects([{ name: modal.data.subject.name }]);
+    }
+  }, [isEditing, modal]);
 
   const handleInputChange = (
     index: number,
@@ -73,7 +80,7 @@ const CreateSubjectsModal = () => {
     } catch {
       toast({
         title: "Error",
-        description: "error uploading file, please try again.",
+        description: "Error uploading file, please try again.",
         variant: "destructive",
       });
     }
@@ -90,38 +97,45 @@ const CreateSubjectsModal = () => {
   };
 
   const handleSubmit = async () => {
-    try {
-      setIsLoading(true);
-      const response = await axiosInstance.post(
-        apiUrls.subject.createSubjects,
-        {
-          subjects,
-        }
-      );
+    const apiEndpoint = isEditing
+      ? `${apiUrls.subject.updateSubject}/${modal?.data?.subject?._id}`
+      : apiUrls.subject.createSubjects;
 
-      if (response) {
-        closeModal();
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    const method = isEditing ? "PUT" : "POST";
+
+    await mutateData({
+      url: apiEndpoint,
+      method,
+      payload: isEditing ? subjects[0] : subjects,
+      queryKey: ["all-subjects"],
+    });
+
+    closeModal();
   };
 
   return (
     <ModalLayout isOpen={!!modal}>
-      <DialogTitle>Create Subjects</DialogTitle>
+      <DialogTitle>
+        {isEditing ? "Update Subject" : "Create Subjects"}
+      </DialogTitle>
       <div className="flex flex-col gap-y-4">
-        <span className="text-xs text-zinc-600">
-          upload only cvs or excel file
-        </span>
+        {!isEditing && (
+          <span className="text-xs text-zinc-600">
+            Upload only CSV or Excel file
+          </span>
+        )}
         <div className="flex gap-x-2 items-center">
-          <Input
-            type="file"
-            accept=".csv, .xls, .xlsx"
-            onChange={handleFileUpload}
-            className="file-input"
-          />
-          <Button onClick={addSubject}>Add Manually</Button>
+          {!isEditing && (
+            <>
+              <Input
+                type="file"
+                accept=".csv, .xls, .xlsx"
+                onChange={handleFileUpload}
+                className="file-input"
+              />
+              <Button onClick={addSubject}>Add Manually</Button>
+            </>
+          )}
         </div>
 
         {subjects?.map((subject, index) => (
@@ -131,9 +145,14 @@ const CreateSubjectsModal = () => {
               value={subject.name}
               onChange={(e) => handleInputChange(index, "name", e.target.value)}
             />
-            <Button variant="destructive" onClick={() => removeSubject(index)}>
-              Remove
-            </Button>
+            {!isEditing && (
+              <Button
+                variant="destructive"
+                onClick={() => removeSubject(index)}
+              >
+                Remove
+              </Button>
+            )}
           </div>
         ))}
       </div>
@@ -143,7 +162,7 @@ const CreateSubjectsModal = () => {
           disabled={!subjects.length || isLoading}
           isLoading={isLoading}
         >
-          Submit
+          {isEditing ? "Update" : "Submit"}
         </Button>
         <Button variant="secondary" onClick={closeModal}>
           Cancel
@@ -153,4 +172,4 @@ const CreateSubjectsModal = () => {
   );
 };
 
-export default CreateSubjectsModal;
+export default UpsertSubjectsModal;

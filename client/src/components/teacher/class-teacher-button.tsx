@@ -17,7 +17,7 @@ const ClassTeacherButton = ({ classroom }: { classroom: IClassroom }) => {
       className="relative w-32 flex items-center justify-center"
     >
       <div
-        className={`absolute flex items-center justify-center font-medium transition-opacity duration-300 ease-in-out px-4 py-2 rounded-md border-[1px] border-primary w-full overflow-hidden text-ellipsis whitespace-nowrap ${
+        className={`absolute text-sm flex items-center justify-center font-medium transition-opacity duration-300 ease-in-out px-4 py-2 rounded-md border-[1px] border-primary w-full overflow-hidden text-ellipsis whitespace-nowrap ${
           isHovered ? "opacity-0" : "opacity-100"
         }`}
       >

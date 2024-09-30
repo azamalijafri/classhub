@@ -6,24 +6,15 @@ import { useLoading } from "@/stores/loader-store";
 
 type Method = "POST" | "PUT" | "DELETE";
 
-interface UseApiProps<T> {
-  isLoading: boolean;
-  error: string | null;
-  data: T | null;
-  fetchData: () => void;
-  mutateData: (url: string, method: Method, payload?: any) => Promise<void>;
-  fetchedData: T | null;
-}
-
 export const useApi = <T = any>({
   apiUrl,
   queryKey = [],
   enabledFetch = true,
 }: {
-  apiUrl: string;
+  apiUrl?: string;
   queryKey?: any[];
   enabledFetch?: boolean;
-}): UseApiProps<T> => {
+}) => {
   const queryClient = useQueryClient();
   const { isLoading: globalLoading, startLoading, stopLoading } = useLoading();
 
@@ -36,7 +27,7 @@ export const useApi = <T = any>({
   const fetchData = useCallback(async () => {
     try {
       startLoading();
-      const response = await axiosInstance.get(apiUrl);
+      const response = await axiosInstance.get(apiUrl!);
       setData(response.data);
       return response.data;
     } finally {
@@ -44,14 +35,24 @@ export const useApi = <T = any>({
     }
   }, [apiUrl, startLoading, stopLoading]);
 
-  const { data: fetchedData } = useQuery({
+  const { data: fetchedData, refetch } = useQuery({
     queryKey,
     queryFn: fetchData,
     enabled: enabledFetch,
   });
 
   const mutateData = useCallback(
-    async (url: string, method: Method, payload?: any) => {
+    async ({
+      url,
+      method,
+      queryKey,
+      payload,
+    }: {
+      url: string;
+      method: Method;
+      queryKey?: any[];
+      payload?: any;
+    }) => {
       setIsLocalLoading(true);
       setError(null);
 
@@ -68,7 +69,7 @@ export const useApi = <T = any>({
         setIsLocalLoading(false);
       }
     },
-    [queryClient, queryKey]
+    [queryClient]
   );
 
   return {
@@ -78,5 +79,6 @@ export const useApi = <T = any>({
     fetchData,
     mutateData,
     fetchedData,
+    refetch,
   };
 };

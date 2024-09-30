@@ -4,9 +4,9 @@ import { apiUrls } from "../../constants/api-urls";
 import { useModal } from "../../stores/modal-store";
 import { cn } from "@/lib/utils";
 import ClassTeacherButton from "../teacher/class-teacher-button";
-import { useFetchData } from "@/hooks/useFetchData";
 import useAuthStore from "@/stores/auth-store";
 import { useEffect } from "react";
+import { useApi } from "@/hooks/useApiRequest";
 
 const tabs = [
   { label: "Timetable", path: "timetable" },
@@ -20,9 +20,9 @@ const ClassDetailsLayout = () => {
   const { openModal } = useModal();
   const { user } = useAuthStore();
 
-  const { data } = useFetchData({
-    queryKey: [classroomId ?? "", "class-details"],
+  const { fetchedData: data } = useApi({
     apiUrl: `${apiUrls.classroom.getClassroomDetails}/${classroomId}`,
+    queryKey: [classroomId ?? "", "class-details"],
   });
 
   useEffect(() => {
@@ -62,7 +62,7 @@ const ClassDetailsLayout = () => {
           )}
           {user?.role == "principal" ? (
             <div>
-              {data?.classroom?.teacher ? (
+              {data?.classroom?.mentor ? (
                 <ClassTeacherButton classroom={data?.classroom} />
               ) : (
                 <div>
@@ -77,7 +77,7 @@ const ClassDetailsLayout = () => {
             </div>
           ) : (
             <div
-              className={`flex items-center justify-center font-medium px-4 py-2 rounded-md border-[1px] border-primary w-full overflow-hidden text-ellipsis whitespace-nowrap`}
+              className={`flex text-sm items-center justify-center font-medium px-4 py-2 rounded-md border-[1px] border-primary w-full overflow-hidden text-ellipsis whitespace-nowrap`}
             >
               {data?.classroom?.teacher.name}
             </div>

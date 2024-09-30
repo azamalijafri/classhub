@@ -8,7 +8,7 @@ export type ModalType =
   | "confirm"
   | "edit-timetable"
   | "assign-students"
-  | "create-subject"
+  | "upsert-subject"
   | "attendance"
   | null;
 

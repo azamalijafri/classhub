@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { apiUrls } from "../../constants/api-urls";
-import axiosInstance from "../../lib/axios-instance";
 import { useModal } from "../../stores/modal-store";
 import { Button } from "@/components/ui/button";
 import { DialogFooter, DialogTitle } from "../ui/dialog";
@@ -16,40 +15,28 @@ import {
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { useRefetchQuery } from "@/hooks/useRefetchQuery";
+import { useApi } from "@/hooks/useApiRequest";
 
 const AssignStudentModal = () => {
   const { modals, closeModal } = useModal();
   const modal = modals.find((modal) => modal.type === "assign-students");
   const selectedStudents = modal?.data?.selectedStudents;
-  const [classrooms, setClassrooms] = useState<IClassroom[]>([]);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
-  const fetchClassrooms = async () => {
-    const response = await axiosInstance.get(
-      apiUrls.classroom.getAllClassrooms
-    );
-    if (response) setClassrooms(response.data.classrooms);
-  };
-
-  useEffect(() => {
-    if (modal) {
-      fetchClassrooms();
-    }
-  }, [modal]);
-
-  const refetchQuery = useRefetchQuery();
+  const { mutateData, isLoading, data } = useApi({
+    apiUrl: apiUrls.classroom.getAllClassrooms,
+  });
 
   const handleAssign = async () => {
-    const response = await axiosInstance.post(
-      apiUrls.classroom.assignStudents,
-      { studentsIds: selectedStudents, classroomId: selectedClass }
-    );
-    if (response) {
-      refetchQuery(["all", "students"]);
-      closeModal();
-    }
+    await mutateData({
+      url: apiUrls.classroom.assignStudents,
+      payload: { studentsIds: selectedStudents, classroomId: selectedClass },
+      method: "POST",
+      queryKey: ["all-students"],
+    });
+
+    closeModal();
   };
 
   return (
@@ -66,8 +53,8 @@ const AssignStudentModal = () => {
               className="justify-between"
             >
               {selectedClass
-                ? classrooms.find(
-                    (classroom) => classroom._id === selectedClass
+                ? data?.classrooms.find(
+                    (classroom: IClassroom) => classroom._id === selectedClass
                   )?.name
                 : "Select a classroom"}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -79,7 +66,7 @@ const AssignStudentModal = () => {
               <CommandList id="classroom-list">
                 <CommandEmpty>No classroom found.</CommandEmpty>
                 <CommandGroup>
-                  {classrooms.map((classroom) => (
+                  {data?.classrooms.map((classroom: IClassroom) => (
                     <CommandItem
                       key={classroom._id}
                       value={classroom.name}
@@ -106,7 +93,11 @@ const AssignStudentModal = () => {
         </Popover>
       </div>
       <DialogFooter>
-        <Button onClick={handleAssign} disabled={!selectedClass}>
+        <Button
+          onClick={handleAssign}
+          disabled={!selectedClass || isLoading}
+          isLoading={isLoading}
+        >
           Assign
         </Button>
         <Button variant="outline" onClick={closeModal}>
