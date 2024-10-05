@@ -2,7 +2,7 @@ import TimetableGrid from "@/components/classroom/timetable-grid";
 
 const Timetable = () => {
   return (
-    <div className="p-4 w-full">
+    <div className="w-full">
       <TimetableGrid />
     </div>
   );

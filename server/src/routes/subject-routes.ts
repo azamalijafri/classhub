@@ -30,15 +30,7 @@ router.put(
   updateSubject
 );
 
-router.put(
-  "/enable/subject/:subjectId",
-  requireRole(["principal"]),
-  enableSubject
-);
+router.put("/enable/subjects", requireRole(["principal"]), enableSubject);
 
-router.put(
-  "/disable/subject/:subjectId",
-  requireRole(["principal"]),
-  disableSubject
-);
+router.put("/disable/subjects", requireRole(["principal"]), disableSubject);
 export default router;

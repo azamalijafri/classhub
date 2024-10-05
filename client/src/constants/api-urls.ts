@@ -16,6 +16,7 @@ export const apiUrls = {
     getClassStudents: "/get/students",
     removeClassroom: "/remove/classroom",
     updateClassroom: "/update/classroom",
+    getAttendance: "/get/classroom/attendance",
   },
   user: {
     getMyProfile: "/get/my/profile",
@@ -49,8 +50,8 @@ export const apiUrls = {
     getAllSubjects: "/get/all/subjects",
     getAllSubjectsWithClassCount: "/get/all/subjects/with/classroom/count",
     updateSubject: "/update/subject",
-    enableSubject: "/enable/subject",
-    disableSubject: "/disable/subject",
+    enableSubject: "/enable/subjects",
+    disableSubject: "/disable/subjects",
   },
   attendance: {
     markAttendance: "/mark/attendance",

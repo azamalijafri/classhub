@@ -1,12 +1,14 @@
 import { Request, Response } from "express";
 import {
   createSubjectsSchema,
+  enableDisableSubjectSchema,
   updateSubjectSchema,
 } from "../validation/subject-schema";
 import Subject, { ISubject } from "../models/subject";
 import { validate } from "../libs/utils";
 import { asyncTransactionWrapper } from "../libs/async-transaction-wrapper";
 import { CustomError } from "../libs/custom-error";
+import { ClientSession } from "mongoose";
 
 export const createSubjects = asyncTransactionWrapper(
   async (req: Request, res: Response) => {
@@ -83,7 +85,7 @@ export const getAllSubjectsWithClassroomCount = asyncTransactionWrapper(
 
     const match: any = {
       school: req.user.profile.school,
-      status: 1,
+      // status: 1,
     };
 
     if (search) {
@@ -155,46 +157,48 @@ export const updateSubject = asyncTransactionWrapper(
 );
 
 export const disableSubject = asyncTransactionWrapper(
-  async (req: Request, res: Response) => {
-    const { subjectId } = req.params;
+  async (req: Request, res: Response, session: ClientSession) => {
+    const validatedData = validate(enableDisableSubjectSchema, req.body, res);
+    if (!validatedData) return;
 
-    const enabledSubject = await Subject.findOneAndUpdate(
-      { _id: subjectId, school: req.user.profile.school },
-      {
-        status: 0,
-      },
-      { new: true }
+    const { subjects } = validatedData;
+
+    const updatedSubjects = await Subject.updateMany(
+      { _id: { $in: subjects }, school: req.user.profile.school },
+      { status: 0 },
+      { new: true, session }
     );
 
-    if (!enabledSubject) {
-      throw new CustomError("Subject not found", 404);
+    if (updatedSubjects.modifiedCount === 0) {
+      throw new CustomError("No subjects found or updated", 404);
     }
 
     return res.status(200).json({
-      message: "Subject deleted successfully",
+      message: "Subjects disabled successfully",
       showMessage: true,
     });
   }
 );
 
 export const enableSubject = asyncTransactionWrapper(
-  async (req: Request, res: Response) => {
-    const { subjectId } = req.params;
+  async (req: Request, res: Response, session: ClientSession) => {
+    const validatedData = validate(enableDisableSubjectSchema, req.body, res);
+    if (!validatedData) return;
 
-    const enabledSubject = await Subject.findOneAndUpdate(
-      { _id: subjectId, school: req.user.profile.school },
-      {
-        status: 1,
-      },
-      { new: true }
+    const { subjects } = validatedData;
+
+    const updatedSubjects = await Subject.updateMany(
+      { _id: { $in: subjects }, school: req.user.profile.school },
+      { status: 1 },
+      { new: true, session }
     );
 
-    if (!enabledSubject) {
-      throw new CustomError("Subject not found", 404);
+    if (updatedSubjects.modifiedCount === 0) {
+      throw new CustomError("No subjects found or updated", 404);
     }
 
     return res.status(200).json({
-      message: "Subject enabled successfully",
+      message: "Subjects enabled successfully",
       showMessage: true,
     });
   }

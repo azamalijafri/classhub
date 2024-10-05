@@ -1,4 +1,5 @@
 import SecondaryLoader from "@/components/loader/secondary-loader";
+import PrincipalAttendanceView from "@/pages/common/principal-attendance-view";
 
 import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
@@ -22,6 +23,7 @@ function PrincipalRoutes() {
           <Route path="/class/:classroomId" element={<ClassDetailsLayout />}>
             <Route path="timetable" element={<Timetable />} />
             <Route path="students" element={<ClassStudents />} />
+            <Route path="attendance" element={<PrincipalAttendanceView />} />
           </Route>
           <Route path="/teachers" element={<AllTeachers />} />
           <Route path="/students" element={<AllStudents />} />

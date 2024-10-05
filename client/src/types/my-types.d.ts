@@ -68,6 +68,7 @@ interface ISubject {
   name: string;
   school: ISchool;
   createdBy: Date;
+  status: number;
 }
 
 interface IPeriod {

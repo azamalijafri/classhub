@@ -92,7 +92,7 @@ const AllSubjects = () => {
     },
   ];
 
-  const actions = (subject: any) => (
+  const actions = (subject: ISubject) => (
     <div className="flex space-x-2">
       <Button
         variant="default"
@@ -103,12 +103,15 @@ const AllSubjects = () => {
         Edit
       </Button>
       <Button
-        variant="destructive"
+        variant={subject.status == 1 ? "destructive" : "default"}
         onClick={() => {
           openModal("confirm", {
             performingAction: async () => {
               const response = await axiosInstance.put(
-                `${apiUrls.subject.removeSubject}/${subject._id}`
+                subject.status == 1
+                  ? apiUrls.subject.disableSubject
+                  : apiUrls.subject.enableSubject,
+                { subjects: [subject._id] }
               );
 
               if (response) refetch();
@@ -116,7 +119,7 @@ const AllSubjects = () => {
           });
         }}
       >
-        Remove
+        {subject.status == 1 ? "Disable" : "Enable"}
       </Button>
     </div>
   );
@@ -128,17 +131,46 @@ const AllSubjects = () => {
           All Subjects
         </h3>
         <div className="flex justify-between items-center mb-2 gap-x-3">
-          <Button onClick={handleToggleSelectAll}>
+          <Button onClick={handleToggleSelectAll} variant={"outline"}>
             {selectedSubjects?.length === data?.subjects?.length
               ? "Deselect All"
               : "Select All"}
           </Button>
           <Button
-            variant="destructive"
-            // onClick={handleAssign}
+            variant="default"
+            onClick={() => {
+              openModal("confirm", {
+                performingAction: async () => {
+                  const response = await axiosInstance.put(
+                    apiUrls.subject.enableSubject,
+                    { subjects: selectedSubjects }
+                  );
+
+                  if (response) refetch();
+                },
+              });
+            }}
             disabled={selectedSubjects.length === 0}
           >
-            Remove In Bulk
+            Enable In Bulk
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              openModal("confirm", {
+                performingAction: async () => {
+                  const response = await axiosInstance.put(
+                    apiUrls.subject.disableSubject,
+                    { subjects: selectedSubjects }
+                  );
+
+                  if (response) refetch();
+                },
+              });
+            }}
+            disabled={selectedSubjects.length === 0}
+          >
+            Disable In Bulk
           </Button>
         </div>
       </div>

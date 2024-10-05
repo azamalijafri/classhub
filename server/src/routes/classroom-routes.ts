@@ -7,6 +7,7 @@ import {
   createClassroom,
   deleteClassroom,
   getAllClassrooms,
+  getClassroomAttendance,
   getClassroomDetails,
   getClassroomSubjects,
   updateClassroom,
@@ -39,5 +40,7 @@ router.get("/get/classroom/details/:classroomId", getClassroomDetails);
 router.delete("/remove/classroom/:classroomId", deleteClassroom);
 
 router.put("/update/classroom/:classroomId", updateClassroom);
+
+router.get("/get/classroom/attendance/:classroomId", getClassroomAttendance);
 
 export default router;

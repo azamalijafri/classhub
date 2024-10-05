@@ -7,15 +7,17 @@ import {
 } from "../validation/classroom-schema";
 import { ClientSession, Types } from "mongoose";
 import Teacher from "../models/teacher";
-import Student from "../models/student";
+import Student, { IStudent } from "../models/student";
 import { getSchool, validate } from "../libs/utils";
 import Subject from "../models/subject";
-import { daysOfWeek } from "../constants/variables";
+import { daysOfWeek, DEFAULT_PAGE_LIMIT } from "../constants/variables";
 import Timetable from "../models/timetable";
 import ClassroomStudentAssociation from "../models/classroom-student";
 import ClassroomSubjectAssociation from "../models/classroom-subject";
 import { asyncTransactionWrapper } from "../libs/async-transaction-wrapper";
 import { CustomError } from "../libs/custom-error";
+import AttendanceRecord from "../models/attendance-record";
+import StudentAttendance from "../models/student-attendence";
 
 export const createClassroom = asyncTransactionWrapper(
   async (req: Request, res: Response, session) => {
@@ -296,5 +298,146 @@ export const updateClassroom = asyncTransactionWrapper(
     } catch (error) {
       throw error;
     }
+  }
+);
+
+export const getClassroomAttendance = asyncTransactionWrapper(
+  async (req: Request, res: Response) => {
+    const { classroomId } = req.params;
+    const { subjectId } = req.query;
+    const {
+      page = 1,
+      limit = DEFAULT_PAGE_LIMIT,
+      search,
+      sf = "name",
+      sortOrder = "asc",
+    } = req.query;
+
+    if (
+      !Types.ObjectId.isValid(classroomId) ||
+      !Types.ObjectId.isValid(String(subjectId))
+    ) {
+      throw new CustomError("Invalid ID", 400);
+    }
+
+    const queryOptions: any = {
+      school: req.user.profile.school,
+      status: 1,
+    };
+
+    const matchStage: any = { $match: { ...queryOptions } };
+
+    if (search) {
+      matchStage.$match.name = { $regex: search, $options: "i" };
+    }
+
+    const lookupClassroomAssociationStage: any = {
+      $lookup: {
+        from: "classroomstudentassociations",
+        localField: "_id",
+        foreignField: "student",
+        as: "classroomAssociation",
+      },
+    };
+
+    const unwindClassroomAssociationStage: any = {
+      $unwind: {
+        path: "$classroomAssociation",
+        preserveNullAndEmptyArrays: true,
+      },
+    };
+
+    const lookupUserStage: any = {
+      $lookup: {
+        from: "users",
+        localField: "user",
+        foreignField: "_id",
+        as: "user",
+      },
+    };
+
+    const unwindUserStage: any = {
+      $unwind: {
+        path: "$user",
+        preserveNullAndEmptyArrays: true,
+      },
+    };
+
+    const sortOptions: any = {};
+    sortOptions[sf.toString()] = sortOrder === "asc" ? 1 : -1;
+
+    const limitNumber =
+      limit === "all" ? Infinity : Math.max(0, parseInt(limit as string, 10));
+    const skip = Math.max(0, (parseInt(page as string, 10) - 1) * limitNumber);
+
+    const paginationStage: any = {
+      $facet: {
+        paginatedResults: [{ $skip: skip }, { $limit: limitNumber }],
+        totalCount: [{ $count: "count" }],
+      },
+    };
+
+    const pipeline = [
+      matchStage,
+      lookupClassroomAssociationStage,
+      unwindClassroomAssociationStage,
+      lookupUserStage,
+      unwindUserStage,
+      {
+        $match: {
+          "classroomAssociation.classroom": new Types.ObjectId(classroomId),
+        },
+      },
+      { $sort: sortOptions },
+      paginationStage,
+    ];
+
+    const result = await Student.aggregate(pipeline);
+
+    const students = result[0]?.paginatedResults || [];
+    const totalCount = result[0]?.totalCount[0]?.count || 0;
+
+    // if (totalCount === 0) {
+    //   throw new CustomError("No students found in this class", 404);
+    // }
+
+    const attendanceRecords = await AttendanceRecord.find({
+      classroom: classroomId,
+      subject: subjectId,
+    });
+
+    const attendanceRecordsId = attendanceRecords.map((record) => record._id);
+    const totalClasses = attendanceRecords.length;
+
+    const attendanceData = await Promise.all(
+      students.map(async (student: IStudent) => {
+        const studentPresentCount = await StudentAttendance.countDocuments({
+          student: student._id,
+          attendance: { $in: attendanceRecordsId },
+          status: 1,
+        });
+
+        const percentage = totalClasses
+          ? ((studentPresentCount / totalClasses) * 100).toFixed(2)
+          : "0.00";
+
+        return {
+          name: student.name,
+          roll: student.roll,
+          presentCount: studentPresentCount,
+          percentage,
+        };
+      })
+    );
+
+    res.status(200).json({
+      message: "Classroom attendance fetched successfully",
+      attendanceData,
+      totalClasses,
+      totalItems: totalCount,
+      currentPage: parseInt(page as string, 10),
+      totalPages: Math.ceil(totalCount / limitNumber),
+      classroom: classroomId,
+    });
   }
 );

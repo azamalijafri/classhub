@@ -83,13 +83,13 @@ const ClassStudentsList = () => {
   );
 
   return (
-    <div className="p-4 ">
+    <div>
       <DataTable
         gridValue="10"
-        data={data.students}
+        data={data?.students}
         columns={columns}
         actions={actions}
-        totalItems={data.totalStudents}
+        totalItems={data?.totalStudents}
       />
     </div>
   );
