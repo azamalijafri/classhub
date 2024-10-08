@@ -14,7 +14,7 @@ import { ClientSession, startSession, Types } from "mongoose";
 import Timetable, { IPeriod } from "../models/timetable";
 import dayjs from "dayjs";
 import AttendanceRecord from "../models/attendance-record";
-import Student from "../models/student";
+import Student, { IStudent } from "../models/student";
 import StudentAttendance from "../models/student-attendence";
 import { asyncTransactionWrapper } from "../libs/async-transaction-wrapper";
 import { CustomError } from "../libs/custom-error";
@@ -200,10 +200,6 @@ export const createBulkTeachers = asyncTransactionWrapper(
       )
     );
 
-    // for (const { email, uniqueEmail, password } of emailData) {
-    //   await sendEmail(email, uniqueEmail, password);
-    // }
-
     res.status(200).json({
       message: `Teachers created successfully`,
     });
@@ -351,7 +347,7 @@ export const getMySchedule = asyncTransactionWrapper(
       return acc;
     }, {} as Record<string, IPeriod[]>);
 
-    return res.json(groupedSchedule);
+    return res.json({ timetable: groupedSchedule });
   }
 );
 
@@ -389,52 +385,89 @@ export const getMyAttendanceClasses = asyncTransactionWrapper(
 
 export const getMySubjectAttendance = asyncTransactionWrapper(
   async (req: Request, res: Response) => {
-    const teacherId = req.user.profile._id as string;
     const { classroomId } = req.params;
-    const { page = 1, limit = DEFAULT_PAGE_LIMIT } = req.query;
+    const {
+      page = 1,
+      limit = DEFAULT_PAGE_LIMIT,
+      search,
+      sf = "name",
+      so = "asc",
+    } = req.query;
 
-    if (
-      !Types.ObjectId.isValid(classroomId) ||
-      !Types.ObjectId.isValid(teacherId)
-    ) {
+    if (!Types.ObjectId.isValid(classroomId)) {
       throw new CustomError("Invalid ID", 400);
     }
 
-    const classroom = await Classroom.findById(classroomId);
-    if (!classroom) throw new CustomError("Classroom not found", 404);
+    const queryOptions: any = {
+      school: req.user.profile.school,
+      status: 1,
+    };
 
-    const pageNumber = Math.max(0, parseInt(page as string, 10));
-    const limitNumber = Math.max(0, parseInt(limit as string, 10));
+    const matchStage: any = { $match: { ...queryOptions } };
 
-    if (
-      isNaN(pageNumber) ||
-      isNaN(limitNumber) ||
-      pageNumber <= 0 ||
-      limitNumber <= 0
-    ) {
-      throw new CustomError("Invalid pagination parameters", 400);
+    if (search) {
+      matchStage.$match.name = { $regex: search, $options: "i" };
     }
 
-    const totalItems = await Student.countDocuments({ classroom: classroomId });
-    if (totalItems === 0) {
-      throw new CustomError("No students found in this class", 404);
-    }
+    const lookupClassroomAssociationStage: any = {
+      $lookup: {
+        from: "classroomstudentassociations",
+        localField: "_id",
+        foreignField: "student",
+        as: "classroomAssociation",
+      },
+    };
 
-    const students = await Student.find({ classroom: classroomId })
-      .skip((pageNumber - 1) * limitNumber)
-      .limit(limitNumber)
-      .sort({ name: 1 });
+    const unwindClassroomAssociationStage: any = {
+      $unwind: {
+        path: "$classroomAssociation",
+        preserveNullAndEmptyArrays: true,
+      },
+    };
+
+    const sortOptions: any = {};
+    sortOptions[sf.toString()] = so === "asc" ? 1 : -1;
+
+    const limitNumber =
+      limit === "all" ? Infinity : Math.max(0, parseInt(limit as string, 10));
+    const skip = Math.max(0, (parseInt(page as string, 10) - 1) * limitNumber);
+
+    const paginationStage: any = {
+      $facet: {
+        paginatedResults: [{ $skip: skip }, { $limit: limitNumber }],
+        totalCount: [{ $count: "count" }],
+      },
+    };
+
+    const pipeline = [
+      matchStage,
+      lookupClassroomAssociationStage,
+      unwindClassroomAssociationStage,
+      {
+        $match: {
+          "classroomAssociation.classroom": new Types.ObjectId(classroomId),
+        },
+      },
+      { $sort: sortOptions },
+      paginationStage,
+    ];
+
+    const result = await Student.aggregate(pipeline);
+
+    const students = result[0]?.paginatedResults || [];
+    const totalCount = result[0]?.totalCount[0]?.count || 0;
 
     const attendanceRecords = await AttendanceRecord.find({
       classroom: classroomId,
-      teacher: teacherId,
+      // @ts-ignore
+      subject: req.user.profile.subject,
     });
 
     const attendanceRecordsId = attendanceRecords.map((record) => record._id);
     const totalClasses = attendanceRecords.length;
 
     const attendanceData = await Promise.all(
-      students.map(async (student) => {
+      students.map(async (student: IStudent) => {
         const studentPresentCount = await StudentAttendance.countDocuments({
           student: student._id,
           attendance: { $in: attendanceRecordsId },
@@ -455,12 +488,13 @@ export const getMySubjectAttendance = asyncTransactionWrapper(
     );
 
     res.status(200).json({
+      message: "Subject attendance fetched successfully",
       attendanceData,
       totalClasses,
-      totalItems,
-      currentPage: pageNumber,
-      totalPages: Math.ceil(totalItems / limitNumber),
-      classroom,
+      totalItems: totalCount,
+      currentPage: parseInt(page as string, 10),
+      totalPages: Math.ceil(totalCount / limitNumber),
+      classroom: classroomId,
     });
   }
 );

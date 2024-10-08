@@ -39,6 +39,7 @@ export const useApi = <T = any>({
     queryKey,
     queryFn: fetchData,
     enabled: enabledFetch,
+    refetchOnWindowFocus: false,
   });
 
   const mutateData = useCallback(

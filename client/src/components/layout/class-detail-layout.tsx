@@ -1,11 +1,15 @@
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Suspense, lazy, useEffect } from "react";
 import { Button } from "../ui/button";
 import { apiUrls } from "../../constants/api-urls";
 import { useModal } from "../../stores/modal-store";
-import ClassTeacherButton from "../teacher/class-teacher-button";
 import useAuthStore from "@/stores/auth-store";
-import { useEffect } from "react";
 import { useApi } from "@/hooks/useApiRequest";
+import SecondaryLoader from "../loader/secondary-loader";
+
+const ClassTeacherButton = lazy(
+  () => import("../teacher/class-teacher-button")
+);
 
 const tabs = [
   { label: "Timetable", path: "timetable" },
@@ -47,9 +51,6 @@ const ClassDetailsLayout = () => {
             </div>
           ))}
         </div>
-        {/* <div className={cn(buttonVariants({ variant: "outline" }))}>
-          <h3>{data?.classroom?.name}</h3>
-        </div> */}
         <div className="flex items-center gap-x-5">
           {user?.role === "principal" && (
             <div>
@@ -63,7 +64,9 @@ const ClassDetailsLayout = () => {
           {user?.role == "principal" ? (
             <div>
               {data?.classroom?.mentor ? (
-                <ClassTeacherButton classroom={data?.classroom} />
+                <Suspense fallback={<SecondaryLoader />}>
+                  <ClassTeacherButton classroom={data?.classroom} />
+                </Suspense>
               ) : (
                 <div>
                   <Button
@@ -79,7 +82,7 @@ const ClassDetailsLayout = () => {
             <div
               className={`flex text-sm items-center justify-center font-medium px-4 py-2 rounded-md border-[1px] border-primary w-full overflow-hidden text-ellipsis whitespace-nowrap`}
             >
-              {data?.classroom?.teacher.name}
+              {data?.classroom?.mentor?.name}
             </div>
           )}
         </div>

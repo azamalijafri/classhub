@@ -335,11 +335,16 @@ export const getAllStudentByClass = asyncTransactionWrapper(
       pageLimit === "all"
         ? Infinity
         : Math.max(0, parseInt(pageLimit as string, 10));
-    const skip = Math.max(0, (parseInt(page as string, 10) - 1) * limit);
+
+    const skip =
+      limit === Infinity
+        ? 0
+        : Math.max(0, (parseInt(page as string, 10) - 1) * limit);
 
     const paginationStage: any = {
       $facet: {
-        paginatedResults: [{ $skip: skip }, { $limit: limit }],
+        paginatedResults:
+          limit === Infinity ? [] : [{ $skip: skip }, { $limit: limit }],
         totalCount: [{ $count: "count" }],
       },
     };

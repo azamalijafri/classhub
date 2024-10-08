@@ -107,7 +107,7 @@ const AttendanceModal = () => {
           <div className="flex flex-col gap-y-4 max-h-[70vh] overflow-auto">
             <div className="flex items-center gap-x-2">
               <Button onClick={handleToggleAll}>
-                {toggleAll ? "Uncheck All" : "Check All"}
+                {toggleAll ? "Absent All" : "Present All"}
               </Button>
             </div>
 

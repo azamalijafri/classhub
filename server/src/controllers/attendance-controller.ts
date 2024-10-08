@@ -11,6 +11,7 @@ import Student from "../models/student";
 import { asyncTransactionWrapper } from "../libs/async-transaction-wrapper";
 import { CustomError } from "../libs/custom-error";
 import Timetable from "../models/timetable";
+import ClassroomStudentAssociation from "../models/classroom-student";
 
 export const markAttendance = asyncTransactionWrapper(
   async (req: Request, res: Response, session: ClientSession) => {
@@ -24,27 +25,35 @@ export const markAttendance = asyncTransactionWrapper(
       Subject.findById(subjectId).session(session),
     ]);
 
-    if (!classroom)
-      return res.status(404).json({ message: "Classroom not found" });
-    if (!subject) return res.status(404).json({ message: "Subject not found" });
+    if (!classroom) throw new CustomError("Classroom not found", 404);
+    if (!subject) throw new CustomError("Subject not found", 404);
 
     const timetable = await Timetable.findOne({
       classroom: classroomId,
     }).session(session);
 
-    const period = timetable?.periods?.find((period) => period.id == periodId);
+    if (!timetable) throw new CustomError("Timetable not found", 404);
 
-    if (!period || period.teacher != req.user.profile._id)
-      throw new CustomError("You are not assigned to this period");
+    const period = timetable?.periods?.find(
+      (p) => p.id?.toString() === periodId
+    );
+
+    if (!period || String(period.teacher) !== String(req.user.profile._id)) {
+      throw new CustomError("You are not assigned to this period", 403);
+    }
 
     const studentIds = students.map((s: { studentId: string }) => s.studentId);
-    const validStudents = await Student.find({
-      _id: { $in: studentIds },
+
+    const validAssociations = await ClassroomStudentAssociation.find({
       classroom: classroomId,
+      student: { $in: studentIds },
     }).session(session);
 
-    if (validStudents.length !== students.length) {
-      throw new CustomError("Some Students are Invalid", 400);
+    if (validAssociations.length !== students.length) {
+      throw new CustomError(
+        "Some Students are Invalid or not associated with the classroom",
+        400
+      );
     }
 
     const attendance = new AttendanceRecord({
@@ -53,17 +62,10 @@ export const markAttendance = asyncTransactionWrapper(
       period: periodId,
       date,
     });
-
     await attendance.save({ session });
 
     const attendanceRecords = students.map(
-      ({
-        studentId,
-        status,
-      }: {
-        studentId: Types.ObjectId;
-        status: string;
-      }) => ({
+      ({ studentId, status }: { studentId: string; status: string }) => ({
         attendance: attendance._id,
         student: studentId,
         status: parseInt(status, 10),

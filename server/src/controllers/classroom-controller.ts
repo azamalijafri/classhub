@@ -310,7 +310,7 @@ export const getClassroomAttendance = asyncTransactionWrapper(
       limit = DEFAULT_PAGE_LIMIT,
       search,
       sf = "name",
-      sortOrder = "asc",
+      so = "asc",
     } = req.query;
 
     if (
@@ -364,7 +364,7 @@ export const getClassroomAttendance = asyncTransactionWrapper(
     };
 
     const sortOptions: any = {};
-    sortOptions[sf.toString()] = sortOrder === "asc" ? 1 : -1;
+    sortOptions[sf.toString()] = so === "asc" ? 1 : -1;
 
     const limitNumber =
       limit === "all" ? Infinity : Math.max(0, parseInt(limit as string, 10));

@@ -12,8 +12,8 @@ export const asyncTransactionWrapper = (
 
       await session.commitTransaction();
     } catch (error: any) {
-      await session.abortTransaction();
       console.error(error);
+      await session.abortTransaction();
       res.status(error.status || 500).json({
         message: error.message || "Internal Server Error",
       });

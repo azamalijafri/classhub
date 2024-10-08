@@ -35,11 +35,12 @@ const PrincipalAttendanceView = () => {
 
   const { data: subjectsData } = useApi({
     apiUrl: `${apiUrls.classroom.getClassroomSubjects}/${classroomId}`,
+    queryKey: ["classroom-subjects", classroomId],
   });
 
   const { data: attendance, refetch } = useApi({
     apiUrl,
-    queryKey: [subjectId, classroomId, "attendance"],
+    queryKey: [classroomId, subjectId, "attendance"],
     enabledFetch: !!subjectId,
   });
 
@@ -100,7 +101,8 @@ const PrincipalAttendanceView = () => {
                 },
                 {
                   label: "Present Count",
-                  render: (student) => student.presentCount,
+                  render: (student) =>
+                    `${student.presentCount} / ${attendance.totalClasses}`,
                   value: "presentCount",
                   colspan: 2,
                 },

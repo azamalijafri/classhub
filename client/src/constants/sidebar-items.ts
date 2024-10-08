@@ -3,13 +3,12 @@ import {
   BookType,
   CalendarCheckIcon,
   LayoutDashboardIcon,
-  ListCheckIcon,
   UsersIcon,
 } from "lucide-react";
 
 export const PrincipalItems = [
   {
-    label: "Classes",
+    label: "Classrooms",
     href: "/",
     icon: LayoutDashboardIcon,
   },
@@ -32,7 +31,7 @@ export const PrincipalItems = [
 
 export const StudentItems = [
   {
-    label: "Class",
+    label: "Classroom",
     href: "/",
     icon: LayoutDashboardIcon,
   },
@@ -40,7 +39,7 @@ export const StudentItems = [
 
 export const TeacherItems = [
   {
-    label: "Class",
+    label: "Classroom",
     href: "/",
     icon: LayoutDashboardIcon,
   },
@@ -49,9 +48,9 @@ export const TeacherItems = [
     href: "/schedule",
     icon: CalendarCheckIcon,
   },
-  {
-    label: "Attendance",
-    href: "/attendance",
-    icon: ListCheckIcon,
-  },
+  // {
+  //   label: "Attendance",
+  //   href: "/attendance",
+  //   icon: ListCheckIcon,
+  // },
 ];

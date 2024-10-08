@@ -1,5 +1,4 @@
 import SecondaryLoader from "@/components/loader/secondary-loader";
-import PrincipalAttendanceView from "@/pages/common/principal-attendance-view";
 
 import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
@@ -13,6 +12,9 @@ const ClassStudents = lazy(() => import("../pages/common/class-students"));
 const AllStudents = lazy(() => import("@/pages/principal/students"));
 const AllTeachers = lazy(() => import("@/pages/principal/teachers"));
 const AllSubjects = lazy(() => import("@/pages/principal/subjects"));
+const PrincipalAttendanceView = lazy(
+  () => import("@/pages/principal/attendance")
+);
 
 function PrincipalRoutes() {
   return (

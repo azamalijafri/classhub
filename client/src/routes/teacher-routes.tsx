@@ -1,28 +1,36 @@
 import { Routes, Route } from "react-router-dom";
-import { TeacherDashboard } from "../pages/teacher/dashboard";
+import { Suspense, lazy } from "react";
+import SecondaryLoader from "@/components/loader/secondary-loader";
 
-import Timetable from "@/pages/common/timetable";
-import ClassStudents from "@/pages/common/class-students";
-import Schedule from "@/pages/teacher/schedule";
-import Attendance from "@/pages/teacher/attendance";
-import ClassDetailsLayout from "@/components/layout/class-detail-layout";
-import TeacherClassAttendance from "@/components/teacher/teacher-class-attendance";
+const TeacherDashboard = lazy(() => import("../pages/teacher/dashboard"));
+const Timetable = lazy(() => import("@/pages/common/timetable"));
+const ClassStudents = lazy(() => import("@/pages/common/class-students"));
+const Schedule = lazy(() => import("@/pages/teacher/schedule"));
+const TeacherAttendanceView = lazy(() => import("@/pages/teacher/attendance"));
+const ClassDetailsLayout = lazy(
+  () => import("@/components/layout/class-detail-layout")
+);
+const TeacherClassAttendance = lazy(
+  () => import("@/components/teacher/teacher-class-attendance")
+);
 
 function TeacherRoutes() {
   return (
-    <Routes>
-      <Route path="/" element={<TeacherDashboard />} />
-      <Route path="/class/:classroomId" element={<ClassDetailsLayout />}>
-        <Route path="timetable" element={<Timetable />} />
-        <Route path="students" element={<ClassStudents />} />
-      </Route>
-      <Route path="/schedule" element={<Schedule />} />
-      <Route path="/attendance" element={<Attendance />} />
-      <Route
-        path="/attendance/:classroomId"
-        element={<TeacherClassAttendance />}
-      />
-    </Routes>
+    <Suspense fallback={<SecondaryLoader />}>
+      <Routes>
+        <Route path="/" element={<TeacherDashboard />} />
+        <Route path="/class/:classroomId" element={<ClassDetailsLayout />}>
+          <Route path="timetable" element={<Timetable />} />
+          <Route path="students" element={<ClassStudents />} />
+          <Route path="attendance" element={<TeacherAttendanceView />} />
+        </Route>
+        <Route path="/schedule" element={<Schedule />} />
+        <Route
+          path="/attendance/:classroomId"
+          element={<TeacherClassAttendance />}
+        />
+      </Routes>
+    </Suspense>
   );
 }
 
